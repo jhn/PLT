@@ -1,0 +1,17 @@
+In computer Science, a graph is an abstract data type, which is used to implement graph concepts from mathematics. Basically, a 
+graph data structure contains a set of nodes and some of them are joined by edges to form ordered pairs. The nodes could be 
+represented by integer indices or references, and the edges could be assigned with some edge values. [1]
+
+This data structure is widely applied in many different fields, for instance, one programmer could use the graph data structure to 
+simulate computer network. However, implementing this graph from scratch in Java could be tedious. First, the programmer has to 
+create three different classes called node, edge and graph. Then, the graph could be implemented as either a 2-D matrix called 
+adjacency matrix or a list of lists call adjacency list, which are indeed two different ways used to record the relations within 
+the graph. And the programmer would have to keep track of the graph as well as the records.
+
+Thus, we propose our Relational Graphing Language, in which the node, edge and graph are built-in data types in order to help 
+programmer to construct a graph in a much simpler way. Also, we would introduce built-in functions in the language in order to 
+analyze the graph, for example, we could import Facebook friend network and compute the communities within the network, or 
+calculating the shortest distance from node A to node B within the New York subway network. 
+
+
+[1] Graph (abstract data type): http://en.wikipedia.org/wiki/Graph_(abstract_data_type)
