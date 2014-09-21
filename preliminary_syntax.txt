@@ -1,0 +1,64 @@
+Hey guys, this is the preliminary syntax that we have so far.
+
+Data types:
+
+1)Basic:
+int
+string
+boolean
+double
+
+2)More complicated:
+Node
+Edge
+Lists, sets, tuples, maps?
+Graph (But this is going to be implemented as one of the above)
+
+conventions:
+1) Comments (how do we want to do those?)
+2) if/else (maybe then?)
+3) for or while loops (I don't think we need both/ maybe for each might work better in this context
+4) Declarations:
+	Edge: Basically setting a relationship between two nodes using one
+	or more of the basic data types. Looks like:
+	{A R1 B} so {Node (Whitespace) Relationship (Whitespace) Node};
+	This creates a directed edge from A to B;
+	
+	Graph: Not sure how we're implementing this yet. But I think we're 
+	leaning toward a list of nodes, which in turn, have a list of edges.
+	Either that, or an adjacency matrix (see Wikipedia). Syntax for this
+	is:
+	Graph x = {A R1 B,
+		   B R2 C
+		   C R3 B}
+	This creates three nodes with three separate edges. I think it needs
+	to be clear that these are implicit declarations of Nodes. The Nodes
+	are completely empty of data. For instance, here think of it this way:
+	you create an empty node with a pointer you can reference with the variable
+	A. A doesn't have any info except that it has an edge object with relationship
+	R1 and end node B.
+
+	Node: Not sure about this one either, besides the implicit declaration above,
+	I think we should be allowed to say something like:
+	Node A = new Node(). This is a bit too Java-ey but I think that we might have
+	explicit/implicit declarations.
+
+5) Built in operations (insert/remove, etc). This is going off the Graph x declaration
+from above.
+
+x ins {A R4 D} -> This adds a node D with a relationship R4 from the existing node A
+to D.
+x rem {A r4 D} -> This removes the edge from A to D, and D as well if there are no
+more relationships associated with it (pointing to/coming from).
+x rem {D} -> This removes the Node D and all edges associated with it (pointing to/coming from).
+
+6) Other Operators. Let me know if y'all think we don't or do need any of these.
+Arithmetic (+, -. *. /)
+Logical (&& || !)
+Comparative(>, <, ==, <=, >=, !=)
+Assignment (=)
+
+Please put your input on this. Change this file or whatever you think. And then push it back to the github repo.
+
+Nick 
+
