@@ -77,189 +77,175 @@ neighbors()
 Takes a graph and a node. Returns a list of all the direct neighbors of that node. In particular, this will return only those neighbors for which the node has an edge directed toward (not from).
 addField()
 Takes two arguments: a basic data type, and a variable name. This tells the compiler to add a field into one of our basic data types, sort of like adding an instance variable to a Java class. This is useful for adding different types of data to Nodes later in the program.
-Operations on collections
+
+#### Operations on collections
 map(coll, fn) ; returns an array of the results of running fn on each elem of coll;
 reduce(coll, fn, init) ; combines all elements of coll by applying fn to two args at a time, starting from init;
 each(coll, fn) ; applies fn to each elem of coll, returns the original coll;
 filter(coll, pred) ; yields every element in coll to a predicate pred;
 
-Useful native syntax
+#### Useful native syntax
 
 Line termination by new line. No semicolons.
 
 Native definitions of graphs and graph elements:
-Defining a relationship
-let r1: Relationship = [A 4 B]
+
+#### Defining a relationship
+    let r1: Relationship = [A 4 B]
 Where A and B are connected by an edge with weight 4. If A or B are not nodes already, these nodes are created implicitly.
-Defining a graph
-let graph: Graph = {A 4 B
-		           B 5 C
-		           C 3 A
-		           D 4 A}
+
+#### Defining a graph
+    let graph: Graph = {A 4 B
+    		           B 5 C
+    		           C 3 A
+    		           D 4 A}
 
 This creates a graph with 4 empty nodes, A, B, C, and D. Edges will be created from A to B, B to C, C to A, and D to A, with relationships defined by the integers 4, 5, 3, and 4, respectively.
-Comments
+
+#### Comments
 Our language only supports multi-line comments. Use ; to start and ; to end. 
-Sample Code
-; declare some data ;
-data SwimmingPool {            
-  let length: Int
-  let size: Double
-}
 
-; declaring a relationship with one attribute ;
-data Connected [                     
-  let isConnected: Bool                        
-]  
-                               
-; another relationship;
-data sortaConneted [	     
-  let isSortaConnected: Bool	     
-]
+### Sample Code
 
-; declaring a Swimming Pool Graph that contains SwimmingPool nodes related through some relationships;
-let spg: Graph = { p1 Connected p2                           
-                               p1 Connected p4
-		       p1 sortaConnected p3
-                               p2 Connected p3
-                               p3 sortaConnected p4 }
-
-; filter direct neighbors by relationship, nodes connected to node p1 either directly or indirectly would be returned;
-let connected-neighbors: List = neighbors(p1 Connected)  
-         
-; get direct neighbors ;
-let p1Neighbors: List = neighbors(p1)        
-
-; inserting a node into the ‘spg’ graph ;
-ins(spg {p6 Connected p7})
-
-; This removes the edge from A to D, and D as well if there are no more relationships associated with it (pointing to/coming from) ;
-rem(spg {p6 Connected p7})
-
-; This removes the Node D and all edges associated with it (pointing to/coming from) ;
-rem(spg D)
-
-
-
-
+    ; declare some data ;
+    data SwimmingPool {            
+      let length: Int
+      let size: Double
+    }
+    
+    ; declaring a relationship with one attribute ;
+    data Connected [                     
+      let isConnected: Bool                        
+    ]  
+                                   
+    ; another relationship;
+    data sortaConneted [	     
+      let isSortaConnected: Bool	     
+    ]
+    
+    ; declaring a Swimming Pool Graph that contains SwimmingPool nodes related through some relationships;
+    let spg: Graph = { p1 Connected p2                           
+                                   p1 Connected p4
+    		       p1 sortaConnected p3
+                                   p2 Connected p3
+                                   p3 sortaConnected p4 }
+    
+    ; filter direct neighbors by relationship, nodes connected to node p1 either directly or indirectly would be returned;
+    let connected-neighbors: List = neighbors(p1 Connected)  
+             
+    ; get direct neighbors ;
+    let p1Neighbors: List = neighbors(p1)        
+    
+    ; inserting a node into the ‘spg’ graph ;
+    ins(spg {p6 Connected p7})
+    
+    ; This removes the edge from A to D, and D as well if there are no more relationships associated with it (pointing to/coming from) ;
+    rem(spg {p6 Connected p7})
+    
+    ; This removes the Node D and all edges associated with it (pointing to/coming from) ;
+    rem(spg D)
 
 
+### Depth-first search comparison n2n vs. Java
 
+#### n2n
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Depth-first search comparison n2n vs. Java
-
-n2n
-
-addField(Node, visited: Boolean) ; Node now has a boolean field called visited; 
-
-fn visited(n: Node) -> void { n.visited = true }
-
-fn visitAllNodes(g: Graph, n: Node) -> void {
-	if (! n.visited) { 
-visited(n)
-each(neighbors(n), { node in visitAllNodes(g, node) })
-}
-}
-
-; Dollar sign indicates start of main method ;
-$
-	let node1: Node = node(Visited)
-	let node2: Node = node(Visited)
-	let node3: Node = node(Visited)
-let g:Graph = { node1 1 node2
-	           node2 2 node1
-           node3 3 node1 }
-dfs(g, node1)
-Java
-
-import java.util.ArrayList;
-import java.util.List;
-
-class Main {
-    private static class Node {
-        private boolean visited;
-        private List<Node> neighbors;
-
-        public Node() {
-            this.visited = false;
-            this.neighbors = new ArrayList<Node>();
-        }
-
-        public boolean isVisited() {
-            return this.visited;
-        }
-        public void setVisited(boolean visited){
-            this.visited = visited;
-        }
-
-        public void addNeighbor(Node node){
-            this.neighbors.add(node);
-        }
-
-        public List<Node> getNeighbors() {
-            return this.neighbors;
+    addField(Node, visited: Boolean) ; Node now has a boolean field called visited; 
+    
+    fn visited(n: Node) -> void { n.visited = true }
+    
+    fn visitAllNodes(g: Graph, n: Node) -> void {
+    	if (! n.visited) { 
+            visited(n)
+            each(neighbors(n), { node in visitAllNodes(g, node) })
         }
     }
+    
+    ; Dollar sign indicates start of main method ;
+    $
+    	let node1: Node = node(Visited)
+    	let node2: Node = node(Visited)
+    	let node3: Node = node(Visited)
+        let g:Graph = { node1 1 node2
+                        node2 2 node1
+                        node3 3 node1 }
+        dfs(g, node1)
 
-    private static class Graph {
-        List<Node> nodes;
-        public Graph() {
-            this.nodes = new ArrayList<Node>();
-        }
+#### Java
 
-        public Graph(List<Node> nodes) {
-            this();
-            for(Node node : nodes) {
-                this.nodes.add(node);
+    import java.util.ArrayList;
+    import java.util.List;
+
+    class Main {
+        private static class Node {
+            private boolean visited;
+            private List<Node> neighbors;
+
+            public Node() {
+                this.visited = false;
+                this.neighbors = new ArrayList<Node>();
+            }
+
+            public boolean isVisited() {
+                return this.visited;
+            }
+            public void setVisited(boolean visited){
+                this.visited = visited;
+            }
+
+            public void addNeighbor(Node node){
+                this.neighbors.add(node);
+            }
+
+            public List<Node> getNeighbors() {
+                return this.neighbors;
             }
         }
 
-        public Node getFirst() throws Exception {
-            if (nodes.isEmpty()) {
-                throw new Exception();
-            } else {
-                return nodes.get(0);
+        private static class Graph {
+            List<Node> nodes;
+            public Graph() {
+                this.nodes = new ArrayList<Node>();
+            }
+
+            public Graph(List<Node> nodes) {
+                this();
+                for(Node node : nodes) {
+                    this.nodes.add(node);
+                }
+            }
+
+            public Node getFirst() throws Exception {
+                if (nodes.isEmpty()) {
+                    throw new Exception();
+                } else {
+                    return nodes.get(0);
+                }
             }
         }
-    }
 
-    public static void main(String[] args) throws Exception {
-        Node n1 = new Node();
-        Node n2 = new Node();
-        n2.addNeighbor(n1);
-        n1.addNeighbor(n2);
-        List<Node> nodes = new ArrayList<Node>();
-        nodes.add(n1);
-        nodes.add(n2);
-        Graph g = new Graph(nodes);
-        dfs(g, g.getFirst());
-        System.out.println("Done");
-    }
-
-    public static void visitAllNodes(Graph g, Node n) {
-        if(n.isVisited()) {
-            return;
-        }
-        n.setVisited(true);
-        for (Node node : n.getNeighbors()) {
-            dfs(g, node);
+        public static void main(String[] args) throws Exception {
+            Node n1 = new Node();
+            Node n2 = new Node();
+            n2.addNeighbor(n1);
+            n1.addNeighbor(n2);
+            List<Node> nodes = new ArrayList<Node>();
+            nodes.add(n1);
+            nodes.add(n2);
+            Graph g = new Graph(nodes);
+            dfs(g, g.getFirst());
+            System.out.println("Done");
         }
 
+        public static void visitAllNodes(Graph g, Node n) {
+            if(n.isVisited()) {
+                return;
+            }
+            n.setVisited(true);
+            for (Node node : n.getNeighbors()) {
+                dfs(g, node);
+            }
+
+        }
     }
-}
 
