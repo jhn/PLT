@@ -1,59 +1,94 @@
-{open Parser}
+{ 
+	open Parser 
+	exception LexError of string
 
-rule token  = 
-    parse
-   | '('        { LPAREN }
-   | ')'        { RPAREN }
-| '{'        { LBRACE }
-| '}'        { RBRACE }
-| ']'        { RBRACKET }
-| '['        { LBRACKET }
-| ';'        { SEMI }
-| ','        { COMMA }
-| '+'        { PLUS }
-| '-'        { MINUS }
-| "--"       { POP }
-| '*'        { TIMES }
-| "mod"      { MOD } 
-| '/'        { DIVIDE }
-| '='        { ASSIGN }
-| "=="       { EQ }
-| "!="       { NEQ }
-| '<'        { LT }
-| "<="       { LEQ }
-| ">"        { GT }
-| ">="       { GEQ }
-| "if"       { IF }
-| "else"     { ELSE }
-| "for"      { FOR }
-| "while"    { WHILE }
-| "return"   { RETURN }
-| "int"      { INT }
-| "float"    { FLOAT }  
-| "string"   { STRING }
-| "bool"     { BOOL } 
-| "tree"     { TREE } 
-| "break"    { BREAK }
-| "continue" { CONTINUE }
-| "null"     { NULL } 
-| "char"         { CHAR }
-| "!"            { NOT } 
-| "&&"           { AND }
-| "||"           { OR } 
-| '@'        { AT }
-| '%'            { CHILD }
-| digit+ as lxm                                 { INT_LITERAL(int_of_string lxm)
+	let verify_escape s =
+		if String.length s = 1 then (String.get s 0)
+		else 
+		match s with
+		   "\\n" -> '\n'
+		 | "\\t" -> '\t'
+		 | "\\\\" -> '\\'
+		 | c -> raise (Failure("unsupported character " ^ c))
 }
-| decimal as lxm                                { FLOAT_LITERAL(float_of_string
-lxm) }
-| '\"' ([^'\"']* as lxm) '\"'   { STRING_LITERAL(lxm) }
-| '\'' ([^'\'']* as lxm ) '\''  { CHAR_LITERAL((verify_escape lxm)) }
-| ("true" | "false") as lxm             { BOOL_LITERAL(bool_of_string lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
-| eof { EOF }
-| _ as char { raise (Failure("illegal character " ^ Char.escaped char))
-rule token = 
-       
-    | ['0'-'9']+ as lit         { LITERAL(int_of_string lit) }
-    | '$'['0'-'9'] as lit       { VARIABLE(int_of_char lit.[1] - 48) }
-    | eof                       { EOF }
+
+(* Regular Definitions *)
+
+let digit = ['0'-'9']
+let decimal = ((digit+ '.' digit*) | ('.' digit+))
+
+(* Regular Rules *)
+
+(* 
+ * built-in functions handled as keywords in semantic checking
+ * print, root, degree
+ *)
+
+rule token = parse
+	  [' ' '\t' '\n'] { token lexbuf }
+	 | '\r'       { Termination } (* terminate the code*)
+	 | ';'       { block_comment lexbuf } (* block comment*)
+	 | '('        { LPAREN }
+	 | ')'        { RPAREN }
+	 | '{'        { LBRACE }
+	 | '}'        { RBRACE }
+	 | ']'        { RBRACKET }
+	 | '['        { LBRACKET }
+	 | '+'        { PLUS }
+	 | '-'        { MINUS }
+	 | '*'        { TIMES }
+	 | '/'        { DIVIDE }
+	 | '='        { ASSIGN }
+	 | "=="       { EQ }
+	 | "!="       { NEQ }
+	 | '<'        { LT }
+	 | "<="       { LEQ }
+	 | ">"        { GT }
+	 | ">="       { GEQ }
+	 | ':'        { INDICATOR}
+	 | "if"       { IF }
+	 | "else"     { ELSE }
+	 | "each"    { EACH }
+	 | "return"   { RETURN }
+	 | "fn"		  { FUNCTION}
+	 | "let"	  { IND_ASS }
+	 | "node"	  { CRE_NODE}
+	 | "rel"	  { RELATIONSHIP}
+	 | "ins"	  { INSERT}
+	 | "rem"	  { REMOVE}
+	 | "neighbors"	  { NEIGHBORS }
+	 | "addField"	  { ADDFIELD}
+	 | "map"	  { MAP }
+	 | "reduce"	  { REDUCE }
+	 | "filter"	  { FILTER }
+	 | "Node"	  { NODE }	 
+	 | "Int"       { INT }
+	 | "Double"    { DOUBLE }	
+	 | "String"   { STRING }
+	 | "Bool"     { BOOL }
+	 | "true"     { TRUE }
+	 | "false"     { FALSE }
+	 | "Data"     { DATA } 
+	 | "null"     { NULL }
+ 	 | "void"	  { VOID } 
+	 | "!"		 { NOT } 
+	 | "&&"		 { AND }
+	 | "||"		 { OR }	
+	 | digit+ as lit 				{ INT_LITERAL(int_of_string lit) }
+	 | decimal as lit 				{ FLOAT_LITERAL(float_of_string lit) }
+	 | '\"' ([^'\"']* as lit) '\"'   { STRING_LITERAL(lit) }
+	 | '\'' ([^'\'']* as lit ) '\'' 	{ CHAR_LITERAL((verify_escape lit)) }
+	 | ("true" | "false") as lit		{ BOOL_LITERAL(bool_of_string lit) }
+	 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }
+	 | eof { EOF }
+	 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+
+and block_comment = parse
+  ";" { token lexbuf }
+| eof  { raise (LexError("unterminated block_comment!")) }
+| _    { block_comment lexbuf }
+
+(*
+and line_comment = parse
+| ['\n' '\r'] { token lexbuf }
+| _           { line_comment lexbuf }*)
