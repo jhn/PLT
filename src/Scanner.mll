@@ -9,6 +9,7 @@
 		   "\\n" -> '\n'
 		 | "\\t" -> '\t'
 		 | "\\\\" -> '\\'
+		 | "\"" ->  '"'
 		 | c -> raise (Failure("unsupported character " ^ c))
 }
 
@@ -26,60 +27,58 @@ let decimal = ((digit+ '.' digit*) | ('.' digit+))
 
 rule token = parse
 	  [' ' '\t' '\n'] { token lexbuf }
-	 | '\r'       { Termination } (* terminate the code*)
-	 | ';'       { block_comment lexbuf } (* block comment*)
-	 | '('        { LPAREN }
-	 | ')'        { RPAREN }
-	 | '{'        { LBRACE }
-	 | '}'        { RBRACE }
-	 | ']'        { RBRACKET }
-	 | '['        { LBRACKET }
-	 | '+'        { PLUS }
-	 | '-'        { MINUS }
-	 | '*'        { TIMES }
-	 | '/'        { DIVIDE }
-	 | '='        { ASSIGN }
-	 | "=="       { EQ }
-	 | "!="       { NEQ }
-	 | '<'        { LT }
-	 | "<="       { LEQ }
-	 | ">"        { GT }
-	 | ">="       { GEQ }
-	 | ':'        { INDICATOR}
-	 | "if"       { IF }
-	 | "else"     { ELSE }
-	 | "each"    { EACH }
-	 | "return"   { RETURN }
-	 | "fn"		  { FUNCTION}
-	 | "let"	  { IND_ASS }
-	 | "node"	  { CRE_NODE}
-	 | "rel"	  { RELATIONSHIP}
-	 | "ins"	  { INSERT}
-	 | "rem"	  { REMOVE}
-	 | "neighbors"	  { NEIGHBORS }
-	 | "addField"	  { ADDFIELD}
-	 | "map"	  { MAP }
-	 | "reduce"	  { REDUCE }
-	 | "filter"	  { FILTER }
-	 | "Node"	  { NODE }	 
-	 | "Int"       { INT }
-	 | "Double"    { DOUBLE }	
-	 | "String"   { STRING }
-	 | "Bool"     { BOOL }
-	 | "true"     { TRUE }
-	 | "false"     { FALSE }
-	 | "Data"     { DATA } 
-	 | "null"     { NULL }
- 	 | "void"	  { VOID } 
-	 | "!"		 { NOT } 
-	 | "&&"		 { AND }
-	 | "||"		 { OR }	
-	 | digit+ as lit 				{ INT_LITERAL(int_of_string lit) }
-	 | decimal as lit 				{ FLOAT_LITERAL(float_of_string lit) }
-	 | '\"' ([^'\"']* as lit) '\"'   { STRING_LITERAL(lit) }
-	 | '\'' ([^'\'']* as lit ) '\'' 	{ CHAR_LITERAL((verify_escape lit)) }
-	 | ("true" | "false") as lit		{ BOOL_LITERAL(bool_of_string lit) }
-	 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }
+	 | '\r'      											  { Termination } (* terminate the code*)
+	 | ';'       											  { block_comment lexbuf } (* block comment*)
+	 | '('       											  { LPAREN }
+	 | ')'       											  { RPAREN }
+	 | '{'       											  { LBRACE }
+	 | '}'       											  { RBRACE }
+	 | ']'       											  { RBRACKET }
+	 | '['       											  { LBRACKET }
+	 | '+'       											  { PLUS }
+	 | '-'       											  { MINUS }
+	 | '*'       											  { TIMES }
+	 | '/'       											  { DIVIDE }
+	 | '='       											  { ASSIGN }
+	 | "=="      											  { EQ }
+	 | "!="      											  { NEQ }
+	 | '<'       											  { LT }
+	 | "<="      											  { LEQ }
+	 | ">"       											  { GT }
+	 | ">="      											  { GEQ }
+	 | ","													  { COMMA }  (*For sequence*)
+	 | ':'       											  { INDICATOR}
+	 | "if"      											  { IF }
+	 | "else"    											  { ELSE }
+	 | "each"    											  { EACH }
+	 | "return"  											  { RETURN }
+	 | "fn"		 											  { FUNCTION}
+	 | "let"	 											  { IND_ASS }
+	 | "node"	 											  { CRE_NODE}
+	 | "rel"	 											  { RELATIONSHIP}
+	 | "ins"	 											  { INSERT}
+	 | "rem"	 											  { REMOVE}
+	 | "neighbors"	  									      { NEIGHBORS }
+	 | "addField"											  { ADDFIELD}
+	 | "map"	 											  { MAP }
+	 | "reduce"	 									   		  { REDUCE }
+	 | "filter"	 											  { FILTER }
+	 | "Node"	 											  { NODE }	 
+	 | "Int"     											  { INT }
+	 | "Double"  											  { DOUBLE }	
+	 | "String"  											  { STRING }
+	 | "Bool"    											  { BOOL }
+	 | "Data"    											  { DATA } 
+	 | "null"    											  { NULL }
+ 	 | "void"	 											  { VOID } 
+	 | "!"		 											  { NOT } 
+	 | "&&"		 											  { AND }
+	 | "||"		 											  { OR }	
+	 | digit+ as lit 										  { INT_LITERAL(int_of_string lit) }
+	 | decimal as lit 										  { FLOAT_LITERAL(float_of_string lit) }
+	 | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(verify_escape lit) }
+	 | ("true" | "false") as lit							  { BOOL_LITERAL(bool_of_string lit) }
+	 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }  (*every ID should start with a letter*)
 	 | eof { EOF }
 	 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
