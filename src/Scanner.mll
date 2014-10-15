@@ -27,7 +27,7 @@ let decimal = ((digit+ '.' digit*) | ('.' digit+))
 
 rule token = parse
 	  [' ' '\t' '\n'] { token lexbuf }
-	 | '\r'      											  { Termination } (* terminate the code*)
+	 | '\r'      											  { TERMINATION } (* terminate the code*)
 	 | ';'       											  { block_comment lexbuf } (* block comment*)
 	 | '('       											  { LPAREN }
 	 | ')'       											  { RPAREN }
@@ -47,6 +47,7 @@ rule token = parse
 	 | ">"       											  { GT }
 	 | ">="      											  { GEQ }
 	 | ","													  { COMMA }  (*For sequence*)
+	 | "->"													  { ARROW }
 	 | ':'       											  { INDICATOR}
 	 | "if"      											  { IF }
 	 | "else"    											  { ELSE }
