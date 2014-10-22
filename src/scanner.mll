@@ -41,7 +41,7 @@ rule token = parse
    | ';'                     { SEMI }
    | ':'                     { COLON }
    | ","                     { COMMA }
-   | '='                     { EQUALS }
+   | '='                     { ASSIGN }
    | "->"                    { ARROW }
    | "^"                     { CONCAT }
    | "."                     { ACCESS }
@@ -70,8 +70,10 @@ rule token = parse
 
    | "let"                   { LET }
 
-   | "ins"                   { INSERT}
-   | "rem"                   { REMOVE}
+   | "^+"                    { GRAPH_INSERT }
+   | "^-"                    { GRAPH_REMOVE }
+   | "[+]"                   { DATA_INSERT }
+   | "[-]"                   { DATA_REMOVE }
    | "neighbors"             { NEIGHBORS }
 
    | "Graph"                 { GRAPH }
