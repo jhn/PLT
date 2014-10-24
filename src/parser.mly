@@ -1,11 +1,11 @@
-%{ open Ast % }
+%{ open Ast %}
 
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 %token SEMI COMMA ASSIGN COLON ARROW CONCAT ACCESS
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
 %token IF ELIF ELSE
-%token EACH MAP REDUCE FILTER
+%token EACH MAP REDUCE FILTER IN
 %token FUNCTION RETURN
 %token LET
 %token GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE NEIGHBORS
@@ -34,7 +34,7 @@
 %%
 
 program:
- (* nothing *) { [], [] }
+ /* nothing */ { [], [] }
  | program global_variable_declaration { ($2 :: fst $1), snd $1 }
  | program function_declaration { fst $1, ($2 :: snd $1) }
 
@@ -95,6 +95,10 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
+  | EACH LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Each($3, $6,
+  $8) }
+  | FILTER LPAREN expr COMMA LBRACE ID
+  | FILTER LPARENT expr 
   | LPAREN expr RPAREN { $2 }
 
 actuals_opt:
