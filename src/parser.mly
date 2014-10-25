@@ -105,7 +105,7 @@ expr:
   | binary_operation             { $1 }
   | unary_operation              { $1 }
   | ID                           { Id($1) }
-  | ID ACCESS ID                 { Access($1, $2) }
+  | ID ACCESS ID                 { Access($1, $3) }
   | ID ASSIGN expr               { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
