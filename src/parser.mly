@@ -138,10 +138,10 @@ unary_operation:
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
 
 collection_operation:
-  | EACH LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Each($3, $6,
-  $8) }
-  | FILTER LPAREN expr COMMA LBRACE ID
-  | FILTER LPARENT expr 
+  | EACH   LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Each($3, $6, $8) }
+  | FILTER LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Filter($3, $6, $8) }
+  | MAP    LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map($3, $6, $8) }
+  | REDUCE LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Reduce($3, $6, $8) }
 
 actuals_opt:
   | /* nothing */ { [] }
