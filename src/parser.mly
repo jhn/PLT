@@ -36,12 +36,12 @@
 %%
 
 program:
- | /* nothing */ { [], [] }
- | program variable_declarations { ($2 :: fst $1), snd $1 }
- | program function_declaration { fst $1, ($2 :: snd $1) }
+ | /* nothing */                  { [], [] }
+ | program global_var_declaration { ($2 :: fst $1), snd $1 }
+ | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW type_spec LBRACE variable_declarations statements RBRACE
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE var_declarations statements RBRACE
      {
        { fname = $2;
          formals = $4;
@@ -82,23 +82,26 @@ formal_list:
 parameter:
   | ID COLON type_spec { ($3, $1) }
 
-variable_declarations:
-  | /* nothing */    { [] }
-  | variable_declarations variable_declaration { $2 :: $1 }
+var_declarations:
+  | /* nothing */                                { [] }
+  | var_declarations var_declaration TERMINATION { $2 :: $1 }
 
-variable_declaration:
-  | LET ID COLON type_spec ASSIGN expr { $2 }
+var_declaration:
+  | LET ID COLON type_spec ASSIGN expr TERMINATION { $2 }
+
+global_var_declaration:
+  | var_declaration TERMINATION { $1 }
 
 statements:
-  | /* nothing */  { [] }
+  | /* nothing */        { [] }
   | statements statement { $2 :: $1 }
 
 statement:
-  | expr { Expr($1) }
-  | RETURN expr { Return($2) }
-  | LBRACE statements RBRACE { Block(List.rev $2) }
-  | IF LPAREN expr RPAREN statement %prec NOELSE { If($3, $5, Block([])) }
-  | IF LPAREN expr RPAREN statement ELSE statement    { If($3, $5, $7) }
+  | expr TERMINATION                               { Expr($1) }
+  | RETURN expr TERMINATION                        { Return($2) }
+  | LBRACE statements RBRACE                       { Block(List.rev $2) }
+  | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
+  | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
   | literal                      { $1 }
