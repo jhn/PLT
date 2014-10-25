@@ -69,6 +69,7 @@ rule token = parse
    | "return"                { RETURN }
 
    | "let"                   { LET }
+   | "in"                    { IN }
 
    | "^+"                    { GRAPH_INSERT }
    | "^-"                    { GRAPH_REMOVE }
