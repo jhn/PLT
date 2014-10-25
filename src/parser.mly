@@ -52,7 +52,22 @@ formal_parameters:
   | formal_list   { List.rev $1 }
 
 parameter:
-  ID COLON TYPE { $1 }
+  ID COLON type_spec { $1 }
+
+type_spec:
+    INT       { "Int" }
+    | STRING  { "String" }
+    | DOUBLE  { "Double" }
+    | BOOL    { "Bool" }
+    | GRAPH   { "Graph" }
+    | NODE    { "Node" }
+    | data_name { $1 } (* Need to see if the particular Data type exists *)
+    | REL     { "Rel" }
+    | VOID    { "Void" }
+
+
+data_name:
+    ID        { datatype($1) }
 
 formal_list:
     parameter                   { [$1] }
@@ -63,7 +78,7 @@ variable_declarations:
   | variable_declarations variable_declaration { $2 :: $1 }
 
 variable_declaration:
-   LET ID COLON TYPE ASSIGN EXPR { $2 }
+   LET ID COLON type_spec ASSIGN expr { $2 }
 
 statements:
     /* nothing */  { [] }
@@ -81,7 +96,10 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    LITERAL          { Literal($1) }
+    INT_LITERAL      { Int($1) }
+  | STRING_LITERAL   { String($1) }
+  | FLOAT_LITERAL    { Float($1) }
+  | BOOL_LITERAL     { Bool($1) }
   | ID               { Id($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
