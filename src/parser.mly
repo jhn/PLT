@@ -1,4 +1,6 @@
-%{ open Ast % }
+%{
+   open Ast
+%}
 
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 %token SEMI COMMA ASSIGN COLON ARROW CONCAT ACCESS
@@ -99,29 +101,47 @@ statement:
   | IF LPAREN expr RPAREN statement ELSE statement    { If($3, $5, $7) }
 
 expr:
-  | INT_LITERAL      { Int($1) }
-  | STRING_LITERAL   { String($1) }
-  | FLOAT_LITERAL    { Float($1) }
-  | BOOL_LITERAL     { Bool($1) }
-  | ID               { Id($1) }
-  | expr PLUS   expr { Binop($1, Add,   $3) }
-  | expr MINUS  expr { Binop($1, Sub,   $3) }
-  | expr TIMES  expr { Binop($1, Mult,  $3) }
-  | expr DIVIDE expr { Binop($1, Div,   $3) }
-  | expr EQ     expr { Binop($1, Equal, $3) }
-  | expr NEQ    expr { Binop($1, Neq,   $3) }
-  | expr LT     expr { Binop($1, Less,  $3) }
-  | expr LEQ    expr { Binop($1, Leq,   $3) }
-  | expr GT     expr { Binop($1, Greater,  $3) }
-  | expr GEQ    expr { Binop($1, Geq,   $3) }
-  | ID ASSIGN expr   { Assign($1, $3) }
+  | literal                      { $1 }
+  | binary_operation             { $1 }
+  | unary_operation              { $1 }
+  | ID                           { Id($1) }
+  | ID ACCESS ID                 { Access($1, $2) }
+  | ID ASSIGN expr               { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
-  | EACH LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Each($3, $6, $8) }
+  | collection_operation         { $1 }
+  | LPAREN expr RPAREN           { $2 }
+
+literal:
+  | INT_LITERAL                  { Int($1) }
+  | STRING_LITERAL               { String($1) }
+  | FLOAT_LITERAL                { Float($1) }
+  | BOOL_LITERAL                 { Bool($1) }
+
+binary_operation:
+  | expr PLUS   expr             { Binop($1, Add,   $3) }
+  | expr MINUS  expr             { Binop($1, Sub,   $3) }
+  | expr TIMES  expr             { Binop($1, Mult,  $3) }
+  | expr DIVIDE expr             { Binop($1, Div,   $3) }
+  | expr MOD    expr             { Binop($1, Mod,   $3) }
+  | expr EQ     expr             { Binop($1, Equal, $3) }
+  | expr NEQ    expr             { Binop($1, Neq,   $3) }
+  | expr LT     expr             { Binop($1, Less,  $3) }
+  | expr LEQ    expr             { Binop($1, Leq,   $3) }
+  | expr GT     expr             { Binop($1, Greater,  $3) }
+  | expr GEQ    expr             { Binop($1, Geq,   $3) }
+  | expr AND    expr             { Binop($1, And, $3) }
+  | expr OR     expr             { Binop($1, Or, $3) }
+  | expr CONCAT expr             { Binop($1, Concat, $3) }
+
+unary_operation:
+  | NOT expr                     { Unop(Not, $2) }
+  | MINUS expr %prec NEG         { Unop(Neg, $2) }
+
+collection_operation:
+  | EACH LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Each($3, $6,
+  $8) }
   | FILTER LPAREN expr COMMA LBRACE ID
-  | FILTER LPARENT expr
-  | LPAREN expr RPAREN { $2 }
-  | expr CONCAT expr { Binop($1, Concat, $3) }
-  | ID ACCESS ID { Access($1, $2) }
+  | FILTER LPARENT expr 
 
 actuals_opt:
   | /* nothing */ { [] }
