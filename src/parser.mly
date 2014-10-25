@@ -35,7 +35,7 @@
 
 program:
  | /* nothing */ { [], [] }
- | program global_variable_declaration { ($2 :: fst $1), snd $1 }
+ | program variable_declarations { ($2 :: fst $1), snd $1 }
  | program function_declaration { fst $1, ($2 :: snd $1) }
 
 function_declaration:
@@ -49,33 +49,36 @@ function_declaration:
        }
      }
 
-formal_parameters:
-  | /* nothing */ { [] }
-  | formal_list   { List.rev $1 }
-
-parameter:
-  | ID COLON type_spec { $1 }
-
 return_type:
   | type_spec { $1 }
+  | VOID      { "Void" }
 
 type_spec:
+  | primitive_type { $1 }
+  | complex_type   { $1 }
+
+primitive_type:
   | INT       { "Int" }
   | STRING    { "String" }
   | DOUBLE    { "Double" }
   | BOOL      { "Bool" }
+
+complex_type:
   | GRAPH     { "Graph" }
   | NODE      { "Node" }
-  | data_name { $1 } (* Need to see if the particular Data type exists *)
   | REL       { "Rel" }
-  | VOID      { "Void" }
+  | DATA      { "Data" }
 
-data_name:
-  | ID        { datatype($1) }
+formal_parameters:
+  | /* nothing */ { [] }
+  | formal_list   { List.rev $1 }
 
 formal_list:
   | parameter                   { [$1] }
   | formal_list COMMA parameter { $3 :: $1 }
+
+parameter:
+  | ID COLON type_spec { ($3, $1) }
 
 variable_declarations:
   | /* nothing */    { [] }
@@ -117,6 +120,8 @@ expr:
   | FILTER LPAREN expr COMMA LBRACE ID
   | FILTER LPARENT expr
   | LPAREN expr RPAREN { $2 }
+  | expr CONCAT expr { Binop($1, Concat, $3) }
+  | ID ACCESS ID { Access($1, $2) }
 
 actuals_opt:
   | /* nothing */ { [] }
