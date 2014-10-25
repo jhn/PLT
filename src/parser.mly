@@ -25,10 +25,10 @@
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
+%left CONCAT
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
 %left NEG NOT
-%left CONCAT ACCESS
 
 %start program
 %type <Ast.program> program
