@@ -13,14 +13,14 @@ type stmt =
   | Expr of expr
   | Return of expr
   | If of expr * stmt * stmt
-  | For of expr * expr * expr * stmt
-  | While of expr * stmt
+
 
 type func_decl = {
     fname : string;
     formals : string list;
     locals : string list;
     body : stmt list;
+    return_type : string;
   }
 
 type program = string list * func_decl list

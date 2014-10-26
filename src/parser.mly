@@ -80,14 +80,17 @@ formal_list:
   | formal_list COMMA parameter { $3 :: $1 }
 
 parameter:
-  | ID COLON type_spec { ($3, $1) }
+  | ID COLON type_spec { ($3, $1) } /*We followed this (type, ID) pattern*/
 
 var_declarations:
   | /* nothing */                                { [] }
   | var_declarations var_declaration TERMINATION { $2 :: $1 }
 
 var_declaration:
-  | LET ID COLON type_spec ASSIGN expr TERMINATION { $2 }
+  | LET ID COLON primitive_type TERMINATION { ($4, $2) }
+  | LET ID COLON complex_type LBRACE /*primitive datatype*/ RBRACE TERMINATION { ($4, $2) }
+  /*Do we really want to do this, this means we are always initializing when
+  defining new vars*/
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -105,6 +108,7 @@ statement:
 
 expr:
   | literal                      { $1 }
+  | complex_literal              { $1 }
   | binary_operation             { $1 }
   | unary_operation              { $1 }
   | ID                           { Id($1) }
@@ -119,6 +123,14 @@ literal:
   | STRING_LITERAL               { String($1) }
   | FLOAT_LITERAL                { Float($1) }
   | BOOL_LITERAL                 { Bool($1) }
+  /*Do we need NULL or not*/
+
+complex_literal:
+  | INT_LITERAL                  { Int($1) }
+  | INT_LITERAL                  { Int($1) }
+  | INT_LITERAL                  { Int($1) }
+  | INT_LITERAL                  { Int($1) }
+  /*Need to come up with the structure of the complex_literal*/
 
 binary_operation:
   | expr PLUS   expr             { Binop($1, Add,   $3) }
