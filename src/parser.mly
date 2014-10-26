@@ -69,7 +69,11 @@ complex_type:
   | GRAPH     { "Graph" }
   | NODE      { "Node" }
   | REL       { "Rel" }
-  | DATA      { "Data" }
+  | data_spec { $1 }
+
+data_spec:
+    DATA      { "Data" }
+    | ID        { DataSpec($1) }  /*Could be the name of a Data type defintion*/
 
 formal_parameters:
   | /* nothing */ { [] }
@@ -88,9 +92,7 @@ var_declarations:
 
 var_declaration:
   | LET ID COLON primitive_type TERMINATION { ($4, $2) }
-  | LET ID COLON complex_type LBRACE /*primitive datatype*/ RBRACE TERMINATION { ($4, $2) }
-  /*Do we really want to do this, this means we are always initializing when
-  defining new vars*/
+  | LET ID COLON complex_type TERMINATION { ($4, $2) }
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -126,11 +128,21 @@ literal:
   /*Do we need NULL or not*/
 
 complex_literal:
-  | INT_LITERAL                  { Int($1) }
-  | INT_LITERAL                  { Int($1) }
-  | INT_LITERAL                  { Int($1) }
-  | INT_LITERAL                  { Int($1) }
-  /*Need to come up with the structure of the complex_literal*/
+  | LBRACKET expr ID LPAREN formal_list RPAREN expr RBRACKET TERMINATION    { Rel($2,
+  $3, $5, $7) } /* Rel Literal, of form [node1 rel:(coolness:Data,
+  other_field:Boolean) node2] */
+  | LBRACKET formal_list RBRACKET TERMINATION                  { Node($2) } /*node literal,
+  of form let node:Node = [some_data_fields] */
+/*  | statement                  { Graph($1) } THIS ONE ISN'T DONE */
+  | LBRACE data_fields_opt RBRACE                 { List.rev $2 }
+
+data_fields_opt:
+    /*nothing*/         { [] }
+    | data_fields       { $1 }
+
+data_fields:
+    parameter TERMINATION          { [$1] }
+    | data_fields parameter TERMINATION         { $2 :: $1 }
 
 binary_operation:
   | expr PLUS   expr             { Binop($1, Add,   $3) }
@@ -147,6 +159,10 @@ binary_operation:
   | expr AND    expr             { Binop($1, And, $3) }
   | expr OR     expr             { Binop($1, Or, $3) }
   | expr CONCAT expr             { Binop($1, Concat, $3) }
+  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
+  | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
+  | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
+  | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
