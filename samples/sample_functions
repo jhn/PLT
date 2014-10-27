@@ -1,6 +1,6 @@
 
 ;Assumes standard graph with nodes and edges with positive integer weights between them in
-edges with "distance field" of type int;
+edges with "distance" field of type int;
 
 fn dijkstra_insert_help_fields(node:Node)->Void{
 	let visited:Boolean = false
@@ -11,33 +11,46 @@ fn dijkstra_insert_help_fields(node:Node)->Void{
 
 fn dijkstra_get_min_distance_node(graph:Graph)->Node{
 	let min_distance:Int = -1
-	let node_to_return:Node
-	graph.find_many([visited = false]).each(node in
-		{ if(node.distance != -1){
-			minDistance = node.distance
-			
+	let node_to_return:Node = null
+	each(graph.find_many([visited = false]), {node in
+		{ if(node.distance != -1 && min_distance != -1){
+			min_distance = node.distance
+		  } else {
+			if (node.distance < min_distance){
+				min_distance = node.distance
+				node_to_return  = node
+			}
 		  }
-		})
+		}})
 	return node_to_return
 }
 
 fn dijkstra_get_edge_weight(node_start:Node, node_end:Node)->Int{
-	in
+	let edge_weight:Int = get_rel_data(node, distance, node)
+	return edge_weight
+}
 
 fn dijkstra_does_work(node:Node, graph:Graph)->Graph{
 	if(node == Null){
 		return graph
 	}
 	let base_distance:Int = node.distance
-	graph.find_many(node, distance).each(neighbor_node in {
-		let possible_new_distance:Int = node.distance + base_distance
-		if(node.distance
-	
+	each(graph.find_many(node, distance), {neighbor_node in 
+		{ 
+		   let possible_new_distance:Int = base_distance + dijkstra_get_min_distance(node, neighbor_node)
+		   if(possible_new_distance < node.distance){
+			node.distance = possible_new_distance
+		   }
+		}})
+	node.visited = true;
+	let next_node:Node = dijkstra_get_min_distance_node(graph)
+	return dijkstra_does_work(next_node, graph)
 }
 	
 fn dijkstra_main(node_distance_from:Node, graph:Graph)->Graph{
 	graph.each(node in dijkstra_insert_help_fields(node))
 	node.distance_to = 0;
-	
+	return dijkstra_does_work(node_distance_from, graph)
+}
 	
 	
