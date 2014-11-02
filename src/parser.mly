@@ -7,9 +7,8 @@
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
 %token IF ELIF ELSE
-%token EACH MAP REDUCE FILTER IN
+%token EACH MAP REDUCE FILTER IN FINDMANY
 %token FUNCTION RETURN
-%token LET
 %token GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE NEIGHBORS
 %token GRAPH REL NODE INT DOUBLE STRING BOOL DATA NULL VOID
 %token <int> INT_LITERAL
@@ -70,11 +69,12 @@ complex_type:
   | GRAPH     { "Graph" }
   | NODE      { "Node" }
   | REL       { "Rel" }
-  | data_spec      { $1 }
- 
+  | data_spec { $1 }
+
 data_spec:
     DATA      { "Data" }
     | ID      { $1 }
+ 
 
 formal_parameters:
   | /* nothing */ { [] }
@@ -92,8 +92,8 @@ var_declarations:
   | var_declarations var_declaration TERMINATION { $2 :: $1 }
 
 var_declaration:
-  | LET ID COLON primitive_type TERMINATION { ($4, $2) }
-  | LET ID COLON complex_type TERMINATION { ($4, $2) }
+  | ID COLON primitive_type TERMINATION { ($3, $1) }
+  | ID COLON complex_type TERMINATION { ($3, $1) }
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -106,7 +106,6 @@ statement:
   | expr TERMINATION                               { Expr($1) }
   | RETURN expr TERMINATION                        { Return($2) }
   | LBRACE statements RBRACE                       { Block(List.rev $2) }
-  | ID LBRACE statements RBRACE                    { DataBlock($1, List.rev $3) }
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
@@ -122,6 +121,10 @@ expr:
   | collection_operation         { $1 }
   | LPAREN expr RPAREN           { $2 }
 
+expr_list:
+    /*nothing*/                 { [] }
+    | expr_list COMMA expr      { $3 :: $1 }
+
 literal:
   | INT_LITERAL                  { Int($1) }
   | STRING_LITERAL               { String($1) }
@@ -130,21 +133,18 @@ literal:
   /*Do we need NULL or not*/
 
 complex_literal:
-  | LBRACKET expr ID LPAREN formal_list RPAREN expr RBRACKET    { Rel($2,
-  $3, $5, $7) } /* Rel Literal, of form [node1 rel:(coolness:Data,
-  other_field:Boolean) node2] */
-
-  | LBRACKET statement RBRACKET                 { Node($2) } /*node literal,
-  of form let node:Node = [some_data_fields] */
-/*  | statement                  { Graph($1) } THIS ONE ISN'T DONE */
-  | LBRACE data_fields_opt RBRACE                 { List.rev $2 }
+  | LBRACKET expr COMMA expr COMMA expr RBRACKET    { Rel($2,
+  $4, $6) }
+  | LBRACKET expr_list RBRACKET                     { Node(List.Rev $2) }
+  | LBRACE expr_list RBRACE                         { Graph(List.Rev $2) }
+  | ID LBRACE data_fields_opt RBRACE                { Data($1, List.rev $3) }
 
 data_fields_opt:
     /*nothing*/         { [] }
     | data_fields       { $1 }
 
 data_fields:
-    parameter TERMINATION          { [$1] }
+      parameter TERMINATION                         { [$1] }
     | data_fields parameter TERMINATION         { $2 :: $1 }
 
 binary_operation:
