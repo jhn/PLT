@@ -92,8 +92,8 @@ var_declarations:
   | var_declarations var_declaration TERMINATION { $2 :: $1 }
 
 var_declaration:
-  | ID COLON primitive_type TERMINATION { ($3, $1) }
-  | ID COLON complex_type TERMINATION { ($3, $1) }
+  | ID COLON primitive_type { ($3, $1) }
+  | ID COLON complex_type { ($3, $1) }
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -117,6 +117,7 @@ expr:
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | ID ASSIGN expr               { Assign($1, $3) }
+  | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
   | LPAREN expr RPAREN           { $2 }
