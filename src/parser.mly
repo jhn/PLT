@@ -116,7 +116,7 @@ expr:
   | unary_operation              { $1 }
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
-  | ID ASSIGN expr               { Assign($1, $3) }
+  | expr ASSIGN expr               { Assign($1, $3) }
   | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
@@ -134,11 +134,10 @@ literal:
   /*Do we need NULL or not*/
 
 complex_literal:
-  | LBRACKET expr COMMA expr COMMA expr RBRACKET    { Rel($2,
-  $4, $6) }
+  | LBRACKET expr COMMA expr COMMA expr RBRACKET    { Rel($2, $4, $6) }
   | LBRACKET expr_list RBRACKET                     { Node(List.Rev $2) }
   | LBRACE expr_list RBRACE                         { Graph(List.Rev $2) }
-  | ID LBRACE data_fields_opt RBRACE                { Data($1, List.rev $3) }
+  | LBRACE data_fields_opt RBRACE                   { Data(List.rev $2) }
 
 data_fields_opt:
     /*nothing*/         { [] }
