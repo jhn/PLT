@@ -2,7 +2,7 @@
    open Ast
 %}
 
-%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
+%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET LET
 %token SEMI TERMINATION COMMA ASSIGN COLON ARROW CONCAT ACCESS
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
@@ -92,8 +92,8 @@ var_declarations:
   | var_declarations var_declaration TERMINATION { $2 :: $1 }
 
 var_declaration:
-  | ID COLON primitive_type { ($3, $1) }
-  | ID COLON complex_type { ($3, $1) }
+  | LET ID COLON primitive_type { ($3, $1) }
+  | LET ID COLON complex_type { ($3, $1) }
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -110,17 +110,22 @@ statement:
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
-  | literal                      { $1 }
-  | complex_literal              { $1 }
+/*  | literal                      { $1 }
+  | complex_literal              { $1 }*/
   | binary_operation             { $1 }
   | unary_operation              { $1 }
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | expr ASSIGN expr               { Assign($1, $3) }
+  | expr ASSIGN literal_expr               { Assign($1, $3) }
   | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
   | LPAREN expr RPAREN           { $2 }
+
+literal_expr:
+  | literal                      { $1 }
+  | complex_literal              { $1 }
 
 expr_list:
     /*nothing*/                 { [] }
