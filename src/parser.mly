@@ -110,14 +110,14 @@ statement:
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
-/*  | literal                      { $1 }
-  | complex_literal              { $1 }*/
+  | literal                      { $1 }
+  | complex_literal              { $1 }
   | binary_operation             { $1 }
   | unary_operation              { $1 }
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | expr ASSIGN expr               { Assign($1, $3) }
-  | expr ASSIGN literal_expr               { Assign($1, $3) }
+  /*| expr ASSIGN literal_expr               { Assign($1, $3) }*/
   | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
@@ -128,9 +128,9 @@ literal_list:
   | literal                      { [$1] }
   | literal_list COMMA literal   { $3:: $1 }
 
-literal_expr:
+/*literal_expr:
   | literal                      { $1 }
-  | complex_literal              { $1 }
+  | complex_literal              { $1 }*/
 
 expr_list:
     /*nothing*/                 { [] }
@@ -149,12 +149,12 @@ graph_element:
 
 complex_literal_list:
   |                                           { [] }
-  | graph_element graph_element graph_element { [($1, $2, $3)] }
-  | complex_literal_list COMMA graph_element graph_element graph_element { [($3, $4, $5)] @ $1 }
+  | LPAREN graph_element graph_element graph_element RPAREN { [($1, $2, $3)] }
+  | complex_literal_list COMMA LPAREN graph_element graph_element graph_element RPAREN { [($4, $5, $6)] @ $1 }
 
 complex_literal:
-  | ID LPAREN literal_list RPAREN                         { Graph_element($1, List.Rev $3) }
-  | LPAREN complex_literal_list RPAREN                    { Graph(List.Rev $2) }
+  | ID LBRACKET literal_list RBRACKET                        { Graph_element($1, List.Rev $3) }
+  | LBRACKET complex_literal_list RBRACKET                    { Graph(List.Rev $2) }
 
 binary_operation:
   | expr PLUS   expr             { Binop($1, Add,   $3) }
