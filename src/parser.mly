@@ -92,8 +92,8 @@ var_declarations:
   | var_declarations var_declaration TERMINATION { $2 :: $1 }
 
 var_declaration:
-  | LET ID COLON primitive_type { ($3, $1) }
-  | LET ID COLON complex_type { ($3, $1) }
+  | LET ID COLON primitive_type { ($4, $2) }
+  | LET ID COLON complex_type { ($4, $2) }
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -123,6 +123,11 @@ expr:
   | collection_operation         { $1 }
   | LPAREN expr RPAREN           { $2 }
 
+literal_list:
+  |                              { [] }
+  | literal                      { [$1] }
+  | literal_list COMMA literal   { $3:: $1 }
+
 literal_expr:
   | literal                      { $1 }
   | complex_literal              { $1 }
@@ -138,19 +143,18 @@ literal:
   | BOOL_LITERAL                 { Bool($1) }
   /*Do we need NULL or not*/
 
+graph_element:
+  | ID                  { $1 }
+  | complex_literal                  { $1 }
+
+complex_literal_list:
+  |                                           { [] }
+  | graph_element graph_element graph_element { [($1, $2, $3)] }
+  | complex_literal_list COMMA graph_element graph_element graph_element { [($3, $4, $5)] @ $1 }
+
 complex_literal:
-  | LBRACKET expr COMMA expr COMMA expr RBRACKET    { Rel($2, $4, $6) }
-  | LBRACKET expr_list RBRACKET                     { Node(List.Rev $2) }
-  | LBRACE expr_list RBRACE                         { Graph(List.Rev $2) }
-  | LBRACE data_fields_opt RBRACE                   { Data(List.rev $2) }
-
-data_fields_opt:
-    /*nothing*/         { [] }
-    | data_fields       { $1 }
-
-data_fields:
-      parameter TERMINATION                         { [$1] }
-    | data_fields parameter TERMINATION         { $2 :: $1 }
+  | ID LPAREN literal_list RPAREN                         { Graph_element($1, List.Rev $3) }
+  | LPAREN complex_literal_list RPAREN                    { Graph(List.Rev $2) }
 
 binary_operation:
   | expr PLUS   expr             { Binop($1, Add,   $3) }
@@ -177,10 +181,7 @@ unary_operation:
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
 
 collection_operation:
-  | EACH   LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Each($3, $6, $8) }
-  | FILTER LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Filter($3, $6, $8) }
   | MAP    LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map($3, $6, $8) }
-  | REDUCE LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Reduce($3, $6, $8) }
 
 actuals_opt:
   | /* nothing */ { [] }
