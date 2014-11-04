@@ -107,7 +107,7 @@ expr:
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | expr ASSIGN expr               { Assign($1, $3) }
-  | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
+  | ID LBRACE expr_list RBRACE   { DataConstruct($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
   | LPAREN expr RPAREN           { $2 }
@@ -160,7 +160,7 @@ binary_operation:
   | expr OR     expr             { Binop($1, Or, $3) }
   | expr CONCAT expr             { Binop($1, Concat, $3) }
   | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
-  | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
+  | expr GRAPH_REMOVE expr       { Binop($1, Graph_Remove, $3) }
   | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
   | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
 
