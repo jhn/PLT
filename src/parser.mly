@@ -7,10 +7,10 @@
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
 %token IF ELIF ELSE
-%token EACH MAP REDUCE FILTER IN FINDMANY
+%token MAP IN FINDMANY
 %token FUNCTION RETURN
 %token GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE NEIGHBORS
-%token GRAPH REL NODE INT DOUBLE STRING BOOL DATA NULL VOID
+%token GRAPH REL NODE INT DOUBLE STRING BOOL NULL VOID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL ID
 %token <float> FLOAT_LITERAL
@@ -41,12 +41,11 @@ program:
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE var_declarations statements RBRACE
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE
      {
        { fname = $2;
          formals = $4;
-         locals = List.rev $9;
-         body = List.rev $10;
+         body = List.rev $9;
          return_type = $7;
        }
      }
@@ -69,12 +68,6 @@ complex_type:
   | GRAPH     { "Graph" }
   | NODE      { "Node" }
   | REL       { "Rel" }
-  | data_spec { $1 }
-
-data_spec:
-    DATA      { "Data" }
-    | ID      { $1 }
- 
 
 formal_parameters:
   | /* nothing */ { [] }
@@ -87,13 +80,9 @@ formal_list:
 parameter:
   | ID COLON type_spec { ($3, $1) } /*We followed this (type, ID) pattern*/
 
-var_declarations:
-  | /* nothing */                                { [] }
-  | var_declarations var_declaration TERMINATION { $2 :: $1 }
-
 var_declaration:
-  | LET ID COLON primitive_type { ($4, $2) }
-  | LET ID COLON complex_type { ($4, $2) }
+  | ID COLON primitive_type { ($3, $1) }
+  | ID COLON complex_type { ($3, $1) }
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
@@ -105,6 +94,7 @@ statements:
 statement:
   | expr TERMINATION                               { Expr($1) }
   | RETURN expr TERMINATION                        { Return($2) }
+  | var_declaration TERMINATION                    { $1 }
   | LBRACE statements RBRACE                       { Block(List.rev $2) }
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
@@ -117,7 +107,6 @@ expr:
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | expr ASSIGN expr               { Assign($1, $3) }
-  /*| expr ASSIGN literal_expr               { Assign($1, $3) }*/
   | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
@@ -127,10 +116,6 @@ literal_list:
   |                              { [] }
   | literal                      { [$1] }
   | literal_list COMMA literal   { $3:: $1 }
-
-/*literal_expr:
-  | literal                      { $1 }
-  | complex_literal              { $1 }*/
 
 expr_list:
     /*nothing*/                 { [] }
@@ -144,17 +129,20 @@ literal:
   /*Do we need NULL or not*/
 
 graph_element:
-  | ID                  { $1 }
-  | complex_literal                  { $1 }
+  | ID                                   { $1 }
+  | node_or_rel_literal                  { $1 }
 
 complex_literal_list:
   |                                           { [] }
-  | LPAREN graph_element graph_element graph_element RPAREN { [($1, $2, $3)] }
-  | complex_literal_list COMMA LPAREN graph_element graph_element graph_element RPAREN { [($4, $5, $6)] @ $1 }
+  | graph_element graph_element graph_element { [($1, $2, $3)] }
+  | complex_literal_list COMMA graph_element graph_element graph_element { [($3, $4, $5)] @ $1 }
+
+node_or_rel_literal:
+  | ID LBRACKET literal_list RBRACKET          { Graph_element($1, List.Rev $3) }
 
 complex_literal:
-  | ID LBRACKET literal_list RBRACKET                        { Graph_element($1, List.Rev $3) }
-  | LBRACKET complex_literal_list RBRACKET                    { Graph(List.Rev $2) }
+  |node_or_rel_literal                  { $1 }
+  |LPAREN complex_literal_list RPAREN   { Graph(List.rev $2) }
 
 binary_operation:
   | expr PLUS   expr             { Binop($1, Add,   $3) }

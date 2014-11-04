@@ -60,15 +60,12 @@ rule token = parse
    | "elif"                  { ELIF }
    | "else"                  { ELSE }
 
-   | "each"                  { EACH }
    | "map"                   { MAP }
-   | "reduce"                { REDUCE }
-   | "filter"                { FILTER }
+   | "find_many"             { FINDMANY }
 
    | "fn"                    { FUNCTION}
    | "return"                { RETURN }
 
-   | "let"                   { LET }
    | "in"                    { IN }
 
    | "^+"                    { GRAPH_INSERT }
@@ -84,7 +81,6 @@ rule token = parse
    | "Double"                { DOUBLE }
    | "String"                { STRING }
    | "Bool"                  { BOOL }
-   | "Data"                  { DATA }
    | "Null"                  { NULL }
    | "Void"                  { VOID }
 
