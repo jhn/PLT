@@ -99,15 +99,15 @@ statement:
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
-  | literal                      { $1 }
-  | complex_literal              { $1 }
+  | literal                      { Literal($1) }
+  | complex_literal              { Complex_Literal($1) }
   | binary_operation             { $1 }
   | unary_operation              { $1 }
   | var_declaration              { $1 }
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | expr ASSIGN expr             { Assign($1, $3) }
-  | ID LBRACE formal_list RBRACE   { Contructor($1, List.rev $3) }
+  | ID LBRACE formal_list RBRACE { Contructor($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
   | find_many                    { $1 }

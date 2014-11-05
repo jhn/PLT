@@ -1,7 +1,10 @@
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
 type expr =
-    Literal of int
+    Int of int
+  | String of string
+  | Double of float
+  | 
   | Id of string
   | Binop of expr * op * expr
   | Assign of string * expr
@@ -18,7 +21,6 @@ type stmt =
 type func_decl = {
     fname : string;
     formals : string list;
-    locals : string list;
     body : stmt list;
     return_type : string;
   }
