@@ -13,7 +13,7 @@
 %token GRAPH REL NODE INT DOUBLE STRING BOOL NULL VOID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL ID
-%token <float> FLOAT_LITERAL
+%token <float> DOUBLE_LITERAL
 %token <bool> BOOL_LITERAL
 %token EOF
 
@@ -99,15 +99,15 @@ statement:
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
-  | literal                      { Literal($1) }
-  | complex_literal              { Complex_Literal($1) }
+  | literal                      { Literal($1) } /* 42, "Jerry", 4.3, true */
+  | complex_literal              { Complex_Literal($1) } 
   | binary_operation             { $1 }
   | unary_operation              { $1 }
   | var_declaration              { $1 }
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
   | expr ASSIGN expr             { Assign($1, $3) }
-  | ID LBRACE formal_list RBRACE { Contructor($1, List.rev $3) }
+  | LBRACE formal_list RBRACE    { Contructor(List.rev $2) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
   | find_many                    { $1 }
@@ -125,7 +125,7 @@ expr_list:
 literal:
   | INT_LITERAL                  { Int($1) }
   | STRING_LITERAL               { String($1) }
-  | FLOAT_LITERAL                { Float($1) }
+  | DOUBLE_LITERAL                { Double($1) }
   | BOOL_LITERAL                 { Bool($1) }
   /*Do we need NULL or not*/
 
@@ -160,7 +160,7 @@ binary_operation:
   | expr AND    expr             { Binop($1, And, $3) }
   | expr OR     expr             { Binop($1, Or, $3) }
   | expr CONCAT expr             { Binop($1, Concat, $3) }
-  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
+  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) } 
   | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
   | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
   | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
