@@ -5,7 +5,7 @@ type uop = Not | Neg
 
 type expr =
     Int of int
-  | Float of float 
+  | Double of float 
   | String of string 
   | Bool of bool 
   | Id of string
@@ -28,7 +28,6 @@ type stmt =
 type func_decl = {
     fname : string;
     formals : string list;
-    locals : string list;
     body : stmt list;
     return_type : string;
   }
