@@ -40,20 +40,6 @@ program:
  | program global_var_declaration { ($2 :: fst $1), snd $1 }
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
-function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE
-     {
-       { fname = $2;
-         formals = $4;
-         body = List.rev $9;
-         return_type = $7;
-       }
-     }
-
-return_type:
-  | type_spec { $1 }
-  | VOID      { "Void" }
-
 type_spec:
   | primitive_type { $1 }
   | complex_type   { $1 }
@@ -69,6 +55,23 @@ complex_type:
   | NODE      { "Node" }
   | REL       { "Rel" }
 
+var_declaration:
+  | ID COLON primitive_type { ($3, $1) }
+  | ID COLON complex_type { ($3, $1) }
+
+global_var_declaration:
+  | var_declaration TERMINATION { $1 }
+
+function_declaration:
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE
+     {
+       { fname = $2;
+         formals = $4;
+         body = List.rev $9;
+         return_type = $7;
+       }
+     }
+
 formal_parameters:
   | /* nothing */ { [] }
   | formal_list   { List.rev $1 }
@@ -80,12 +83,9 @@ formal_list:
 parameter:
   | ID COLON type_spec { ($3, $1) } /*We followed this (type, ID) pattern*/
 
-var_declaration:
-  | ID COLON primitive_type { ($3, $1) }
-  | ID COLON complex_type { ($3, $1) }
-
-global_var_declaration:
-  | var_declaration TERMINATION { $1 }
+return_type:
+  | type_spec { $1 }
+  | VOID      { "Void" }
 
 statements:
   | /* nothing */        { [] }
@@ -113,11 +113,6 @@ expr:
   | find_many                    { $1 }
   | LPAREN expr RPAREN           { $2 }
 
-literal_list:
-  |                              { [] }
-  | literal                      { [$1] }
-  | literal_list COMMA literal   { $3:: $1 }
-
 expr_list:
     /*nothing*/                 { [] }
     | expr_list COMMA expr      { $3 :: $1 }
@@ -129,21 +124,34 @@ literal:
   | BOOL_LITERAL                 { Bool($1) }
   /*Do we need NULL or not*/
 
-graph_element:
-  | ID                                   { $1 }
-  | node_or_rel_literal                  { $1 }
+complex_literal:
+  |node_or_rel_literal                  { $1 }
+  |LPAREN complex_literal_list RPAREN   { Graph(List.rev $2) }
 
 complex_literal_list:
   |                                           { [] }
   | graph_element graph_element graph_element { [($1, $2, $3)] }
   | complex_literal_list COMMA graph_element graph_element graph_element { [($3, $4, $5)] @ $1 }
 
+graph_element:
+  | ID                                   { $1 }
+  | node_or_rel_literal                  { $1 }
+
 node_or_rel_literal:
   | ID LBRACKET literal_list RBRACKET          { Graph_element($1, List.Rev $3) }
 
-complex_literal:
-  |node_or_rel_literal                  { $1 }
-  |LPAREN complex_literal_list RPAREN   { Graph(List.rev $2) }
+literal_list:
+  |                              { [] }
+  | literal                      { [$1] }
+  | literal_list COMMA literal   { $3:: $1 }
+
+actuals_opt:
+  | /* nothing */ { [] }
+  | actuals_list  { List.rev $1 }
+
+actuals_list:
+  | expr                    { [$1] }
+  | actuals_list COMMA expr { $3 :: $1 }
 
 binary_operation:
   | expr PLUS   expr             { Binop($1, Add,   $3) }
@@ -176,11 +184,3 @@ find_many:
   | FINDMANY LPAREN node_or_rel_literal graph_element graph_element RPAREN     { Find_Many_Pointing_From($3, $4, $5) }
   | FINDMANY LPAREN ID node_or_rel_literal RPAREN                                      { Find_Many_Pointing_To($3, $4) }
   | FINDMANY LPAREN node_or_rel_literal RPAREN                                  { Find_Many_Nodes($3) }
-
-actuals_opt:
-  | /* nothing */ { [] }
-  | actuals_list  { List.rev $1 }
-
-actuals_list:
-  | expr                    { [$1] }
-  | actuals_list COMMA expr { $3 :: $1 }
