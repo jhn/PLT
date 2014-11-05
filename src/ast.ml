@@ -10,9 +10,9 @@ type expr =
   | Bool of bool 
   | Id of string
   | Binop of expr * op * expr
-  | Assign of string * expr
+  | Assign of expr * expr
   | Call of string * expr list
-  | DataConstruct of  string * expr list
+  | Constructor of  string * expr list
   | Graph of (* *)
   | Node of (* *)
   | Rel of (* *)
@@ -23,6 +23,7 @@ type stmt =
   | Expr of expr
   | Return of expr
   | If of expr * stmt * stmt
+  | If of expr * stmt (*write both?*)
 
 
 type func_decl = {
@@ -32,11 +33,28 @@ type func_decl = {
     return_type : string;
   }
 
+type var = string * var_type;
+type var_type = 
+    primitive_type
+  | complex_type
+
+type primitive_type =
+    Int
+  | String
+  | Bool
+  | Double
+
 type complex_type =
-  Graph_element of string * expr list
+  Graph of graph_decl
+  | Graph_element of graph_elem_decl
 
 type graph_decl =
-  Graph of complex_type list (* THIS IS NOT DONE/CORRECT *)
+  Id of string
+  | Graph_element of string * expr list
+  
+  (*Graph of complex_type list *) (* THIS IS NOT DONE/CORRECT *)
+
+type graph_elem_decl = string * expr list
 
 type program = string list * func_decl list
 
