@@ -13,7 +13,7 @@
 %token GRAPH REL NODE INT DOUBLE STRING BOOL NULL VOID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL ID
-%token <float> FLOAT_LITERAL
+%token <float> DOUBLE_LITERAL
 %token <bool> BOOL_LITERAL
 %token EOF
 
@@ -56,14 +56,14 @@ complex_type:
   | REL       { "Rel" }
 
 var_declaration:
-  | ID COLON primitive_type { ($3, $1) }
-  | ID COLON complex_type { ($3, $1) }
+  | ID COLON primitive_type { ($3, $1) } /* foo: String */
+  | ID COLON complex_type { ($3, $1) }   /* foo: Node */
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
 
 function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
      {
        { fname = $2;
          formals = $4;
@@ -77,11 +77,11 @@ formal_parameters:
   | formal_list   { List.rev $1 }
 
 formal_list:
-  | parameter                   { [$1] }
-  | formal_list COMMA parameter { $3 :: $1 }
+  | parameter                   { [$1] }     /* foo: Int */
+  | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec { ($3, $1) } /*We followed this (type, ID) pattern*/
+  | ID COLON type_spec { ($3, $1) } /* foo: Int */
 
 return_type:
   | type_spec { $1 }
@@ -92,40 +92,36 @@ statements:
   | statements statement { $2 :: $1 }
 
 statement:
-  | expr TERMINATION                               { Expr($1) }
-  | RETURN expr TERMINATION                        { Return($2) }
-  | LBRACE statements RBRACE                       { Block(List.rev $2) }
+  | expr TERMINATION                               { Expr($1) } /* 1 + 2 */
+  | RETURN expr TERMINATION                        { Return($2) } /* return 1 + 2 */
+  | LBRACE statements RBRACE                       { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
-  | literal                      { Literal($1) }
-  | complex_literal              { Complex_Literal($1) }
-  | binary_operation             { $1 }
-  | unary_operation              { $1 }
-  | var_declaration              { $1 }
-  | ID                           { Id($1) }
-  | ID ACCESS ID                 { Access($1, $3) }
-  | expr ASSIGN expr               { Assign($1, $3) }
-  | ID LBRACE formal_list RBRACE { Contructor($1, List.rev $3) }
-  | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
-  | collection_operation         { $1 }
-  | find_many                    { $1 }
-  | LPAREN expr RPAREN           { $2 }
-
-expr_list:
-    /*nothing*/                 { [] }
-    | expr_list COMMA expr      { $3 :: $1 }
+  | literal                      { Literal($1) } /* 42, "Jerry", 4.3, true */
+  | complex_literal              { Complex_Literal($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
+  | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
+  | unary_operation              { $1 } /* -1 */
+  | var_declaration              { $1 } /* actor: Node, number: Int, graph_example: Graph */
+  | ID                           { Id($1) } /* actor, number, graph_example */
+  | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
+  | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
+  | LBRACE formal_list RBRACE    { Contructor(List.rev $2) } /* { name: String, age: Int} */
+  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
+  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
+  | find_many                    { $1 } /*find_many(node_literal), find_many(node_id, rel_literal), find_many(node_literal, id_or_rel_literal, id_or_node_literal) */
+  | LPAREN expr RPAREN           { $2 } /* (4 + 6) */
 
 literal:
-  | INT_LITERAL                  { Int($1) }
-  | STRING_LITERAL               { String($1) }
-  | FLOAT_LITERAL                { Float($1) }
-  | BOOL_LITERAL                 { Bool($1) }
+  | INT_LITERAL                  { Int($1) } /* 4, 3, 27 */
+  | STRING_LITERAL               { String($1) } /* "Me", "You", "Bill Clinton" */
+  | DOUBLE_LITERAL                { Double($1) } /* 4.2, 3.7, 7.4 */
+  | BOOL_LITERAL                 { Bool($1) } /* true, false */
   /*Do we need NULL or not*/
 
 complex_literal:
-  |node_or_rel_literal                  { $1 }
+  |node_or_rel_literal                  { $1 } /* actor("Keanu"), "true" */
   |LPAREN complex_literal_list RPAREN   { Graph(List.rev $2) }
 
 complex_literal_list:
@@ -138,6 +134,7 @@ graph_element:
   | node_or_rel_literal                  { $1 }
 
 node_or_rel_literal:
+  | 
   | ID LBRACKET literal_list RBRACKET          { Graph_element($1, List.Rev $3) }
 
 literal_list:
@@ -168,17 +165,14 @@ binary_operation:
   | expr AND    expr             { Binop($1, And, $3) }
   | expr OR     expr             { Binop($1, Or, $3) }
   | expr CONCAT expr             { Binop($1, Concat, $3) }
-  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
-  | expr GRAPH_REMOVE expr       { Binop($1, Graph_Remove, $3) }
+  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) } 
+  | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
   | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
   | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
-
-collection_operation:
-  | MAP    LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map($3, $6, $8) }
 
 find_many:
   | FINDMANY LPAREN node_or_rel_literal graph_element graph_element RPAREN     { Find_Many_Pointing_From($3, $4, $5) }
