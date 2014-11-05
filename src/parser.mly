@@ -94,7 +94,6 @@ statements:
 statement:
   | expr TERMINATION                               { Expr($1) }
   | RETURN expr TERMINATION                        { Return($2) }
-  | var_declaration TERMINATION                    { $1 }
   | LBRACE statements RBRACE                       { Block(List.rev $2) }
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
@@ -104,12 +103,14 @@ expr:
   | complex_literal              { $1 }
   | binary_operation             { $1 }
   | unary_operation              { $1 }
+  | var_declaration              { $1 }
   | ID                           { Id($1) }
   | ID ACCESS ID                 { Access($1, $3) }
-  | expr ASSIGN expr               { Assign($1, $3) }
-  | ID LBRACE expr_list RBRACE   { DataContruct($1, List.rev $3) }
+  | expr ASSIGN expr             { Assign($1, $3) }
+  | ID LBRACE formal_list RBRACE   { Contructor($1, List.rev $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | collection_operation         { $1 }
+  | find_many                    { $1 }
   | LPAREN expr RPAREN           { $2 }
 
 literal_list:
@@ -170,6 +171,11 @@ unary_operation:
 
 collection_operation:
   | MAP    LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map($3, $6, $8) }
+
+find_many:
+  | FINDMANY LPAREN node_or_rel_literal graph_element graph_element RPAREN     { Find_Many_Pointing_From($3, $4, $5) }
+  | FINDMANY LPAREN ID node_or_rel_literal RPAREN                                      { Find_Many_Pointing_To($3, $4) }
+  | FINDMANY LPAREN node_or_rel_literal RPAREN                                  { Find_Many_Nodes($3) }
 
 actuals_opt:
   | /* nothing */ { [] }
