@@ -56,14 +56,14 @@ complex_type:
   | REL       { "Rel" }
 
 var_declaration:
-  | ID COLON primitive_type { ($3, $1) }
-  | ID COLON complex_type { ($3, $1) }
+  | ID COLON primitive_type { ($3, $1) } /* foo: String */
+  | ID COLON complex_type { ($3, $1) }   /* foo: Node */
 
 global_var_declaration:
   | var_declaration TERMINATION { $1 }
 
 function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
      {
        { fname = $2;
          formals = $4;
@@ -77,11 +77,11 @@ formal_parameters:
   | formal_list   { List.rev $1 }
 
 formal_list:
-  | parameter                   { [$1] }
-  | formal_list COMMA parameter { $3 :: $1 }
+  | parameter                   { [$1] }     /* foo: Int */
+  | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec { ($3, $1) } /*We followed this (type, ID) pattern*/
+  | ID COLON type_spec { ($3, $1) } /* foo: Int */
 
 return_type:
   | type_spec { $1 }
@@ -92,9 +92,9 @@ statements:
   | statements statement { $2 :: $1 }
 
 statement:
-  | expr TERMINATION                               { Expr($1) }
-  | RETURN expr TERMINATION                        { Return($2) }
-  | LBRACE statements RBRACE                       { Block(List.rev $2) }
+  | expr TERMINATION                               { Expr($1) } /* 1 + 2 */
+  | RETURN expr TERMINATION                        { Return($2) } /* return 1 + 2 */
+  | LBRACE statements RBRACE                       { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
