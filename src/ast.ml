@@ -11,15 +11,18 @@ type expr =
   | Id of string
   | Binop of expr * op * expr
   | Assign of expr * expr
+  | Access of string * string
   | Call of string * expr list
   | Constructor of  string * expr list
   | Map of expr * string * statement
-  | Graph of (* *)
-  | Node of (* *)
-  | Rel of (* *)
-  | Noexpr
+  | Graph of graph_type list (*Or expr list? *)
+  | Graph_element of string * expr list (* do this one step removed? *)
 
-type graph_element = 
+(*type graph_element_type = 
+   Graph_element of string * expr list*)
+type graph_type = 
+   Id of string
+   | Graph_element of string * expr list
    
 
 type statement =
@@ -37,10 +40,13 @@ type func_decl = {
     return_type : string;
   }
 
-type var = var_type * string;
-type var_type = 
-    primitive_type
-  | complex_type
+(* Do we need these? *)
+type var_declaration = string * type_choices
+
+type type_choice = 
+| primitive_type
+| complex_type
+(* till here *)
 
 type primitive_type =
     Int
