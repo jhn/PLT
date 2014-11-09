@@ -1,3 +1,7 @@
+let fst_of_three (t, _, _) = t
+let snd_of_three (_, t, _) = t
+let thd_of_three (_, _, t) = t
+
 type op = Add | Sub | Mult | Div | Mod| Equal | Neq | Less | Leq | Greater | Geq | And | Or | Concat
           | Graph_Insert | Graph_Remove | Data_Insert | Data_Remove
 
@@ -8,8 +12,9 @@ type expr =
   | Double of float 
   | String of string 
   | Bool of bool 
+  |(*Complex literals*)
   | Id of string
-  | Var of string * type_choices 
+  | Var of string * type_choices (* ?????? *)
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of expr * expr
@@ -19,6 +24,30 @@ type expr =
   | Map of expr * string * statement
   | Graph of graph_type list (*Or expr list? *)
   | Graph_element of string * expr list (* do this one step removed? *)
+
+
+(* Do we need these? *)
+(* type var_declaration = string * type_choices
+ *)
+type return_ty =
+  | type_choice
+  | 
+
+type type_choice = 
+  | primitive_type
+  | complex_type
+(* till here *)
+
+type primitive_type =
+    Int
+  | String
+  | Bool
+  | Double
+
+type complex_type =
+  | Graph
+  | Node
+  | Rel
 
 (*type graph_element_type = 
    Graph_element of string * expr list*)
@@ -38,27 +67,8 @@ type func_decl = {
     fname : string;
     formals : string list;
     body : statement list;
-    return_type : string;
+    return_type : return_ty;
   }
-
-(* Do we need these? *)
-(* type var_declaration = string * type_choices
- *)
-type type_choice = 
-| primitive_type
-| complex_type
-(* till here *)
-
-type primitive_type =
-    Int
-  | String
-  | Bool
-  | Double
-
-type complex_type =
-  | Graph
-  | Node
-  | Rel
 
 type find_many = 
   | Find_Many_Pointing_From of string * expr list * graph_element 
@@ -132,12 +142,12 @@ let rec string_of_expr = function
 (*   | Map(e, id, statement) ->
       "map" string_of_expr e ^ "(" ^  *)
   | Graph(graph_type_l) ->
-      "("^ String.concat "," (List.map (string_of_graph_type ^ " " ^ string_of_graph_type ^ " " ^ string_of_graph_type))) ) ^ ")"
-
+      "("^ String.concat "," List.map string_of_graph_type graph_type_l  ^ ")"
+       (*Modification needed*)
   | Graph_element(id, el) ->
       string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
 
-
+let 
   
 
 
