@@ -9,17 +9,22 @@ type expr =
   | String of string 
   | Bool of bool 
   | Id of string
+  | Var of string * type_choices 
   | Binop of expr * op * expr
+  | Unop of uop * expr
   | Assign of expr * expr
+  | Access of string * string
   | Call of string * expr list
   | Constructor of  string * expr list
   | Map of expr * string * statement
-  | Graph of (* *)
-  | Node of (* *)
-  | Rel of (* *)
-  | Noexpr
+  | Graph of graph_type list (*Or expr list? *)
+  | Graph_element of string * expr list (* do this one step removed? *)
 
-type graph_element = 
+(*type graph_element_type = 
+   Graph_element of string * expr list*)
+type graph_type = 
+  | Graph_type_ID of string
+  | Graph_type of string * expr list
    
 
 type statement =
@@ -37,10 +42,13 @@ type func_decl = {
     return_type : string;
   }
 
-type var = var_type * string;
-type var_type = 
-    primitive_type
-  | complex_type
+(* Do we need these? *)
+(* type var_declaration = string * type_choices
+ *)
+type type_choice = 
+| primitive_type
+| complex_type
+(* till here *)
 
 type primitive_type =
     Int
@@ -70,4 +78,92 @@ type graph_decl =
 type graph_elem_decl = string * expr list
 
 type program = string list * func_decl list *)
+
+
+(*For semantic check*)
+let string_of_unop = function
+    Neg -> "-"
+  | Not -> "!"
+
+let string_of_binop = function
+    Add -> "+" 
+  | Sub -> "-" 
+  | Mult -> "*" 
+  | Div -> "/" 
+  | Mod -> "mod"
+  | Equal -> "==" 
+  | Neq -> "!="
+  | Less -> "<" 
+  | Leq -> "<=" 
+  | Greater -> ">" 
+  | Geq -> ">="
+  | And -> "&&"
+  | Or -> "||"
+  | Concat -> "^"
+  | Graph_Insert -> "[+]"
+  | Graph_Remove -> "[-]"
+  | Data_Insert -> "^+"
+  | Data_Remove -> "^-"
+
+let string_of_graph_type = function
+  | Graph_type_ID(id) -> string_of_expr id
+  | Graph_type(graph_element) -> string_of_expr graph_element
+
+let string_of_graph_type_list = function
+  | 
+
+let rec string_of_expr = function
+    Int(l) -> string_of_int l
+  | Double(l) -> string_of_float l
+  | String(l) -> "\"" ^ l ^ "\""
+  | Bool(l) -> string_of_bool l
+  (* | Null_Literal -> "null" *)
+  | Id(s) -> s
+  | Binop(e1, o, e2) ->
+      string_of_expr e1 ^ " " ^ 
+      string_of_binop o ^ " " ^ 
+      string_of_expr e2
+  | Unop(o, e) -> 
+      string_of_unop o ^ " " ^
+      string_of_expr
+  | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
+  | Access(id1, id2) -> string_of_expr id1 ^ "." ^ string_of_expr id2
+  | Call(f, el) ->
+      string_of_expr f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+(*   | Map(e, id, statement) ->
+      "map" string_of_expr e ^ "(" ^  *)
+  | Graph(graph_type_l) ->
+      "("^ String.concat "," (List.map (string_of_graph_type ^ " " ^ string_of_graph_type ^ " " ^ string_of_graph_type))) ) ^ ")"
+
+  | Graph_element(id, el) ->
+      string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
