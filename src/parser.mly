@@ -103,7 +103,7 @@ expr:
   | complex_literal              { Complex_Literal($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
-  | var_declaration              { $1 } /* actor: Node, number: Int, graph_example: Graph */
+  | var_declaration              { Var（$1) } /* actor: Node, number: Int, graph_example: Graph */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
@@ -126,12 +126,12 @@ complex_literal:
 
 complex_literal_list:
   |                                           { [] }
-  | graph_element graph_element graph_element { [($1, $2, $3)] }
-  | complex_literal_list COMMA graph_element graph_element graph_element { [($3, $4, $5)] @ $1 }
+  | graph_type graph_type graph_type { [($1, $2, $3)] }
+  | complex_literal_list COMMA graph_type graph_type graph_type { [($3, $4, $5)] @ $1 }
 
-graph_element:
-  | ID                                   { $1 }
-  | node_or_rel_literal                  { $1 }
+graph_type:
+  | ID                                   { Graph_type_ID($1) }
+  | node_or_rel_literal                  { Graph_type($1) }
 
 node_or_rel_literal:
   | 
