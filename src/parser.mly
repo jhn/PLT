@@ -2,7 +2,7 @@
    open Ast
 %}
 
-%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET LET
+%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 %token SEMI TERMINATION COMMA ASSIGN COLON ARROW CONCAT ACCESS
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
@@ -10,7 +10,7 @@
 %token MAP IN FINDMANY
 %token FUNCTION RETURN
 %token GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE NEIGHBORS
-%token GRAPH REL NODE INT DOUBLE STRING BOOL NULL VOID
+%token GRAPH REL NODE INT DOUBLE STRING BOOL NULL VOID LIST
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL ID
 %token <float> DOUBLE_LITERAL
@@ -41,6 +41,10 @@ program:
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 type_spec:
+  | n2n_type              { $1 }
+  | LIST LT n2n_type GT   { List($3) }
+
+n2n_type:
   | primitive_type { $1 }
   | complex_type   { $1 }
 
@@ -134,8 +138,7 @@ graph_element:
   | node_or_rel_literal                  { $1 }
 
 node_or_rel_literal:
-  | 
-  | ID LBRACKET literal_list RBRACKET          { Graph_element($1, List.Rev $3) }
+  | ID LBRACKET literal_list RBRACKET         { Graph_element($1, List.Rev $3) }
 
 literal_list:
   |                              { [] }
@@ -174,7 +177,4 @@ unary_operation:
   | NOT expr                     { Unop(Not, $2) }
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
 
-find_many:
-  | FINDMANY LPAREN node_or_rel_literal graph_element graph_element RPAREN     { Find_Many_Pointing_From($3, $4, $5) }
-  | FINDMANY LPAREN ID node_or_rel_literal RPAREN                                      { Find_Many_Pointing_To($3, $4) }
-  | FINDMANY LPAREN node_or_rel_literal RPAREN                                  { Find_Many_Nodes($3) }
+
