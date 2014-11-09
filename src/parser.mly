@@ -107,7 +107,7 @@ expr:
   | complex_literal              { Complex_Literal($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
-  | var_declaration              { Var（$1) } /* actor: Node, number: Int, graph_example: Graph */
+  | var_declaration              { Var($1) } /* actor: Node, number: Int, graph_example: Graph */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
@@ -120,7 +120,7 @@ expr:
 literal:
   | INT_LITERAL                  { Int($1) } /* 4, 3, 27 */
   | STRING_LITERAL               { String($1) } /* "Me", "You", "Bill Clinton" */
-  | DOUBLE_LITERAL                { Double($1) } /* 4.2, 3.7, 7.4 */
+  | DOUBLE_LITERAL               { Double($1) } /* 4.2, 3.7, 7.4 */
   | BOOL_LITERAL                 { Bool($1) } /* true, false */
   /*Do we need NULL or not*/
 
