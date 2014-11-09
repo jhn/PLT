@@ -25,7 +25,6 @@ type expr =
 type graph_type = 
   | Graph_type_ID of string
   | Graph_type of string * expr list
-   
 
 type statement =
     Block of statement list (*We called it statement*)
