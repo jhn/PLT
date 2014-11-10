@@ -178,33 +178,3 @@ let rec string_of_expr = function
        (*Modification needed*)
   | Graph_element(id, el) ->
       string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
