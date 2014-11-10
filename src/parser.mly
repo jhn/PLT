@@ -41,7 +41,7 @@ program:
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 type_spec:
-  | n2n_type              { $1 }
+  | n2n_type              { N2N_type($1) }
   | LIST LT n2n_type GT   { List($3) } /*Store the list in the AST?*/
 
 n2n_type:
@@ -90,7 +90,7 @@ parameter:
   | ID COLON type_spec { ($3, $1) } /* foo: Int */
 
 return_type:
-  | type_spec { $1 }
+  | type_spec { Type_spec($1) }
   | VOID      { Void }
 
 statements:
