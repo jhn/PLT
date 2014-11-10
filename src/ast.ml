@@ -14,28 +14,33 @@ type expr =
   | Bool of bool 
   |(*Complex literals*)
   | Id of string
-  | Var of string * type_choices (* ?????? *)
+  | Var of var (* ?????? *)
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of expr * expr
   | Access of string * string
   | Call of string * expr list
+  | Func of built_in_function_call
   | Constructor of  string * expr list
-  | Map of expr * string * statement
   | Graph of graph_type list (*Or expr list? *)
   | Graph_element of string * expr list (* do this one step removed? *)
 
 
+type var = string * n2n_type
 (* Do we need these? *)
 (* type var_declaration = string * type_choices
  *)
 type return_ty =
-  | type_choice
-  | 
+  | type_spec
+  | Void
 
-type type_choice = 
-  | primitive_type
-  | complex_type
+type type_spec = 
+  | n2n_type
+  | List of n2n_type
+
+type n2n_type = 
+  | N2N_primitive of primitive_type
+  | N2N_complex of complex_type 
 (* till here *)
 
 type primitive_type =
@@ -48,6 +53,17 @@ type complex_type =
   | Graph
   | Node
   | Rel
+
+type built_in_function_call = 
+  | find_many
+  | Map of expr * map_function
+  | Neighbours of string * neighbours_function
+
+type map_function = 
+  | Map_Func of expr * string * statement
+
+type neighbours_function = 
+  | Neighbours of string
 
 (*type graph_element_type = 
    Graph_element of string * expr list*)
@@ -71,22 +87,11 @@ type func_decl = {
   }
 
 type find_many = 
-  | Find_Many_Pointing_From of string * expr list * graph_element 
-  | Find_Many_Pointing_To of string * string * expr list
-  | Find_Many_Nodes of string * expr list
+  | FindMany_node of expr 
+  | FindMany_gen of expr * expr
 
- (*  | Graph of graph_decl
-  | Graph_element of graph_elem_decl
 
-type graph_decl =
-  Id of string
-  | Graph_element of string * expr list
-  
-  Graph of complex_type list  (* THIS IS NOT DONE/CORRECT *)
-
-type graph_elem_decl = string * expr list
-
-type program = string list * func_decl list *)
+type program = var list * func_decl list *)
 
 
 (*For semantic check*)
@@ -139,15 +144,13 @@ let rec string_of_expr = function
   | Access(id1, id2) -> string_of_expr id1 ^ "." ^ string_of_expr id2
   | Call(f, el) ->
       string_of_expr f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-(*   | Map(e, id, statement) ->
-      "map" string_of_expr e ^ "(" ^  *)
   | Graph(graph_type_l) ->
       "("^ String.concat "," List.map string_of_graph_type graph_type_l  ^ ")"
        (*Modification needed*)
   | Graph_element(id, el) ->
       string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
 
-let 
+let string_of_
   
 
 
