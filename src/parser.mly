@@ -42,29 +42,31 @@ program:
 
 type_spec:
   | n2n_type              { $1 }
-  | LIST LT n2n_type GT   { List($3) }
+  | LIST LT n2n_type GT   { List($3) } /*Store the list in the AST?*/
 
 n2n_type:
   | primitive_type { $1 }
   | complex_type   { $1 }
 
 primitive_type:
-  | INT       { "Int" }
-  | STRING    { "String" }
-  | DOUBLE    { "Double" }
-  | BOOL      { "Bool" }
+  | INT       { N2N_primitive(Int) }
+  | STRING    { N2N_primitive(String) }
+  | DOUBLE    { N2N_primitive(Double) }
+  | BOOL      { N2N_primitive(Bool) }
 
 complex_type:
-  | GRAPH     { "Graph" }
-  | NODE      { "Node" }
-  | REL       { "Rel" }
+  | GRAPH     { N2N_complex(Graph) }
+  | NODE      { N2N_complex(Node) }
+  | REL       { N2N_complex(Rel) }
+
+var_declarations:
+  | var_declarations var_declaration { ($2::$1) }
 
 var_declaration:
-  | ID COLON primitive_type { ($3, $1) } /* foo: String */
-  | ID COLON complex_type { ($3, $1) }   /* foo: Node */
+  | ID COLON n2n_type TERMINATION { Var ($3, $1) } /* foo: String */
 
 global_var_declaration:
-  | var_declaration TERMINATION { $1 }
+  | var_declarations  { $1 }
 
 function_declaration:
  | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
@@ -89,7 +91,7 @@ parameter:
 
 return_type:
   | type_spec { $1 }
-  | VOID      { "Void" }
+  | VOID      { Void }
 
 statements:
   | /* nothing */        { [] }
@@ -103,8 +105,8 @@ statement:
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
 
 expr:
-  | literal                      { Literal($1) } /* 42, "Jerry", 4.3, true */
-  | complex_literal              { Complex_Literal($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
+  | literal                      { $1 } /* 42, "Jerry", 4.3, true */
+  | complex_literal              { $1 } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
   | var_declaration              { Var($1) } /* actor: Node, number: Int, graph_example: Graph */
@@ -113,7 +115,7 @@ expr:
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
   | expr ASSIGN LBRACE formal_list RBRACE    { Contructor($1, List.rev $4) } /* expr = { name: String, age: Int} Specific kind of rule above. Needed to solve shift/reduce conflict */
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
-  | built_in_function_call       { $1 }
+  | built_in_function_call       { Func($1) }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */
 
 literal:
@@ -145,15 +147,15 @@ literal_list:
   | literal_list COMMA literal   { $3:: $1 }
 
 built_in_function_call:
-  | ID ACCESS find_many                    { FindMany($1, $3) } /* graph_example.find_many(...)*/
+  | ID ACCESS find_many                    { ($1, $3) } /* graph_example.find_many(...)*/
   | ID ACCESS map_function                 { Map($1, $3) } /* graph_or_list_example.map(...) */
   | ID ACCESS neighbors_function           { Neighbors($1, $3) } /* graph_example.neighbors(node_ID) */
 
 map_function:
-  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { ($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
+  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map_Func($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
 
 neighbors_function:
-  | NEIGHBORS LPAREN ID RPAREN { $3 }
+  | NEIGHBORS LPAREN ID RPAREN { Neighbors($3) }
 
 actuals_opt:
   | /* nothing */ { [] }
@@ -188,5 +190,5 @@ unary_operation:
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
 
 find_many:
-  | FINDMANY LPAREN node_or_rel_literal RPAREN   { $3 } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
-  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { ($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
+  | FINDMANY LPAREN node_or_rel_literal RPAREN   { FindMany_node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
+  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { FindMany_gen($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
