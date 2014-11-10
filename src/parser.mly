@@ -111,10 +111,9 @@ expr:
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
-  | LBRACE formal_list RBRACE    { Contructor(List.rev $2) } /* { name: String, age: Int} */
+  | expr ASSIGN LBRACE formal_list RBRACE    { Contructor($1, List.rev $4) } /* expr = { name: String, age: Int} Specific kind of rule above. Needed to solve shift/reduce conflict */
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
-  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
-  | find_many                    { $1 } /*find_many(node_literal), find_many(node_id, rel_literal), find_many(node_literal, id_or_rel_literal, id_or_node_literal) */
+  | built_in_function_call       { $1 }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */
 
 literal:
@@ -144,6 +143,17 @@ literal_list:
   |                              { [] }
   | literal                      { [$1] }
   | literal_list COMMA literal   { $3:: $1 }
+
+built_in_function_call:
+  | ID ACCESS find_many                    { FindMany($1, $3) } /* graph_example.find_many(...)*/
+  | ID ACCESS map_function                 { Map($1, $3) } /* graph_or_list_example.map(...) */
+  | ID ACCESS neighbors_function           { Neighbors($1, $3) } /* graph_example.neighbors(node_ID) */
+
+map_function:
+  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { ($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
+
+neighbors_function:
+  | NEIGHBORS LPAREN ID RPAREN { $3 }
 
 actuals_opt:
   | /* nothing */ { [] }
@@ -177,4 +187,6 @@ unary_operation:
   | NOT expr                     { Unop(Not, $2) }
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
 
-
+find_many:
+  | FINDMANY LPAREN node_or_rel_literal RPAREN   { $3 } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
+  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { ($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
