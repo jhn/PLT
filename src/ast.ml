@@ -31,11 +31,11 @@ type var = string * n2n_type
 (* type var_declaration = string * type_choices
  *)
 type return_ty =
-  | type_spec
+  | Type_spec of type_spec
   | Void
 
 type type_spec = 
-  | n2n_type
+  | N2N_type of n2n_type
   | List of n2n_type
 
 type n2n_type = 
@@ -126,6 +126,29 @@ let string_of_graph_type = function
 let string_of_graph_type_list = function
   | 
 
+let string_of_primitive_type = function
+  | Int -> "Int"
+  | String -> "String"
+  | Bool -> "Bool"
+  | Double -> "Double"
+
+let string_of_complex_type = function
+  | Graph -> "Graph"
+  | Node -> "Node"
+  | Rel -> "Rel"
+
+let string_of_n2n_type = function
+  | N2N_primitive(t) -> string_of_primitive_type t
+  | N2N_complex(t) -> string_of_complex_type t
+
+let string_of_type_spec = function
+  | N2N_type(t) -> string_of_n2n_type t
+  | List(t) -> "List<"^string_of_n2n_type t^">"
+
+let string_of_return_ty = function
+  | Type_spec(t) -> string_of_type_spec t
+  | Void() -> "Void"
+
 let rec string_of_expr = function
     Int(l) -> string_of_int l
   | Double(l) -> string_of_float l
@@ -133,6 +156,12 @@ let rec string_of_expr = function
   | Bool(l) -> string_of_bool l
   (* | Null_Literal -> "null" *)
   | Id(s) -> s
+  | Var(v) ->
+      (match (snd v) with
+        | N2N_primitive(t) -> fst v ^":"^ string_of_primitive_type t
+        | N2N_complex(t) -> fst v ^":"^ string_of_complex_type t 
+        | List(t) -> "List<"^string_of_n2n_type t^">")
+        
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ 
       string_of_binop o ^ " " ^ 
@@ -150,7 +179,7 @@ let rec string_of_expr = function
   | Graph_element(id, el) ->
       string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
 
-let string_of_
+
   
 
 
