@@ -157,9 +157,9 @@ let rec string_of_expr = function
   (* | Null_Literal -> "null" *)
   | Id(s) -> s
   | Var(v) ->
-      (match (snd v) with
-        | N2N_primitive(t) -> fst v ^":"^ string_of_primitive_type t
-        | N2N_complex(t) -> fst v ^":"^ string_of_complex_type t 
+      (match (fst v) with
+        | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
+        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t 
         | List(t) -> "List<"^string_of_n2n_type t^">")
         
   | Binop(e1, o, e2) ->
