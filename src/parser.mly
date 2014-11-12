@@ -130,9 +130,9 @@ complex_literal:
   |LPAREN complex_literal_list RPAREN   { Graph(List.rev $2) }
 
 complex_literal_list:
-  |                                           { [] }
-  | graph_type graph_type graph_type { [($1, $2, $3)] }
-  | complex_literal_list COMMA graph_type graph_type graph_type { [($3, $4, $5)] @ $1 }
+  |                                                             { [] }
+  | graph_type graph_type graph_type                            { ($3 :: $2 :: $1) }
+  | complex_literal_list COMMA graph_type graph_type graph_type { $5 :: $4 :: $3 :: $1 }
 
 graph_type:
   | ID                                   { Graph_type_ID($1) }
@@ -147,7 +147,7 @@ literal_list:
   | literal_list COMMA literal   { $3:: $1 }
 
 built_in_function_call:
-  | ID ACCESS find_many                    { ($1, $3) } /* graph_example.find_many(...)*/
+  | ID ACCESS find_many                    { FindMany($1, $3) } /* graph_example.find_many(...)*/
   | ID ACCESS map_function                 { Map($1, $3) } /* graph_or_list_example.map(...) */
   | ID ACCESS neighbors_function           { Neighbors($1, $3) } /* graph_example.neighbors(node_ID) */
 
