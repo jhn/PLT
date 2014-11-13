@@ -2,6 +2,8 @@ let fst_of_three (t, _, _) = t
 let snd_of_three (_, t, _) = t
 let thd_of_three (_, _, t) = t
 
+type program = var list * func_decl list *)
+
 type op = Add | Sub | Mult | Div | Mod| Equal | Neq | Less | Leq | Greater | Geq | And | Or | Concat
           | Graph_Insert | Graph_Remove | Data_Insert | Data_Remove
 
@@ -21,7 +23,7 @@ type expr =
   | Call of string * expr list
   | Func of built_in_function_call
   | Constructor of  string * expr list
-  | Graph of graph_type list
+  | Graph of node_rel_node_tuple list
   | Graph_element of string * expr list 
 
 type var = string * n2n_type
@@ -65,6 +67,9 @@ type graph_type =
   | Graph_type_ID of string
   | Graph_type of string * expr list
 
+type node_rel_node_tuple =
+  | Node_Rel_Node_Tup of graph_type * graph_type * graph_type
+
 type statement =
     Block of statement list 
   | Expr of expr
@@ -82,7 +87,6 @@ type find_many =
   | FindMany_node of expr 
   | FindMany_gen of expr * expr
 
-type program = var list * func_decl list *)
 
 (*For semantic check*)
 
@@ -135,9 +139,10 @@ let rec string_of_expr = function
       string_of_expr f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Func(k) -> string_of_built_in_fdecl k
   | Constructor(e, f) -> string_of_expr e ^ " = { " ^ String.concat ", " (List.map string_of_expr f) ^ "}"
-  | Graph(graph_type_l) ->
+ (* | Graph(graph_type_l) ->
       if(List.length graph_type_l) > 3 then "(" ^ String.concat "," (List.map string_of_graph_type graph_type_l)  ^ ")" (* Fix this: need to print 3 tuples with comma in between*)
-      else "(" String.concat " " (List.map string_of_graph_type graph_type_l) ^ " )"
+      else "(" String.concat " " (List.map string_of_graph_type graph_type_l) ^ " )" *)
+  | Graph(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
 
        (*Modification needed*)
   | Graph_element(id, el) ->
@@ -175,6 +180,9 @@ let string_of_neighbors = function
 let string_of_graph_type = function
   | Graph_type_ID(id) -> string_of_expr id
   | Graph_type(graph_element) -> string_of_expr graph_element
+
+let string_of_node_rel_tuples = function
+  | Node_Rel_Node_Tup(n1, r1, n2) -> string_of_graph_type n1 ^ " " ^ string_of_graph_type r1 ^ " " ^ string_of_graph_type n2
 
 let string_of_func_decl fdecl=
   "fn" ^ (string_of_expr fdecl.fname) ^ "(" ^ String.concat ", " (List.map string_of_expr fdecl.formals) 

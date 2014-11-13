@@ -40,9 +40,14 @@ program:
  | program global_var_declaration { ($2 :: fst $1), snd $1 }
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
-type_spec:
-  | n2n_type              { N2N_type($1) }
-  | LIST LT n2n_type GT   { List($3) } /*Store the list in the AST?*/
+global_var_declaration:
+  | var_declarations  { $1 }
+
+var_declarations:
+  | var_declarations var_declaration { ($2::$1) }
+
+var_declaration:
+  | ID COLON n2n_type TERMINATION { Var ($3, $1) } /* foo: String */
 
 n2n_type:
   | primitive_type { $1 }
@@ -58,15 +63,6 @@ complex_type:
   | GRAPH     { N2N_complex(Graph) }
   | NODE      { N2N_complex(Node) }
   | REL       { N2N_complex(Rel) }
-
-var_declarations:
-  | var_declarations var_declaration { ($2::$1) }
-
-var_declaration:
-  | ID COLON n2n_type TERMINATION { Var ($3, $1) } /* foo: String */
-
-global_var_declaration:
-  | var_declarations  { $1 }
 
 function_declaration:
  | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
@@ -88,6 +84,10 @@ formal_list:
 
 parameter:
   | ID COLON type_spec { ($3, $1) } /* foo: Int */
+
+type_spec:
+  | n2n_type              { N2N_type($1) }
+  | LIST LT n2n_type GT   { List($3) } /*Store the list in the AST?*/
 
 return_type:
   | type_spec { Type_spec($1) }
@@ -131,7 +131,7 @@ complex_literal:
 
 complex_literal_list:
   |                                                             { [] }
-  | graph_type graph_type graph_type                            { ($3 :: $2 :: $1) }
+  | graph_type graph_type graph_type                            { Node_Rel_Node_Tup($3 :: $2 :: $1) } /* :: or commas? */
   | complex_literal_list COMMA graph_type graph_type graph_type { $5 :: $4 :: $3 :: $1 }
 
 graph_type:
@@ -145,17 +145,6 @@ literal_list:
   |                              { [] }
   | literal                      { [$1] }
   | literal_list COMMA literal   { $3:: $1 }
-
-built_in_function_call:
-  | ID ACCESS find_many                    { FindMany($1, $3) } /* graph_example.find_many(...)*/
-  | ID ACCESS map_function                 { Map($1, $3) } /* graph_or_list_example.map(...) */
-  | ID ACCESS neighbors_function           { Neighbors($1, $3) } /* graph_example.neighbors(node_ID) */
-
-map_function:
-  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map_Func($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
-
-neighbors_function:
-  | NEIGHBORS LPAREN ID RPAREN { Neighbors($3) }
 
 actuals_opt:
   | /* nothing */ { [] }
@@ -188,6 +177,17 @@ binary_operation:
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
+
+built_in_function_call:
+  | ID ACCESS find_many                    { FindMany($1, $3) } /* graph_example.find_many(...)*/
+  | ID ACCESS map_function                 { Map($1, $3) } /* graph_or_list_example.map(...) */
+  | ID ACCESS neighbors_function           { Neighbors($1, $3) } /* graph_example.neighbors(node_ID) */
+
+map_function:
+  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map_Func($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
+
+neighbors_function:
+  | NEIGHBORS LPAREN ID RPAREN { Neighbors($3) }
 
 find_many:
   | FINDMANY LPAREN node_or_rel_literal RPAREN   { FindMany_node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
