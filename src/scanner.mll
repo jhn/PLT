@@ -77,6 +77,7 @@ rule token = parse
    | "Graph"                 { GRAPH }
    | "Rel"                   { REL }
    | "Node"                  { NODE }
+   | "List"                  { LIST }
    | "Int"                   { INT }
    | "Double"                { DOUBLE }
    | "String"                { STRING }

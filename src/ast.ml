@@ -53,9 +53,9 @@ type complex_type =
   | Rel
 
 type built_in_function_call = 
-  | find_many
+  | FindMany of string * find_many
   | Map of expr * map_function
-  | Neighbors of string * neighbors_function
+  | Neighbors_Func of string * neighbors_function
 
 type map_function = 
   | Map_Func of expr * string * statement
@@ -190,7 +190,7 @@ let string_of_func_decl fdecl=
 
 let string_of_built_in_fdecl = function
   | Map(l, s) -> string_of_expr l ^ "." ^ string_of_map s
-  | Neighbors(l, s) -> string_of_expr l ^ "." ^ string_of_neighbors s
+  | Neighbors_Func(l, s) -> string_of_expr l ^ "." ^ string_of_neighbors s
   | FindMany(l, s) -> string_of_expr l ^ "." ^ string_of_find_many s
 
 let string_of_statement = function
