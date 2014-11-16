@@ -155,15 +155,19 @@ let string_of_type_spec = function
 
 let string_of_return_ty = function
   | Type_spec(t) -> string_of_type_spec t
-  | Void() -> "Void"
+  | Void -> "Void"
+
+let string_of_formal = function 
+  | Formal()
+  
 
 let string_of_var_decl = function
- | Var(v) ->
-      (match (fst v) with
-        | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
-        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t
+ | Var(t, id) ->
+      (match t with
+        | N2N_primitive(t) -> id ^":"^ string_of_primitive_type t
+        | N2N_complex(t) -> id ^":"^ string_of_complex_type t
         | List(t) -> "List<"^string_of_n2n_type t^">")
- | Constructor(e, f) -> string_of_expr e ^ " = { " ^ String.concat ", " (List.map string_of_expr f) ^ "}"
+ | Constructor(t, id, fl) -> id ^ string_of_n2n_type t ^ " = { " ^ String.concat ", " (List.map string_of_expr f) ^ "}"
  | VarDeclLiteral(e, f, g) -> string_of_expr e ^ " : " ^ string_of_n2n_type f ^ " = " ^ string_of_complex_literal g
 
 let string_of_complex_literal = function
@@ -178,11 +182,11 @@ let rec string_of_expr = function
   | String(l) -> "\"" ^ l ^ "\""
   | Bool(l) -> string_of_bool l
   | Id(s) -> s
-  | Var(v) ->
+  (* | Var(v) ->
       (match (fst v) with
         | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
         | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t
-        | List(t) -> "List<"^string_of_n2n_type t^">")
+        | List(t) -> "List<"^string_of_n2n_type t^">") *)
 
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^
@@ -232,6 +236,7 @@ let string_of_statement = function
     (match p with
         [] -> "if ( " ^ string_of_expr e ^ " )\n " ^ string_of_statement l
       | _ -> "if ( " ^ string_of_expr e ^ " )\n" ^ string_of_statement l ^ "else\n " ^ string_of_statement p )
+  | Var_Declaration(v) -> string_of_var_decl v
 
 let string_of_find_many = function
   | Find_Many_Node(t) -> "find_many (" ^ string_of_expr t ^ ")"
