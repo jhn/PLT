@@ -82,7 +82,7 @@ and find_many =
   | Find_Many_Gen of expr * expr
 
 and complex_literal =
-  | Graph of node_rel_node_tuple list
+  | Graph_Literal of node_rel_node_tuple list
   | Graph_Element of string * expr list
 
 and node_rel_node_tuple =
@@ -167,7 +167,7 @@ let string_of_var_decl = function
  | VarDeclLiteral(e, f, g) -> string_of_expr e ^ " : " ^ string_of_n2n_type f ^ " = " ^ string_of_complex_literal g
 
 let string_of_complex_literal = function
-  | Graph(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
+  | Graph_Literal(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
        (*Modification needed*)
   | Graph_Element(id, el) ->
       string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"

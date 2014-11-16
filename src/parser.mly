@@ -127,7 +127,7 @@ literal:
 
 complex_literal:
   | node_or_rel_literal                  { $1 } /* actor("Keanu"), "true" */
-  | LPAREN complex_literal_list RPAREN   { Graph(List.rev $2) }
+  | LPAREN complex_literal_list RPAREN   { Graph_Literal(List.rev $2) }
 
 complex_literal_list:
   |                                                             { [] }
