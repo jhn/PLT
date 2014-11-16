@@ -3,19 +3,18 @@
 %}
 
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
-%token SEMI TERMINATION COMMA ASSIGN COLON ARROW CONCAT ACCESS
+%token TERMINATION COMMA ASSIGN COLON ARROW CONCAT ACCESS
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
-%token IF ELIF ELSE
+%token IF ELSE
 %token MAP IN FINDMANY
 %token FUNCTION RETURN
 %token GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE NEIGHBORS
-%token GRAPH REL NODE INT DOUBLE STRING BOOL NULL VOID LIST
+%token GRAPH REL NODE INT DOUBLE STRING BOOL VOID LIST
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL ID
 %token <float> DOUBLE_LITERAL
 %token <bool> BOOL_LITERAL
-%token EOF
 
 %nonassoc NOELSE
 %nonassoc ELSE
@@ -47,7 +46,9 @@ var_declarations:
   | var_declarations var_declaration { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type TERMINATION { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type TERMINATION                                   { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE TERMINATION  { Constructor(N2N_type($3), Id($1), List.rev $6)}
+  | ID COLON n2n_type ASSIGN complex_literal TERMINATION            { VarDeclLiteral(N2N_type($3), Id($1), Complex($5))}
 
 n2n_type:
   | primitive_type { $1 }
@@ -83,7 +84,7 @@ formal_list:
   | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec { ($3, $1) } /* foo: Int */
+  | ID COLON type_spec { Formal($3, $1) } /* foo: Int */
 
 type_spec:
   | n2n_type              { N2N_type($1) }
@@ -103,26 +104,25 @@ statement:
   | LBRACE statements RBRACE                       { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
+  | var_declaration                                { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
-  | complex_literal              { $1 } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
+  | complex_literal              { Complex($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
-  | var_declaration              { Var($1) } /* actor: Node, number: Int, graph_example: Graph */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
-  | expr ASSIGN LBRACE formal_list RBRACE    { Contructor($1, List.rev $4) } /* expr = { name: String, age: Int} Specific kind of rule above. Needed to solve shift/reduce conflict */
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */
 
 literal:
-  | INT_LITERAL                  { Int($1) } /* 4, 3, 27 */
-  | STRING_LITERAL               { String($1) } /* "Me", "You", "Bill Clinton" */
-  | DOUBLE_LITERAL               { Double($1) } /* 4.2, 3.7, 7.4 */
-  | BOOL_LITERAL                 { Bool($1) } /* true, false */
+  | INT_LITERAL                  { Int_Literal($1) } /* 4, 3, 27 */
+  | STRING_LITERAL               { String_Literal($1) } /* "Me", "You", "Bill Clinton" */
+  | DOUBLE_LITERAL               { Double_Literal($1) } /* 4.2, 3.7, 7.4 */
+  | BOOL_LITERAL                 { Bool_Literal($1) } /* true, false */
   /*Do we need NULL or not*/
 
 complex_literal:
@@ -135,11 +135,11 @@ complex_literal_list:
   | complex_literal_list COMMA graph_type graph_type graph_type { ($3, $4, $5):: $1 }
 
 graph_type:
-  | ID                                   { Graph_type_ID($1) }
-  | node_or_rel_literal                  { Graph_type($1) }
+  | ID                                   { Graph_Type_ID($1) }
+  | node_or_rel_literal                  { Graph_Type($1) }
 
 node_or_rel_literal:
-  | ID LBRACKET literal_list RBRACKET         { Graph_element($1, List.Rev $3) }
+  | ID LBRACKET literal_list RBRACKET         { Graph_Element($1, List.Rev $3) }
 
 literal_list:
   |                              { [] }
@@ -169,7 +169,7 @@ binary_operation:
   | expr AND    expr             { Binop($1, And, $3) }
   | expr OR     expr             { Binop($1, Or, $3) }
   | expr CONCAT expr             { Binop($1, Concat, $3) }
-  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) } 
+  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
   | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
   | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
   | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
@@ -179,16 +179,16 @@ unary_operation:
   | MINUS expr %prec NEG         { Unop(Neg, $2) }
 
 built_in_function_call:
-  | ID ACCESS find_many                    { FindMany($1, $3) } /* graph_example.find_many(...)*/
+  | ID ACCESS find_many                    { Find_Many($1, $3) } /* graph_example.find_many(...)*/
   | ID ACCESS map_function                 { Map($1, $3) } /* graph_or_list_example.map(...) */
-  | ID ACCESS neighbors_function           { NeighborsFunc($1, $3) } /* graph_example.neighbors(node_ID) */
+  | ID ACCESS neighbors_function           { Neighbors_Func($1, $3) } /* graph_example.neighbors(node_ID) */
 
 map_function:
   | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map_Func($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
 
 neighbors_function:
-  | NEIGHBORS LPAREN ID RPAREN { Neighbors($3) }
+  | NEIGHBORS LPAREN ID RPAREN { $3 }
 
 find_many:
-  | FINDMANY LPAREN node_or_rel_literal RPAREN   { FindMany_node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
-  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { FindMany_gen($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
+  | FINDMANY LPAREN node_or_rel_literal RPAREN   { Find_Many_Node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
+  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { Find_Many_Gen($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
