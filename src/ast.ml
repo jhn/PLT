@@ -49,10 +49,10 @@ type formal =
   | Formal of type_spec * string
 
 type expr =
-  | Int of int
-  | Double of float
-  | String of string
-  | Bool of bool
+  | Int_Literal of int
+  | Double_Literal of float
+  | String_Literal of string
+  | Bool_Literal of bool
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
