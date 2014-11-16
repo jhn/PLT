@@ -85,7 +85,7 @@ formal_list:
   | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec { ($3, $1) } /* foo: Int */
+  | ID COLON type_spec { Formal($3, $1) } /* foo: Int */
 
 type_spec:
   | n2n_type              { N2N_type($1) }
