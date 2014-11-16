@@ -47,9 +47,9 @@ var_declarations:
   | var_declarations var_declaration { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type TERMINATION                       { Var ($3, $1) } /* foo: String */
-  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE  { Constructor(Id($1), N2N_type($3), List.rev $6)}
-  | ID COLON n2n_type ASSIGN complex_literal            { VarDeclLiteral(Id($1),N2N_type($3), Complex($5))}
+  | ID COLON n2n_type TERMINATION                                   { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE TERMINATION  { Constructor(Id($1), N2N_type($3), List.rev $6)}
+  | ID COLON n2n_type ASSIGN complex_literal TERMINATION            { VarDeclLiteral(Id($1),N2N_type($3), Complex($5))}
 
 n2n_type:
   | primitive_type { $1 }
