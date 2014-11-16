@@ -94,7 +94,7 @@ and graph_type =
 
 and var_decl =
  | Var of n2n_type * string
- | Constructor of n2n_type * string * expr list
+ | Constructor of n2n_type * string * formal list
  | VarDeclLiteral of n2n_type * string * complex_literal
 
 type func_decl = {
