@@ -1,4 +1,5 @@
 let lexbuf = Lexing.from_channel stdin in
-let program = Parser.program Scanner.token lexbuf in
-let listing = Ast.print_function program in
-		print_string listing
+let ast = Parser.program Scanner.token lexbuf in
+let tree_string = Ast.print_function ast in
+print_string tree_string
+
