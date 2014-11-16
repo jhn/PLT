@@ -1,57 +1,57 @@
 open Ast
 
 let string_of_binop = function
-  | Add -> "+"
-  | Sub -> "-"
-  | Mult -> "*"
-  | Div -> "/"
-  | Mod -> "mod"
-  | Equal -> "=="
-  | Neq -> "!="
-  | Less -> "<"
-  | Leq -> "<="
-  | Greater -> ">"
-  | Geq -> ">="
-  | And -> "&&"
-  | Or -> "||"
-  | Concat -> "^"
+  | Add          -> "+"
+  | Sub          -> "-"
+  | Mult         -> "*"
+  | Div          -> "/"
+  | Mod          -> "mod"
+  | Equal        -> "=="
+  | Neq          -> "!="
+  | Less         -> "<"
+  | Leq          -> "<="
+  | Greater      -> ">"
+  | Geq          -> ">="
+  | And          -> "&&"
+  | Or           -> "||"
+  | Concat       -> "^"
   | Graph_Insert -> "[+]"
   | Graph_Remove -> "[-]"
-  | Data_Insert -> "^+"
-  | Data_Remove -> "^-"
+  | Data_Insert  -> "^+"
+  | Data_Remove  -> "^-"
 
 let string_of_unop = function
   | Neg -> "-"
   | Not -> "!"
 
 let string_of_primitive_type = function
-  | Int -> "Int"
+  | Int    -> "Int"
   | String -> "String"
-  | Bool -> "Bool"
+  | Bool   -> "Bool"
   | Double -> "Double"
 
 let string_of_complex_type = function
   | Graph -> "Graph"
-  | Node -> "Node"
-  | Rel -> "Rel"
+  | Node  -> "Node"
+  | Rel   -> "Rel"
 
 let string_of_n2n_type = function
   | N2N_primitive(t) -> string_of_primitive_type t
-  | N2N_complex(t) -> string_of_complex_type t
+  | N2N_complex(t)   -> string_of_complex_type t
 
 let string_of_type_spec = function
   | N2N_type(t) -> string_of_n2n_type t
-  | List(t) -> "List<" ^ string_of_n2n_type t ^ ">"
+  | List(t)     -> "List<" ^ string_of_n2n_type t ^ ">"
 
 let string_of_return_ty = function
   | Type_spec(t) -> string_of_type_spec t
-  | Void -> "Void"
+  | Void         -> "Void"
 
 let string_of_formal = function
   | Formal(the_type, id) -> string_of_type_spec the_type
 
 let string_of_graph_type = function
-  | Graph_Type_ID(id) -> string_of_expr id
+  | Graph_Type_ID(id)         -> string_of_expr id
   | Graph_Type(graph_element) -> string_of_expr graph_element
 
 let string_of_node_rel_tuples = function
@@ -74,11 +74,11 @@ let string_of_var_decl = function
  | VarDeclLiteral(the_type, id, complex) -> id ^ " : " ^ string_of_n2n_type the_type ^ " = " ^ string_of_complex_literal complex
 
 let rec string_of_expr = function
-  | Int(l) -> string_of_int l
+  | Int(l)    -> string_of_int l
   | Double(l) -> string_of_float l
   | String(l) -> "\"" ^ l ^ "\""
-  | Bool(l) -> string_of_bool l
-  | Id(s) -> s
+  | Bool(l)   -> string_of_bool l
+  | Id(s)     -> s
   (* | Var(v) ->
       (match (fst v) with
         | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
