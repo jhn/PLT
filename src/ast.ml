@@ -90,7 +90,7 @@ and node_rel_node_tuple =
 
 and graph_type =
   | Graph_Type_ID of string
-  | Graph_type of string * expr list
+  | Graph_Type of string * expr list
 
 and var_decl =
  | Var of n2n_type * string
