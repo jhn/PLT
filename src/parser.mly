@@ -47,7 +47,9 @@ var_declarations:
   | var_declarations var_declaration { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type TERMINATION { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type TERMINATION                       { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE  { Constructor(Id($1), N2N_type($3), List.rev $6)}
+  | ID COLON n2n_type ASSIGN complex_literal            { VarDeclLiteral(Id($1),N2N_type($3), Complex($5))}
 
 n2n_type:
   | primitive_type { $1 }
@@ -106,14 +108,13 @@ statement:
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
-  | complex_literal              { $1 } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
+  | complex_literal              { Complex($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
-  | var_declaration              { Var($1) } /* actor: Node, number: Int, graph_example: Graph */
+  | var_declaration              { $1 } /* actor: Node, number: Int, graph_example: Graph */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
-  | expr ASSIGN LBRACE formal_list RBRACE    { Contructor($1, List.rev $4) } /* expr = { name: String, age: Int} Specific kind of rule above. Needed to solve shift/reduce conflict */
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */

@@ -2,7 +2,7 @@ let fst_of_three (t, _, _) = t
 let snd_of_three (_, t, _) = t
 let thd_of_three (_, _, t) = t
 
-type program = var list * func_decl list *)
+type program = var_decl list * func_decl list *)
 
 type op = Add | Sub | Mult | Div | Mod| Equal | Neq | Less | Leq | Greater | Geq | And | Or | Concat
           | Graph_Insert | Graph_Remove | Data_Insert | Data_Remove
@@ -15,18 +15,23 @@ type expr =
   | String of string 
   | Bool of bool 
   | Id of string
-  | Var of var 
   | Binop of expr * op * expr
   | Unop of uop * expr
   | Assign of expr * expr
   | Access of string * string
   | Call of string * expr list
   | Func of built_in_function_call
-  | Constructor of  string * expr list
+  | Complex of complex_literal
+  | Var of var_decl
+
+type complex_literal = 
   | Graph of node_rel_node_tuple list
   | Graph_element of string * expr list 
 
-type var = string * n2n_type
+type var_decl = 
+    Var of string * n2n_type
+ |  Constructor of string * n2n_type * expr list
+ |  VarDeclLiteral of string * n2n_type * complex_literal
 
 type return_ty =
   | Type_spec of type_spec
@@ -114,6 +119,15 @@ let string_of_unop = function
     Neg -> "-"
   | Not -> "!"
 
+let string_of_var_decl = function
+ | Var(v) ->
+      (match (fst v) with
+        | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
+        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t 
+        | List(t) -> "List<"^string_of_n2n_type t^">")
+ | Constructor(e, f) -> string_of_expr e ^ " = { " ^ String.concat ", " (List.map string_of_expr f) ^ "}"
+ | VarDeclLiteral(e, f, g) -> string_of_expr e ^ " : " ^ string_of_n2n_type f ^ " = " ^ string_of_complex_literal g
+
 let rec string_of_expr = function
     Int(l) -> string_of_int l
   | Double(l) -> string_of_float l
@@ -142,8 +156,10 @@ let rec string_of_expr = function
  (* | Graph(graph_type_l) ->
       if(List.length graph_type_l) > 3 then "(" ^ String.concat "," (List.map string_of_graph_type graph_type_l)  ^ ")" (* Fix this: need to print 3 tuples with comma in between*)
       else "(" String.concat " " (List.map string_of_graph_type graph_type_l) ^ " )" *)
-  | Graph(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
+  | Complex(c) -> string_of_complex_literal c
 
+let string_of_complex_literal = function
+  | Graph(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
        (*Modification needed*)
   | Graph_element(id, el) ->
       string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
