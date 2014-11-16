@@ -7,9 +7,9 @@ type uop = Not | Neg
 
 type expr =
     Int of int
-  | Double of float 
-  | String of string 
-  | Bool of bool 
+  | Double of float
+  | String of string
+  | Bool of bool
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
@@ -20,11 +20,11 @@ type expr =
   | Complex of complex_literal
   | Var of var_decl
 
-type complex_literal = 
+type complex_literal =
   | Graph of node_rel_node_tuple list
-  | Graph_element of string * expr list 
+  | Graph_element of string * expr list
 
-type var_decl = 
+type var_decl =
     Var of string * n2n_type
  |  Constructor of string * n2n_type * expr list
  |  VarDeclLiteral of string * n2n_type * complex_literal
@@ -33,14 +33,13 @@ type return_ty =
   | Type_spec of type_spec
   | Void
 
-type type_spec = 
+type type_spec =
   | N2N_type of n2n_type
   | List of n2n_type
 
-type n2n_type = 
+type n2n_type =
   | N2N_primitive of primitive_type
-  | N2N_complex of complex_type 
-(* till here *)
+  | N2N_complex of complex_type
 
 type primitive_type =
     Int
@@ -53,18 +52,18 @@ type complex_type =
   | Node
   | Rel
 
-type built_in_function_call = 
+type built_in_function_call =
   | FindMany of string * find_many
   | Map of expr * map_function
   | Neighbors_Func of string * neighbors_function
 
-type map_function = 
+type map_function =
   | Map_Func of expr * string * statement
 
-type neighbors_function = 
+type neighbors_function =
   | Neighbors of string
 
-type graph_type = 
+type graph_type =
   | Graph_type_ID of string
   | Graph_type of string * expr list
 
@@ -72,12 +71,12 @@ type node_rel_node_tuple =
   | Node_Rel_Node_Tup of graph_type * graph_type * graph_type
 
 type statement =
-    Block of statement list 
+    Block of statement list
   | Expr of expr
   | Return of expr
   | If of expr * statement * statement
 
-type formal = 
+type formal =
   Formal of type_spec * string
 
 type func_decl = {
@@ -87,24 +86,24 @@ type func_decl = {
     return_type : return_ty;
   }
 
-type find_many = 
-  | FindMany_node of expr 
+type find_many =
+  | FindMany_node of expr
   | FindMany_gen of expr * expr
 
 
 (*For semantic check*)
 
 let string_of_binop = function
-    Add -> "+" 
-  | Sub -> "-" 
-  | Mult -> "*" 
-  | Div -> "/" 
+    Add -> "+"
+  | Sub -> "-"
+  | Mult -> "*"
+  | Div -> "/"
   | Mod -> "mod"
-  | Equal -> "==" 
+  | Equal -> "=="
   | Neq -> "!="
-  | Less -> "<" 
-  | Leq -> "<=" 
-  | Greater -> ">" 
+  | Less -> "<"
+  | Leq -> "<="
+  | Greater -> ">"
   | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
@@ -145,7 +144,7 @@ let string_of_var_decl = function
  | Var(v) ->
       (match (fst v) with
         | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
-        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t 
+        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t
         | List(t) -> "List<"^string_of_n2n_type t^">")
  | Constructor(e, f) -> string_of_expr e ^ " = { " ^ String.concat ", " (List.map string_of_expr f) ^ "}"
  | VarDeclLiteral(e, f, g) -> string_of_expr e ^ " : " ^ string_of_n2n_type f ^ " = " ^ string_of_complex_literal g
@@ -165,14 +164,14 @@ let rec string_of_expr = function
   | Var(v) ->
       (match (fst v) with
         | N2N_primitive(t) -> snd v ^":"^ string_of_primitive_type t
-        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t 
+        | N2N_complex(t) -> snd v ^":"^ string_of_complex_type t
         | List(t) -> "List<"^string_of_n2n_type t^">")
-        
+
   | Binop(e1, o, e2) ->
-      string_of_expr e1 ^ " " ^ 
-      string_of_binop o ^ " " ^ 
+      string_of_expr e1 ^ " " ^
+      string_of_binop o ^ " " ^
       string_of_expr e2
-  | Unop(o, e) -> 
+  | Unop(o, e) ->
       string_of_unop o ^ " " ^
       string_of_expr
   | Assign(v, e) -> string_of_expr v ^ " = " ^ string_of_expr e
@@ -200,7 +199,7 @@ let string_of_node_rel_tuples = function
   | Node_Rel_Node_Tup(n1, r1, n2) -> string_of_graph_type n1 ^ " " ^ string_of_graph_type r1 ^ " " ^ string_of_graph_type n2
 
 let string_of_func_decl fdecl=
-  "fn" ^ (string_of_expr fdecl.fname) ^ "(" ^ String.concat ", " (List.map string_of_expr fdecl.formals) 
+  "fn" ^ (string_of_expr fdecl.fname) ^ "(" ^ String.concat ", " (List.map string_of_expr fdecl.formals)
   ^ ") -> " ^ (string_of_return_ty fdecl.return_type) ^ "{" ^ (string_of_stmt fdecl.body) ^ "}"
 
 let string_of_built_in_fdecl = function
@@ -212,23 +211,11 @@ let string_of_statement = function
     Expr(l) -> string_of_expr l ^ "\n"
   | Return(l) -> "return" ^ string_of_expr l ^ "\n"
   | Block(l) -> "{" ^ String.concat "\n" (List.map string_of_statement l) ^ "}"
-  | If(e, l , p) -> 
-    (match p with 
-        [] -> "if ( " ^ string_of_expr e ^ " )\n " ^ string_of_statement l 
+  | If(e, l , p) ->
+    (match p with
+        [] -> "if ( " ^ string_of_expr e ^ " )\n " ^ string_of_statement l
       | _ -> "if ( " ^ string_of_expr e ^ " )\n" ^ string_of_statement l ^ "else\n " ^ string_of_statement p )
-  
+
 let string_of_find_many = function
   | FindMany_node(t) -> "find_many (" ^ string_of_expr t ^ ")"
   | FindMany_gen(t) -> "find_many (" ^ string_of_graph_type t ^ "," ^ string_of_graph_type ^ ")"
-   
-
-
-
-
-
-
-
-
-
-
-
