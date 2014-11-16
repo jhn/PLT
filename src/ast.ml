@@ -1,8 +1,4 @@
-let fst_of_three (t, _, _) = t
-let snd_of_three (_, t, _) = t
-let thd_of_three (_, _, t) = t
-
-type program = var_decl list * func_decl list *)
+type program = var_decl list * func_decl list
 
 type op = Add | Sub | Mult | Div | Mod| Equal | Neq | Less | Leq | Greater | Geq | And | Or | Concat
           | Graph_Insert | Graph_Remove | Data_Insert | Data_Remove
@@ -81,9 +77,12 @@ type statement =
   | Return of expr
   | If of expr * statement * statement
 
+type formal = 
+  Formal of type_spec * string
+
 type func_decl = {
     fname : string;
-    formals : string list;
+    formals : formal list;
     body : statement list;
     return_type : return_ty;
   }
@@ -119,6 +118,29 @@ let string_of_unop = function
     Neg -> "-"
   | Not -> "!"
 
+let string_of_primitive_type = function
+  | Int -> "Int"
+  | String -> "String"
+  | Bool -> "Bool"
+  | Double -> "Double"
+
+let string_of_complex_type = function
+  | Graph -> "Graph"
+  | Node -> "Node"
+  | Rel -> "Rel"
+
+let string_of_n2n_type = function
+  | N2N_primitive(t) -> string_of_primitive_type t
+  | N2N_complex(t) -> string_of_complex_type t
+
+let string_of_type_spec = function
+  | N2N_type(t) -> string_of_n2n_type t
+  | List(t) -> "List<"^string_of_n2n_type t^">"
+
+let string_of_return_ty = function
+  | Type_spec(t) -> string_of_type_spec t
+  | Void() -> "Void"
+
 let string_of_var_decl = function
  | Var(v) ->
       (match (fst v) with
@@ -127,6 +149,12 @@ let string_of_var_decl = function
         | List(t) -> "List<"^string_of_n2n_type t^">")
  | Constructor(e, f) -> string_of_expr e ^ " = { " ^ String.concat ", " (List.map string_of_expr f) ^ "}"
  | VarDeclLiteral(e, f, g) -> string_of_expr e ^ " : " ^ string_of_n2n_type f ^ " = " ^ string_of_complex_literal g
+
+let string_of_complex_literal = function
+  | Graph(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
+       (*Modification needed*)
+  | Graph_element(id, el) ->
+      string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
 
 let rec string_of_expr = function
     Int(l) -> string_of_int l
@@ -157,35 +185,6 @@ let rec string_of_expr = function
       if(List.length graph_type_l) > 3 then "(" ^ String.concat "," (List.map string_of_graph_type graph_type_l)  ^ ")" (* Fix this: need to print 3 tuples with comma in between*)
       else "(" String.concat " " (List.map string_of_graph_type graph_type_l) ^ " )" *)
   | Complex(c) -> string_of_complex_literal c
-
-let string_of_complex_literal = function
-  | Graph(graph_type_l) -> "( " ^ String.concat "," (List.map string_of_node_rel_tuples graph_type_l) ^ " )"
-       (*Modification needed*)
-  | Graph_element(id, el) ->
-      string_of_expr id ^ "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
-
-let string_of_return_ty = function
-  | Type_spec(t) -> string_of_type_spec t
-  | Void() -> "Void"
-
-let string_of_type_spec = function
-  | N2N_type(t) -> string_of_n2n_type t
-  | List(t) -> "List<"^string_of_n2n_type t^">"
-
-let string_of_n2n_type = function
-  | N2N_primitive(t) -> string_of_primitive_type t
-  | N2N_complex(t) -> string_of_complex_type t
-
-let string_of_primitive_type = function
-  | Int -> "Int"
-  | String -> "String"
-  | Bool -> "Bool"
-  | Double -> "Double"
-
-let string_of_complex_type = function
-  | Graph -> "Graph"
-  | Node -> "Node"
-  | Rel -> "Rel"
 
 let string_of_map = function
     Map_Func(l, s, t) -> "map (" ^ string_of_expr l ^ ", { " ^ string_of_expr s ^ " in " ^ string_of_statement t ^ " } )"
