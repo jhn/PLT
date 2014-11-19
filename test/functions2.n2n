@@ -1,0 +1,10 @@
+fn foo () -> Void {
+	;Do something;
+	return 5
+
+}
+
+fn init1 () -> Void {
+	a: Int = foo()
+	print(a)
+}

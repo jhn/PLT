@@ -1,0 +1,28 @@
+1. Arithmetic: 
+	integer addition
+2. Arithmetic2: 
+	integer subtraction
+	integer multiplication
+	integer divsion	
+	Mod
+3. Comparison1:
+	>, <
+4. Comparison2:
+	==, !=, >=, <=
+5. Float:
+	integer division(8/6)
+6. Float2:
+	double division(8.0/6.0)
+7. Helloworld:
+	print strings
+8. Declaration:
+	Testing the scope and not sure what happens when a global variable is declared
+	locally again.
+9. Intialization1:
+	Test to see if we can declare and initialize a variable at the same time.
+10. Functions1:
+	Testing the function call.
+11. Functions2:
+	Testing the assignment case:
+		ID: Type = function call
+12. 
