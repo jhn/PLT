@@ -7,15 +7,50 @@ type environment = {
 
 let beginning_environment = { functions = [], variables = [] }
 
+let check_arithmetic_binary_op t1 t2 = 
+	match (t1, t2) with
+	| (Int, Int) -> Int
+	| (Int, Double) -> Double
+	| (Double, Int) -> Double
+	| (Double, Double) -> Double
+	| (_,_) -> raise(Error("Binary operation fails, wrong element type"))
+
+let check_equality t1 t2 = 
+	if t1 = t2 then Bool else
+	match (t1, t2) with
+	| (Int, Double) -> Bool
+	| (Double, Int) -> Bool
+	| (_, _) -> raise(Error("Equality operation fails, arguments not same type"))
+
 let check_expr env expr = match expr with
-	Int_Literal(i) -> T(Int)
+	Int_Literal(i) -> Type_spec(Int)
 	| Double_Literal(d) -> Type_spec(Double)
 	| Bool_Literal(b) ->  Type_spec(Bool)
 	| String_Literal(str) -> Type_spec(String)
 	| ID(v) -> 
 		let (_, t, _) = try List.find (v, _, _) env.variables with
 			Not_found -> raise (Error("Identifier doesn't exist!")) in v
-	| Unop(u, e) -> 
+	| Unop(u, e) -> match u with
+		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using not on a non-boolean expr"))
+		| Neg -> if check_expr e = Type_spec(Double) then Type_spec(Double)
+			else if check_expr e = Type_spec(Int) then Type_spec(Int) 
+			else raise (Error("Using a neg on a non int or float expr"))
+	| Binop(e1, op, e2) -> 
+		let t1 = check_expr e1 and t2 = check_expr e2 in
+		let binop_t = (match op with
+			Add -> check_arithmetic_binary_op t1 t2
+			| Sub -> check_arithmetic_binary_op t1 t2  
+			| Mult -> check_arithmetic_binary_op t1 t2
+			| Div -> check_arithmetic_binary_op t1 t2
+			| Mod -> if (t1, t2) = (Int, Int) then Int
+			| Equal -> check_equality t1 t2
+			| Neq -> check_equality t1 t2
+	(* 	ARITHMETIC -> Ints, floats
+		EQ/NEQ -> All
+		Other Logical -> Not complex types 
+		Concat -> Strings
+		Graph_ops -> Graph op (Nodes and/or rel)
+		Data_insert/remove -> Nodes and  *)
 
 let rec get_sexpr env expr = match expr with
 	Int_Literal(i) -> SInt_Literal(i, Type_spec(Int))
