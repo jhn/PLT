@@ -22,6 +22,15 @@ let check_equality t1 t2 =
 	| (Double, Int) -> Bool
 	| (_, _) -> raise(Error("Equality operation fails, arguments not same type"))
 
+let check_logic t1 t2 =
+	match(t1, t2) with
+	| (Int, Int) -> Bool
+	| (Int, Double) -> Bool
+	| (Double, Int) -> Bool
+	| (Double, Double) -> Bool
+	| (String, String) -> Bool
+	| (_,_) -> raise(Error("Logical operation fails, arguments not of correct types"))
+
 let check_expr env expr = match expr with
 	Int_Literal(i) -> Type_spec(Int)
 	| Double_Literal(d) -> Type_spec(Double)
@@ -31,7 +40,7 @@ let check_expr env expr = match expr with
 		let (_, t, _) = try List.find (v, _, _) env.variables with
 			Not_found -> raise (Error("Identifier doesn't exist!")) in v
 	| Unop(u, e) -> match u with
-		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using not on a non-boolean expr"))
+		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
 		| Neg -> if check_expr e = Type_spec(Double) then Type_spec(Double)
 			else if check_expr e = Type_spec(Int) then Type_spec(Int) 
 			else raise (Error("Using a neg on a non int or float expr"))
@@ -42,9 +51,20 @@ let check_expr env expr = match expr with
 			| Sub -> check_arithmetic_binary_op t1 t2  
 			| Mult -> check_arithmetic_binary_op t1 t2
 			| Div -> check_arithmetic_binary_op t1 t2
-			| Mod -> if (t1, t2) = (Int, Int) then Int
+			| Mod -> if (t1, t2) = (Int, Int) then Int else raise (Error("Using MOD on a non-integer expr"))
 			| Equal -> check_equality t1 t2
 			| Neq -> check_equality t1 t2
+			| Less -> check_logic t1 t2
+			| Leq -> check_logic t1 t2
+			| Greater -> check_logic t1 t2
+			| Geq -> check_logic t1 t2
+			| And -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using AND on a non-boolean expr"))
+			| Or -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using OR on a non-boolean expr"))
+			| Concat -> if (t1, t2) = (String, String) then String else raise (Error("Using Concat on non-string expr"))
+			| Graph_Insert -> 
+			| Graph_Remove -> 
+			| Data_Insert -> 
+			| Data_remove -> 
 	(* 	ARITHMETIC -> Ints, floats
 		EQ/NEQ -> All
 		Other Logical -> Not complex types 
