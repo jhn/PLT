@@ -8,8 +8,9 @@
   match s with
      "\\n" -> '\n'
    | "\\t" -> '\t'
-   | "\\\\" -> '\\'
+   | "\\" -> '\'
    | "\"" ->  '"'
+   | "\'" ->  '''
    | c -> raise (Failure("unsupported character " ^ c))
 }
 
@@ -38,7 +39,7 @@ rule token = parse
    | '/'                     { DIVIDE }
    | '%'                     { MOD }
 
-   | ';'                     { SEMI }
+(*   | ';'                     { SEMI }*)
    | ':'                     { COLON }
    | ","                     { COMMA }
    | '='                     { ASSIGN }
@@ -57,9 +58,9 @@ rule token = parse
    | "||"                    { OR }
 
    | "if"                    { IF }
-   | "elif"                  { ELIF }
    | "else"                  { ELSE }
 
+(*   | "elif"                  { ELIF }*)
    | "map"                   { MAP }
    | "find_many"             { FINDMANY }
 
