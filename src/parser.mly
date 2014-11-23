@@ -59,7 +59,7 @@ primitive_type:
   | INT       { N2N_primitive(Int) }
   | STRING    { N2N_primitive(String) }
   | DOUBLE    { N2N_primitive(Double) }
-  | BOOL      { N2N_priitive(Bool) }
+  | BOOL      { N2N_primitive(Bool) }
 
 complex_type:
   | GRAPH     { N2N_complex(Graph) }
@@ -114,6 +114,7 @@ expr:
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
   | var_declaration              { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
+  | ID LBRACE formal_list RBRACE    { Constructor(Id($1), List.rev $2)}
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
@@ -156,24 +157,24 @@ actuals_list:
   | actuals_list COMMA expr { $3 :: $1 }
 
 binary_operation:
-  | expr PLUS   expr             { Binop($1, Add,   $3) }
-  | expr MINUS  expr             { Binop($1, Sub,   $3) }
-  | expr TIMES  expr             { Binop($1, Mult,  $3) }
-  | expr DIVIDE expr             { Binop($1, Div,   $3) }
-  | expr MOD    expr             { Binop($1, Mod,   $3) }
-  | expr EQ     expr             { Binop($1, Equal, $3) }
-  | expr NEQ    expr             { Binop($1, Neq,   $3) }
-  | expr LT     expr             { Binop($1, Less,  $3) }
-  | expr LEQ    expr             { Binop($1, Leq,   $3) }
-  | expr GT     expr             { Binop($1, Greater,  $3) }
-  | expr GEQ    expr             { Binop($1, Geq,   $3) }
-  | expr AND    expr             { Binop($1, And, $3) }
-  | expr OR     expr             { Binop($1, Or, $3) }
-  | expr CONCAT expr             { Binop($1, Concat, $3) }
-  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
-  | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
-  | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
-  | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
+  | expr PLUS   expr                                                       { Binop($1, Add,   $3) }
+  | expr MINUS  expr                                                       { Binop($1, Sub,   $3) }
+  | expr TIMES  expr                                                       { Binop($1, Mult,  $3) }
+  | expr DIVIDE expr                                                       { Binop($1, Div,   $3) }
+  | expr MOD    expr                                                       { Binop($1, Mod,   $3) }
+  | expr EQ     expr                                                       { Binop($1, Equal, $3) }
+  | expr NEQ    expr                                                       { Binop($1, Neq,   $3) }
+  | expr LT     expr                                                       { Binop($1, Less,  $3) }
+  | expr LEQ    expr                                                       { Binop($1, Leq,   $3) }
+  | expr GT     expr                                                       { Binop($1, Greater,  $3) }
+  | expr GEQ    expr                                                       { Binop($1, Geq,   $3) }
+  | expr AND    expr                                                       { Binop($1, And, $3) }
+  | expr OR     expr                                                       { Binop($1, Or, $3) }
+  | expr CONCAT expr                                                       { Binop($1, Concat, $3) }
+  | expr GRAPH_INSERT LPAREN graph_type graph_type graph_type RPAREN       { Binop($1, Graph_Insert, ($4, $5, $6)) }/* ^+ */
+  | expr GRAPH_REMOVE LPAREN graph_type graph_type graph_type RPAREN       { Binop($1, Graph_Remove, ($4, $5, $6)) }/* ^- */
+  | expr DATA_INSERT expr                                                  { Binop($1, Data_Insert, $3) }/* [+] */
+  | expr DATA_REMOVE expr                                                  { Binop($1, Data_remove, $3) }/* [-] */
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
