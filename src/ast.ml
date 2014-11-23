@@ -49,10 +49,8 @@ type formal =
   | Formal of type_spec * string
 
 type expr =
-  | Int_Literal of int
-  | Double_Literal of float
-  | String_Literal of string
-  | Bool_Literal of bool
+  | Literal of literal
+  | Complex of complex_literal
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
@@ -60,7 +58,12 @@ type expr =
   | Access of string * string
   | Call of string * expr list
   | Func of built_in_function_call
-  | Complex of complex_literal
+
+and literal =
+  | Int_Literal of int
+  | Double_Literal of float
+  | String_Literal of string
+  | Bool_Literal of bool
 
 and built_in_function_call =
   | Find_Many of string * find_many
@@ -68,7 +71,7 @@ and built_in_function_call =
   | Neighbors_Func of string * string
 
 and map_function =
-  | Map_Func of expr * string * statement
+  | Map_Func of string * statement list
 
 and statement =
   | Block of statement list
@@ -93,15 +96,15 @@ and graph_type =
   | Graph_Type of string * expr list
 
 and var_decl =
- | Var of n2n_type * string
- | Constructor of n2n_type * string * formal list
- | VarDeclLiteral of n2n_type * string * complex_literal
+  | Var of n2n_type * string
+  | Constructor of n2n_type * string * formal list
+  | VarDeclLiteral of n2n_type * string * complex_literal
 
 type func_decl = {
-    fname : string;
-    formals : formal list;
-    body : statement list;
-    return_type : return_ty;
-  }
+  fname : string;
+  formals : formal list;
+  body : statement list;
+  return_type : return_ty;
+}
 
 type program = var_decl list * func_decl list
