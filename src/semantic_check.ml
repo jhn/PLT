@@ -31,6 +31,16 @@ let check_logic t1 t2 =
 	| (String, String) -> Bool
 	| (_,_) -> raise(Error("Logical operation fails, arguments not of correct types"))
 
+(* Can't do like this because rhs not just int etc. but (var_name:Type)
+
+let check_data_insert t1 t2 =
+	match(t1, t2) with
+	| (Node, Int) -> Type_spec(Node) (*Can we match with node token?*)
+	| (Node, Double) -> Type_spec(Node)
+	| (Node, Bool) -> Type_spec(Node)
+	| (Node, String) -> Type_spec(Node)
+*)
+
 let check_expr env expr = match expr with
 	Int_Literal(i) -> Type_spec(Int)
 	| Double_Literal(d) -> Type_spec(Double)
@@ -61,16 +71,40 @@ let check_expr env expr = match expr with
 			| And -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using AND on a non-boolean expr"))
 			| Or -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using OR on a non-boolean expr"))
 			| Concat -> if (t1, t2) = (String, String) then String else raise (Error("Using Concat on non-string expr"))
-			| Graph_Insert -> 
-			| Graph_Remove -> 
-			| Data_Insert -> 
-			| Data_remove -> 
+			| Graph_Insert -> check_graph_op t1 t2 (*Func not written yet*)
+			| Graph_Remove -> check_graph_op t1 t2
+			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
+			| Data_remove -> check_data_op t1 t2
+		)
+	| Assign(e1, e2) -> let (_,t1,_) = try List.find (e1, _, _) env.variables and t2 = check_expr env e2
+				in (if not (t1=t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e2
+			Not_found -> raise (Error("Identifier doesn't exist!")) in e1
+	(*For access, types dont need to be the same but need to check if e2 is within data type of e1*)
+	| Access(e1, e2) -> let(_,t1,_) = try List.find (e1, _, _) env.variables (*?????*)
+	| Call(id, e1) -> try (let (fname, ret_ty, args, body) = List.find (s,_,_,_) env.functions id in
+		let passed_type = List.map (fun exp -> check_expr env exp) e1 in
+		let func_types = List.map (fun arg -> let(_,typ,_) = get_name_type_from_formal env arg in typ) args in
+		if not(passed_type = func_types) then
+			raise (Error("Mismatched types in func call")) else Type_spec(ret_ty))
+		with Not_found -> raise (Error("Undeclared Function"))
+	| Func(fname) -> let built_in_func = (match fname with
+		Find_Many(id,e1) ->
+		| Map(e1,e2) -> 
+			let (_,t1,_) = try List.find(e1,_,_) env.variables and
+			let map_func = 
+			(match e2 with 
+				Map_Func(e3,id,s1) -> let (*I got lost understanding how we're using map!*)
+		| Neighbors_Func(id,e1) -> let (_,t1,_) = try List.find(e1,_,_) env.variables and
+
+let get_name_type_from_formal env = function
+	Formal(type_spec,id) -> (id, type_spec, None)
+
 	(* 	ARITHMETIC -> Ints, floats
 		EQ/NEQ -> All
 		Other Logical -> Not complex types 
 		Concat -> Strings
-		Graph_ops -> Graph op (Nodes and/or rel)
-		Data_insert/remove -> Nodes and  *)
+		Graph_ops -> Graph op (Nodes and/or rel) OR node-rel-node tuple
+		Data_insert/remove -> Node and primitive *)
 
 let rec get_sexpr env expr = match expr with
 	Int_Literal(i) -> SInt_Literal(i, Type_spec(Int))
