@@ -46,10 +46,7 @@ var_declarations:
   | var_declarations var_declaration { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type TERMINATION                                   { Var ($3, $1) } /* foo: String */
-/*  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE TERMINATION  { Constructor(N2N_type($3), Id($1), List.rev $6)}
-  | ID COLON n2n_type ASSIGN complex_literal TERMINATION            { VarDeclLiteral(N2N_type($3), Id($1), Complex($5))}
-*/
+  | ID COLON n2n_type TERMINATION   { Var ($3, $1) } /* foo: String */
 
 n2n_type:
   | primitive_type { $1 }
@@ -186,7 +183,7 @@ built_in_function_call:
   | ID ACCESS neighbors_function           { Neighbors_Func($1, $3) } /* graph_example.neighbors(node_ID) */
 
 map_function:
-  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map_Func($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
+  | MAP LPAREN ID IN LBRACE statements RBRACE RPAREN { Map_Func($3, $6) }  /* map(node in {...}) */
 
 neighbors_function:
   | NEIGHBORS LPAREN ID RPAREN { $3 }
