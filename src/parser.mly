@@ -47,8 +47,9 @@ var_declarations:
 
 var_declaration:
   | ID COLON n2n_type TERMINATION                                   { Var ($3, $1) } /* foo: String */
-  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE TERMINATION  { Constructor(N2N_type($3), Id($1), List.rev $6)}
+/*  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE TERMINATION  { Constructor(N2N_type($3), Id($1), List.rev $6)}
   | ID COLON n2n_type ASSIGN complex_literal TERMINATION            { VarDeclLiteral(N2N_type($3), Id($1), Complex($5))}
+*/
 
 n2n_type:
   | primitive_type { $1 }
@@ -58,7 +59,7 @@ primitive_type:
   | INT       { N2N_primitive(Int) }
   | STRING    { N2N_primitive(String) }
   | DOUBLE    { N2N_primitive(Double) }
-  | BOOL      { N2N_primitive(Bool) }
+  | BOOL      { N2N_priitive(Bool) }
 
 complex_type:
   | GRAPH     { N2N_complex(Graph) }
@@ -104,7 +105,6 @@ statement:
   | LBRACE statements RBRACE                       { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
   | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
-  | var_declaration                                { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
@@ -113,6 +113,7 @@ expr:
   | unary_operation              { $1 } /* -1 */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
+  | var_declaration              { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
   | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
