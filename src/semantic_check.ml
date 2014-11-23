@@ -46,6 +46,8 @@ let check_expr env expr = match expr with
 	| Double_Literal(d) -> Type_spec(Double)
 	| Bool_Literal(b) ->  Type_spec(Bool)
 	| String_Literal(str) -> Type_spec(String)
+	| Complex(c) -> match c with
+
 	| ID(v) -> 
 		let (_, t, _) = try List.find (v, _, _) env.variables with
 			Not_found -> raise (Error("Identifier doesn't exist!")) in v
@@ -57,7 +59,7 @@ let check_expr env expr = match expr with
 	| Binop(e1, op, e2) -> 
 		let t1 = check_expr e1 and t2 = check_expr e2 in
 		let binop_t = (match op with
-			Add -> check_arithmetic_binary_op t1 t2
+			  Add -> check_arithmetic_binary_op t1 t2
 			| Sub -> check_arithmetic_binary_op t1 t2  
 			| Mult -> check_arithmetic_binary_op t1 t2
 			| Div -> check_arithmetic_binary_op t1 t2
