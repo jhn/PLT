@@ -1,28 +1,89 @@
 1. Arithmetic: 
 	integer addition
+
 2. Arithmetic2: 
 	integer subtraction
 	integer multiplication
 	integer divsion	
 	Mod
+
 3. Comparison1:
 	>, <
+
 4. Comparison2:
 	==, !=, >=, <=
+
 5. Float:
 	integer division(8/6)
+
 6. Float2:
 	double division(8.0/6.0)
+
 7. Helloworld:
 	print strings
+
 8. Declaration:
 	Testing the scope and not sure what happens when a global variable is declared
 	locally again.
+
 9. Intialization1:
 	Test to see if we can declare and initialize a variable at the same time.
+
 10. Functions1:
 	Testing the function call.
+
 11. Functions2:
 	Testing the assignment case:
 		ID: Type = function call
-12. 
+
+12. Function3:
+	Testing function calls, have a nested feature
+
+13. If:
+	Testing the functionality of "if" -- dangling "else" problem and see if the 
+	predicate can take an expression.
+
+14. Escapestr1:
+	escape case for '\n'
+
+15. Escapestr2:
+	escape case for '\t'
+
+16. Escapestr3:
+	escape case for '\'
+
+17. Escapestr4:
+	escape case for '"'
+
+18. Escapestr5:
+	escape case for '''
+
+19. Node:
+	Testing node declaration and instantiation
+
+20. Rel:
+	Testing rel declaration and instantiation
+
+21. Graph:
+	Test to construct graph from node and rel ID
+
+22. Graph2:
+	Test to construct graph from instantiations
+
+23. NodeAccess:
+	Test the "Access" on the node
+
+24. RelAccess:
+	Test the "Access" on the rel
+
+24. GraphAccess:
+	Test the "Access" on the graph
+
+25. GraphAccess2:
+	Test the "Access" on the graph when graph is constructed from instantiations
+
+26. NodeInsDel:
+	Test to perform data insertion and deletion on node
+
+27. GraphInsDel:
+	Test to perform relationship insertion and deletion into the graph
