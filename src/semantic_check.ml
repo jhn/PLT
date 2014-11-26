@@ -1,11 +1,16 @@
 open Ast
 
+exception Error of string;;
+
 type environment = {
 	functions: (string * return_ty * formal list * statement list) list;
 	variables: (string * n2n_type * expr) list;
+	(*Added Nodes and Rel types for instance "acted_in" and "actor" type rels and nodes, respectively*)
+	node_types: var_decl list;
+	rel_types: var_decl list;
 }
 
-let beginning_environment = { functions = [], variables = [] }
+let beginning_environment = { functions = [], variables = [], node_types = [], rel_types = [] }
 
 let check_arithmetic_binary_op t1 t2 = 
 	match (t1, t2) with
@@ -41,16 +46,51 @@ let check_data_insert t1 t2 =
 	| (Node, String) -> Type_spec(Node)
 *)
 
-let check_expr env expr = match expr with
-	Int_Literal(i) -> Type_spec(Int)
-	| Double_Literal(d) -> Type_spec(Double)
-	| Bool_Literal(b) ->  Type_spec(Bool)
-	| String_Literal(str) -> Type_spec(String)
-	| Complex(c) -> match c with
+let is_node env id =
+	let isNode = List.mem (id, _) env.node_types in
+	isNode
 
-	| ID(v) -> 
+let is_rel env id = 
+	let isRel = List.mem (id, _) env.rel_types in
+	isRel
+
+let check_node_literal env id lit_list =
+	let (_, l) = List.find (id, _) env.node_types in
+	try List.iter2 (fun lit (t2, _) -> 
+		let t1 = check_expr lit in
+		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
+	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Node
+
+let check_rel_literal env id lit_list = 
+	let (_, l) = List.find (id, _) env.rel_types in 
+	try List.iter2 (fun lit (t2, _) ->
+		let t1 = check_expr lit in
+		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
+	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Rel 
+
+let check_node_or_rel_literal env id lit_list = 
+	if is_node id then check_node_literal env id lit_list
+	else if is_rel env id then check_rel_literal env id lit_list
+	else raise(Error("Could not find constructor for your node or rel"))
+
+let check_nrn_expr env (n1, r, n2) = 
+	let t1 = check_expr n1 and t2 = check_expr n2 and tr = check_expr n3 in
+	match (t1, tr, t2) with
+	| (Node, Rel, Node) -> true;
+	| (_,_,_) -> raise(Error("Trying to insert some incorrect combination of nodes and relationships into the graph"))
+
+let rec check_expr env expr = match expr with
+	| Literal(l) -> (match l with
+		| Int_Literal(i) -> Int
+		| Double_Literal(d) -> Double
+		| Bool_Literal(b) -> Bool
+		| String_Literal(str) -> String)
+	| Complex(c) -> match c with 
+		Graph_Literal(nrn_list) -> print_str(nrn)
+		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
+	| Id(v) -> 
 		let (_, t, _) = try List.find (v, _, _) env.variables with
-			Not_found -> raise (Error("Identifier doesn't exist!")) in v
+			Not_found -> raise (Error("Identifier doesn't exist!")) in t
 	| Unop(u, e) -> match u with
 		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
 		| Neg -> if check_expr e = Type_spec(Double) then Type_spec(Double)
