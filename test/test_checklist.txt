@@ -87,3 +87,9 @@
 
 27. GraphInsDel:
 	Test to perform relationship insertion and deletion into the graph
+
+28. Neighbor:
+	Test the builtin function "neighbors"
+
+29. Find_many:
+	
