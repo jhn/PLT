@@ -1,4 +1,4 @@
-fn graphAccess() -> Void {
+fn map() -> Void {
 
 	actor: Node = { name: String, age: Int }
 	Keanu: Node = actor["Keanu", 35]
@@ -17,15 +17,8 @@ fn graphAccess() -> Void {
 		Leo jordan wolf
 	)
 
-	print(Cast)
-	print("\\n")
+	visited_node: List<Node> = Cast.map(node in {node [+] visited:Bool = true})
 
-	Cast ^+ (Keanu acted_in["Nelson"] movie["Sweet November", 2000])
-	print(Cast)
-	print("\\n")
+	print(visited_node)
 
-	Cast ^- (Keanu acted_in["Nelson"] movie["Sweet November", 2000])
-	print(Cast)
-	print("\\n")
-	
 }

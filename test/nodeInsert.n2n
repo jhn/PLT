@@ -1,6 +1,0 @@
-fn node() -> Void {
-	actor: Node = { name: String, age: Int }
-	Keanu: Node = actor["Keanu", 35]
-	print(Keanu)
-	
-}

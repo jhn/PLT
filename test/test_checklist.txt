@@ -91,5 +91,14 @@
 28. Neighbor:
 	Test the builtin function "neighbors"
 
-29. Find_many:
-	
+29. Map:
+	Test the builtin function "map"
+
+30. Find_many1:
+	Test the builtin function "find_many" to find the missing relationship
+
+31. Find_many2:
+	Test the builtin function "find_many" to find relationship pointing to
+
+32. Find_many3:
+	Test the builtin function "find_many" to find relationship pointing from
