@@ -157,6 +157,60 @@ let rec get_sexpr env expr = match expr with
 	| Unop(u, e) -> SUnop(u, check_expr env e)
 	| Binop(e1, op, e2) -> SBinop()
 
+let rec check_stmt env stmt = match stmt with
+	| Block(stmt_list) -> 
+	| Expr(e) -> let _ = check_expr env e in
+		(SExpr(get_sexpr env e),env)
+	| Return(e) -> 
+		let t1 = check_expr env e in 
+		(if not((t1=return_ty)) then (*Allowed? Really want to do env.functions.return_ty - is that allowed?*)
+			raise (Error("Incompatible Return Type")));
+		(*In slang it then sets return_seen in environment to be true but we don't have that. Needed?*)
+	| If(e,s1,s2) -> let t1 = check_expr env e in
+		(if not(t1=Boolean) then
+			raise (Error("If statement must be a boolean")));
+		let (s1,env1)= check_stmt env s1
+		and (st2, env2) = check_stmt env s2 in
+		(*let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
+		let new_env = {env with return_seen=ret_seen} in
+		(SIf((get_sexpr env e),st1,st2),new_env)*) (*Encorporating SAST functions in here???*)
+
+	| Var_Declaration(decl) -> (*Make sure var with same name doesn't exist already and check for correct type*)
+		let(name,typ) = get_decl_name decl in
+		let((_,ty,_),find_var) = try (fun f -> ((f env name),true)) (List.find (s,_,_) env.variables with
+			Not_found-> raise Not_found ) with
+			Not_found -> (((name,typ,None),false) in
+				let ret = if(found=false) then
+					match decl with
+						Var(n2n_type,id) -> 
+						let (sdecl,_) = (SVar(Svar(id,n2n_type),var_type),env)) in
+						let (i, n, v) = (id, n2n_type, None) in
+						(*add new env to table?*)
+						(SVar(sdecl), t) (*maybe t should be new_env?*)
+						| Constructor(dt,id,formals) -> (*Missing from SAST!*)
+						| VarDeclLiteral(dt,id,coplx))) ->
+							let t1 = t and t2 = check_expr env coplx in
+							if(t1=t2) then
+								let(sdecl,_) = (SVar(SVarDecLiteral(id,dt,coplx),env)) in
+								let (i, n, v) = (id, n2n_type, coplx) in
+								(*new_env?*)
+								SVar(sdecl)(*, new_env?*)
+					else raise (Error("Mismatched types"))
+				else raise (Error("Multiple declarations")) in ret
+
+let get_sstmt_list env stmt_list =
+	List.fold_left (fun (sstmt_list,env) stmt ->
+		let (sstmt, new_env) = check_stmt env stmt in
+		(sstmt::sstmt_list, new_env)) ([],env) stmt_list
+
+let get_decl_name decl = match decl with
+	| Var(n2n_type,id) -> (id,n2n_type)
+	| Constructor(n2n_type,id,formals) -> (id,n2n_type)
+	| VarDeclLiteral(n2n_type,id,complex_literal) -> (id,n2n_type)
+
+let check_func env func_decl =
+	let locals = List.fold_left(fun a (Formal(n2n_type,id)) -> (id,n2n_type,None)::a)[] func_decl.formals in
+	(*var scope and new environments?*)
 
 let add_all_functions_to_env env func_decl_list = 
 	let (checked_functions, new_env) = (fun e fl -> let new_env)
