@@ -2,3 +2,6 @@
 *.automaton
 *.conflicts
 parser.mli
+parser.ml
+parser.conflicts
+ast.cm*
