@@ -47,22 +47,22 @@ let check_data_insert t1 t2 =
 *)
 
 let is_node env id =
-	let isNode = List.mem (id, _) env.node_types in
+	let isNode = List.exists (fun (fid, _) -> fid = id) env.node_types in
 	isNode
 
 let is_rel env id = 
-	let isRel = List.mem (id, _) env.rel_types in
+	let isRel = List.exists (fun (fid, _) -> fid = id) env.rel_types in 
 	isRel
 
 let check_node_literal env id lit_list =
-	let (_, l) = List.find (id, _) env.node_types in
+	let (_, l) = List.find (fun (fid, _) -> fid = id) env.node_types in
 	try List.iter2 (fun lit (t2, _) -> 
 		let t1 = check_expr lit in
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
 	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Node
 
 let check_rel_literal env id lit_list = 
-	let (_, l) = List.find (id, _) env.rel_types in 
+	let (_, l) = List.find (fun (fid, _) -> fid = id) env.rel_types in 
 	try List.iter2 (fun lit (t2, _) ->
 		let t1 = check_expr lit in
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
@@ -74,7 +74,7 @@ let check_node_or_rel_literal env id lit_list =
 	else raise(Error("Could not find constructor for your node or rel"))
 
 let check_graph_ID env id = 
-	let (_, t, _) = try List.find (id, _, _) env.variables with
+	let (_, t, _) = try List.find (fun (fid, _, _) -> fid = id) env.variables with
 	Not_found -> raise (Error("Graph type identifier does not exist!")) in t
 
 let check_graph_type env gt = 
@@ -104,7 +104,7 @@ let rec check_expr env expr = match expr with
 		Graph_Literal(nrn_list) -> print_str(nrn)
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
 	| Id(v) -> 
-		let (_, t, _) = try List.find (v, _, _) env.variables with
+		let (_, t, _) = try List.find (fun (fv, _, _) -> fv = v)  env.variables with
 			Not_found -> raise (Error("Identifier doesn't exist!")) in t
 	| Unop(u, e) -> match u with
 		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
@@ -132,8 +132,8 @@ let rec check_expr env expr = match expr with
 			| Graph_Remove -> check_graph_op t1 t2
 			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
 			| Data_remove -> check_data_op t1 t2
-		)
-	| Assign(e1, e2) -> let (_,t1,_) = try List.find (e1, _, _) env.variables and t2 = check_expr env e2
+		) in binop_t
+	| Assign(e1, e2) -> let (_,t1,_) = try List.find (fun (fe1, _, _) -> fe1 = e1) env.variables and t2 = check_expr env e2
 				in (if not (t1=t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e2
 			Not_found -> raise (Error("Identifier doesn't exist!")) in e1
 	(*For access, types dont need to be the same but need to check if e2 is within data type of e1*)
