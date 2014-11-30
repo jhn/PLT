@@ -121,8 +121,12 @@ let rec check_expr env expr = match expr with
 	| Assign(e1, e2) -> let (_,t1,_) = try List.find (e1, _, _) env.variables and t2 = check_expr env e2
 				in (if not (t1=t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e2
 			Not_found -> raise (Error("Identifier doesn't exist!")) in e1
-	(*For access, types dont need to be the same but need to check if e2 is within data type of e1*)
-	| Access(e1, e2) -> let(_,t1,_) = try List.find (e1, _, _) env.variables (*?????*)
+	(*For access, check if e1 is a variable, check its type, check if that type has e2 as data object*)
+	| Access(e1, e2) -> let(_,t1,_) = try List.find (e1, _, _) env.variables in
+		(if is_node env t1 then let(_,_,p) = try List.find(e2,) env e2 env.node_types
+		else if is_rel env t1 then check_rel_literal env e2 env.rel_types
+		else raise(Error("Could not find constructor for your node or rel"))
+		)
 	| Call(id, e1) -> try (let (fname, ret_ty, args, body) = List.find (s,_,_,_) env.functions id in
 		let passed_type = List.map (fun exp -> check_expr env exp) e1 in
 		let func_types = List.map (fun arg -> let(_,typ,_) = get_name_type_from_formal env arg in typ) args in
