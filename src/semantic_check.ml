@@ -154,8 +154,13 @@ let rec get_sexpr env expr = match expr with
 	| Bool_Literal(b) -> SBool_Literal(b, Type_spec(Bool))
 	| String_Literal(str) -> SString(str, Type_spec(String))
 	| ID(v) -> SID(v, check_expr env v)
-	| Unop(u, e) -> SUnop(u, check_expr env e)
-	| Binop(e1, op, e2) -> SBinop()
+	| Unop(u, e) -> SUnop(u, get_sexpr env e, check_expr env expr)
+	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr env e2, check_expr expr)
+	| Assign(e1, e2) -> SAssign(get_sexpr env e1, get_sexpr env e2, check_expr env expr)
+	| Access(str, str) -> SAccess(str, str, check_expr env expr)
+	| Call(str, el) -> SCall(str, (*get s_expr on list? do list.map?*) , check_expr env expr)
+	| Func (f) -> SFunc()
+	| Complex(comp) -> SComplex()
 
 let rec check_stmt env stmt = match stmt with
 	| Block(stmt_list) -> 
@@ -185,8 +190,8 @@ let rec check_stmt env stmt = match stmt with
 						Var(n2n_type,id) -> 
 						let (sdecl,_) = (SVar(Svar(id,n2n_type),var_type),env)) in
 						let (i, n, v) = (id, n2n_type, None) in
-						(*add new env to table?*)
-						(SVar(sdecl), t) (*maybe t should be new_env?*)
+						let new_env = add_variable env i, n, v in
+						(SVar_Declaration(sdecl), new_env) 
 						| Constructor(dt,id,formals) -> (*Missing from SAST!*)
 						| VarDeclLiteral(dt,id,coplx))) ->
 							let t1 = t and t2 = check_expr env coplx in
@@ -211,6 +216,11 @@ let get_decl_name decl = match decl with
 let check_func env func_decl =
 	let locals = List.fold_left(fun a (Formal(n2n_type,id)) -> (id,n2n_type,None)::a)[] func_decl.formals in
 	(*var scope and new environments?*)
+
+let add_variable env id type value = 
+	let new_var = (id,type,value)::env.variables in
+	let new_env = {env with variables = new_var} in
+	new_env
 
 let add_all_functions_to_env env func_decl_list = 
 	let (checked_functions, new_env) = (fun e fl -> let new_env)
