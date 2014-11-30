@@ -73,11 +73,26 @@ let check_node_or_rel_literal env id lit_list =
 	else if is_rel env id then check_rel_literal env id lit_list
 	else raise(Error("Could not find constructor for your node or rel"))
 
-let check_nrn_expr env (n1, r, n2) = 
-	let t1 = check_expr n1 and t2 = check_expr n2 and tr = check_expr n3 in
+let check_graph_ID env id = 
+	let (_, t, _) = try List.find (id, _, _) env.variables with
+	Not_found -> raise (Error("Graph type identifier does not exist!")) in t
+
+let check_graph_type env gt = 
+	let t = (match gt with
+	Graph_type_ID(gid) -> check_graph_ID env gid
+	|Graph_type(id, lit_list) -> check_node_or_rel_literal env id lit_list) in t
+
+let check_nrn_expr env n1 r n2 = 
+	let t1 = check_graph_type env n1 and t2 = check_graph_type env n2 and tr = check_graph_type env r in
 	match (t1, tr, t2) with
-	| (Node, Rel, Node) -> true;
-	| (_,_,_) -> raise(Error("Trying to insert some incorrect combination of nodes and relationships into the graph"))
+	(Node, Rel, Node) -> true
+	| _ -> false
+
+let check_nrn_list env nrn_list =
+	List.iter (fun nrn_expr -> 
+		match nrn_expr with
+		Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 != true then
+										raise(Error("Combination is not a Node-Rel-Node combination"))) nrn_list; Graph
 
 let rec check_expr env expr = match expr with
 	| Literal(l) -> (match l with
