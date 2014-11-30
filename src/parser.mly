@@ -105,7 +105,6 @@ statement:
   | IF LPAREN expr RPAREN statement %prec NOELSE              { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement            { If($3, $5, $7) }
   | var_declaration TERMINATION                               { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
-  | ID ASSIGN ID LBRACKET literal_list RBRACKET TERMINATION   { ConstructorAssign(Id($1), Constructor(Id($3), List.rev $5)) }
   | ID ASSIGN literal TERMINATION                             { Assign(Id($1), $3) }
   | ID ACCESS ID ASSIGN literal TERMINATION                   { AccessAssign(VarId($1), FieldId($3), $5) }
 
