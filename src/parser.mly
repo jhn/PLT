@@ -46,9 +46,9 @@ var_declarations:
 
 var_declaration:
   | ID COLON n2n_type                                          { Var ($3, $1) } /* foo: String */
-  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE         { Constructor(N2N_type($3), Id($1), List.rev $6)}
-  | ID COLON n2n_type ASSIGN ID LBRACKET literal_list RBRACKET { VarDecConstructor(N2N_type($3), Id($1), Constructor(Id($5), List.rev $7))}
-  | ID COLON n2n_type ASSIGN literal                           { VarDeclLiteral(N2N_type($3), Id($1), ExprVal($5))}
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE         { Constructor(N2N_type($3), Id($1), List.rev $6)} /* movie: Node = { title: String, year: Int } */
+  | ID COLON n2n_type ASSIGN ID LBRACKET literal_list RBRACKET { VarDecConstructor(N2N_type($3), Id($1), Constructor(Id($5), List.rev $7))} /* matrix: Node = movie[“Matrix”, 1999] */
+  | ID COLON n2n_type ASSIGN literal                           { VarDeclLiteral(N2N_type($3), Id($1), ExprVal($5))} /* foo: String = "lolomg" */
 
 n2n_type:
   | primitive_type { $1 }
@@ -105,8 +105,9 @@ statement:
   | IF LPAREN expr RPAREN statement %prec NOELSE              { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement            { If($3, $5, $7) }
   | var_declaration TERMINATION                               { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
-  | ID ASSIGN literal TERMINATION                             { Assign(Id($1), $3) }
-  | ID ACCESS ID ASSIGN literal TERMINATION                   { AccessAssign(VarId($1), FieldId($3), $5) }
+  | ID ASSIGN literal TERMINATION                             { Assign(Id($1), $3) } /* foo = "lolomg" */
+  | ID ASSIGN ID LBRACKET literal_list RBRACKET TERMINATION   { ConstructorAssign(Id($1), Constructor(Id($3), List.rev $5)) } /* matrix = movie[“Matrix”, 1999] */
+  | ID ACCESS ID ASSIGN literal TERMINATION                   { AccessAssign(VarId($1), FieldId($3), $5) } /* Keanu.age = 35 ;Where Keanu a Node; */
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
@@ -114,7 +115,6 @@ expr:
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
   | ID                           { Id($1) } /* actor, number, graph_example */
-  | ID LBRACE formal_list RBRACE { Constructor(Id($1), List.rev $3)}
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */
