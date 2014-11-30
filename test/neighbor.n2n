@@ -1,4 +1,4 @@
-fn graphAccess() -> Void {
+fn neighbor() -> Void {
 
 	actor: Node = { name: String, age: Int }
 	Keanu: Node = actor["Keanu", 35]
@@ -17,15 +17,8 @@ fn graphAccess() -> Void {
 		Leo jordan wolf
 	)
 
-	print(Cast)
-	print("\\n")
+	Keanu_movies: List<Node> = Cast.neighbors(Keanu)
 
-	Cast ^+ (Keanu acted_in["Nelson"] movie["Sweet November", 2000])
-	print(Cast)
-	print("\\n")
+	print(Keanu_movies)
 
-	Cast ^- (Keanu acted_in["Nelson"] movie["Sweet November", 2000])
-	print(Cast)
-	print("\\n")
-	
 }

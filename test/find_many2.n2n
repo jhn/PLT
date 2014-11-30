@@ -1,4 +1,4 @@
-fn graphAccess() -> Void {
+fn find_many2() -> Void {
 
 	actor: Node = { name: String, age: Int }
 	Keanu: Node = actor["Keanu", 35]
@@ -7,25 +7,21 @@ fn graphAccess() -> Void {
 	actedIn: Rel = { role: String }
 	neo: Rel = actedIn["Neo"]
 	jordan: Rel = actedIn["Jordan"]
+	nelson: Rel = acted_in["Nelson"]
 
 	movie: Node = { title: String, year: Int }
 	matrix: Node = movie["Matrix", 1999]
 	wolf: Node = movie["Wolf", 1994]
+	sweet_nov: Node = movie["Sweet November", 2000]
 
 	Cast: Graph = (
 		Keanu neo matrix,
-		Leo jordan wolf
+		Leo jordan wolf,
+		Keanu nelson sweet_nov
 	)
 
-	print(Cast)
-	print("\\n")
+	point_to: List<Node> = Cast.find_many(Keanu, neo)
 
-	Cast ^+ (Keanu acted_in["Nelson"] movie["Sweet November", 2000])
-	print(Cast)
-	print("\\n")
+	print(point_to)
 
-	Cast ^- (Keanu acted_in["Nelson"] movie["Sweet November", 2000])
-	print(Cast)
-	print("\\n")
-	
 }
