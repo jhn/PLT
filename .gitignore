@@ -5,3 +5,5 @@ parser.mli
 parser.ml
 parser.conflicts
 ast.cm*
+backend/.idea/
+backend/*.iml
