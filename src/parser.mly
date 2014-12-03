@@ -18,7 +18,6 @@
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%right ASSIGN
 %right GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE
 %left OR
 %left AND
@@ -43,10 +42,12 @@ global_var_declaration:
   | var_declarations  { $1 }
 
 var_declarations:
-  | var_declarations var_declaration { ($2::$1) }
+  | var_declarations var_declaration TERMINATION { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type TERMINATION   { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type                                          { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE         { Constructor(N2N_type($3), Id($1), List.rev $6)} /* movie: Node = { title: String, year: Int } */
+  | ID COLON n2n_type ASSIGN expr                              { VarDeclLiteral(N2N_type($3), Id($1), ExprVal($5))} /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
 
 n2n_type:
   | primitive_type { $1 }
@@ -97,11 +98,14 @@ statements:
   | statements statement { $2 :: $1 }
 
 statement:
-  | expr TERMINATION                               { Expr($1) } /* 1 + 2 */
-  | RETURN expr TERMINATION                        { Return($2) } /* return 1 + 2 */
-  | LBRACE statements RBRACE                       { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
-  | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
-  | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
+  | expr TERMINATION                                          { Expr($1) } /* 1 + 2 */
+  | RETURN expr TERMINATION                                   { Return($2) } /* return 1 + 2 */
+  | LBRACE statements RBRACE                                  { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
+  | IF LPAREN expr RPAREN statement %prec NOELSE              { If($3, $5, Block([])) }
+  | IF LPAREN expr RPAREN statement ELSE statement            { If($3, $5, $7) }
+  | var_declaration TERMINATION                               { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
+  | ID ASSIGN expr TERMINATION                                { Assign(Id($1), $3) } /* foo = "lolomg", matrix = movie[“Matrix”, 1999] */
+  | ID ACCESS ID ASSIGN literal TERMINATION                   { AccessAssign(VarId($1), FieldId($3), $5) } /* Keanu.age = 35 ;Where Keanu a Node; */
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
@@ -109,10 +113,6 @@ expr:
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
   | ID                           { Id($1) } /* actor, number, graph_example */
-  | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
-  | var_declaration              { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
-  | ID LBRACE formal_list RBRACE    { Constructor(Id($1), List.rev $2)}
-  | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */

@@ -102,3 +102,7 @@
 
 32. Find_many3:
 	Test the builtin function "find_many" to find relationship pointing from
+
+33. Find_many4:
+	Test the builtin function "find_many" to find all nodes matches with the node
+	literal passed into the fucntion
