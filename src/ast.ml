@@ -54,7 +54,6 @@ type expr =
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
-  | Assign of expr * expr
   | Access of string * string
   | Call of string * expr list
   | Func of built_in_function_call
@@ -98,7 +97,8 @@ and statement =
 and var_decl =
   | Var of n2n_type * string
   | Constructor of n2n_type * string * formal list
-  | VarDeclLiteral of n2n_type * string * complex_literal
+  | AccessAssign of expr * expr
+  | VarDeclAssign of n2n_type * string * expr
 
 type func_decl = {
   fname : string;
