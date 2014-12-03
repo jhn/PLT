@@ -70,23 +70,16 @@ and built_in_function_call =
   | Map of expr * map_function
   | Neighbors_Func of string * string
 
+and complex_literal =
+  | Graph_Literal of node_rel_node_tuple list
+  | Graph_Element of string * expr list
+
 and map_function =
   | Map_Func of string * statement list
-
-and statement =
-  | Block of statement list
-  | Expr of expr
-  | Return of expr
-  | If of expr * statement * statement
-  | Var_Declaration of var_decl
 
 and find_many =
   | Find_Many_Node of expr
   | Find_Many_Gen of expr * expr
-
-and complex_literal =
-  | Graph_Literal of node_rel_node_tuple list
-  | Graph_Element of string * expr list
 
 and node_rel_node_tuple =
   | Node_Rel_Node_Tup of graph_type * graph_type * graph_type
@@ -94,6 +87,13 @@ and node_rel_node_tuple =
 and graph_type =
   | Graph_Type_ID of string
   | Graph_Type of string * expr list
+
+and statement =
+  | Block of statement list
+  | Expr of expr
+  | Return of expr
+  | If of expr * statement * statement
+  | Var_Declaration of var_decl
 
 and var_decl =
   | Var of n2n_type * string
