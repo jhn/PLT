@@ -1,14 +1,14 @@
 open Ast
 
-<<<<<<< HEAD
 exception Error of string;;
 
 type environment = {
 	functions: (string * return_ty * formal list * statement list) list;
-	variables: (string * n2n_type * expr) list;
+	variables: var_scope;
 	(*Added Nodes and Rel types for instance "acted_in" and "actor" type rels and nodes, respectively*)
 	node_types: var_decl list;
 	rel_types: var_decl list;
+	cur_scope: string;
 }
 
 type var_scope = {
@@ -16,7 +16,9 @@ type var_scope = {
 	locals: (string * n2n_type * expr) list;
 }
 
-let beginning_environment = { functions = [], variables = [], node_types = [], rel_types = [] }
+let beginning_scope = { globals = [], locals = []}
+
+let beginning_environment = { functions = [], variables = beginning_scope, cur_scope = "global", node_types = [], rel_types = [] }
 
 let check_arithmetic_binary_op t1 t2 = 
 	match (t1, t2) with
@@ -41,6 +43,17 @@ let check_logic t1 t2 =
 	| (Double, Double) -> Bool
 	| (String, String) -> Bool
 	| (_,_) -> raise(Error("Logical operation fails, arguments not of correct types"))
+
+let find_global_var env name = 
+	let (n, t, v) = try List.find (fun (id, _, _) -> id = name) env.var_scope.globals with
+	Not_found -> raise(Error("Couldn't find the requested global variable")) in
+	(n, t, v)
+
+let find_var_in_local_scope env name = 
+	let (n, t, v) = if List.exists (fun (id, _, _) -> id = name) env.var_scope.locals then
+		try List.find (fun (id, _, _) -> id = name) env.var_scope.locals with
+			Not_found -> try List.find (fun (id, _, _) -> id = name) env.var_scope.globals with
+			Nog_found -> raise(Error("Variable does not exist globally or locally")) in (n, t, v)
 
 (* Can't do like this because rhs not just int etc. but (var_name:Type)
 
@@ -86,7 +99,7 @@ let check_graph_ID env id =
 let check_graph_type env gt = 
 	let t = (match gt with
 	Graph_type_ID(gid) -> check_graph_ID env gid
-	|Graph_type(id, lit_list) -> check_node_or_rel_literal env id lit_list) in t
+	|Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list) in t
 
 let check_nrn_expr env n1 r n2 = 
 	let t1 = check_graph_type env n1 and t2 = check_graph_type env n2 and tr = check_graph_type env r in
@@ -110,8 +123,8 @@ let rec check_expr env expr = match expr with
 		Graph_Literal(nrn_list) -> print_str(nrn)
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
 	| Id(v) -> 
-		let (_, t, _) = try List.find (fun (fv, _, _) -> fv = v)  env.variables with
-			Not_found -> raise (Error("Identifier doesn't exist!")) in t
+		let (_, t, _) = if env.cur_scope = "global" then find_global_var v else
+			find_var_in_local_scope v in t
 	| Unop(u, e) -> match u with
 		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
 		| Neg -> if check_expr e = Type_spec(Double) then Type_spec(Double)
@@ -139,10 +152,10 @@ let rec check_expr env expr = match expr with
 			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
 			| Data_remove -> check_data_op t1 t2) in binop_t
 
-	| Assign(e1, e2) -> let (_,t1,_) = try List.find (fun (fe1, _, _) -> fe1 = e1) env.variables and t2 = check_expr env e2
+	(*| Assign(e1, e2) -> let (_,t1,_) = try List.find (fun (fe1, _, _) -> fe1 = e1) env.variables and t2 = check_expr env e2
 				in (if not (t1=t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e2
 			Not_found -> raise (Error("Identifier doesn't exist!")) in e1
-	(*For access, check if e1 is a variable, check its type, check if that type has e2 as data object*)
+	(*For access, check if e1 is a variable, check its type, check if that type has e2 as data object*)*)
 	| Access(e1, e2) -> let(_,t1,_) = try List.find (e1, _, _) env.variables in
 		(if is_node env t1 then let(_,_,p) = try List.find(e2,) env e2 env.node_types
 		else if is_rel env t1 then check_rel_literal env e2 env.rel_types
@@ -184,8 +197,8 @@ let rec get_sexpr env expr = match expr with
 	| Assign(e1, e2) -> SAssign(get_sexpr env e1, get_sexpr env e2, check_expr env expr)
 	| Access(str, str) -> SAccess(str, str, check_expr env expr)
 	| Call(str, el) -> SCall(str, (*get s_expr on list? do list.map?*) , check_expr env expr)
-	| Func (f) -> SFunc()
-	| Complex(comp) -> SComplex()
+	| Func (f) -> SFunc() 
+	| Complex(comp) -> SComplex() 
 
 let rec check_stmt env stmt = match stmt with
 	| Block(stmt_list) -> 
@@ -206,8 +219,10 @@ let rec check_stmt env stmt = match stmt with
 		(SIf((get_sexpr env e),st1,st2),new_env)*) (*Encorporating SAST functions in here???*)
 
 	| Var_Declaration(decl) -> (*Make sure var with same name doesn't exist already and check for correct type*)
-		let(name,typ) = get_decl_name decl in
-		let((_,ty,_),find_var) = try (fun f -> ((f env name),true)) (List.find (s,_,_) env.variables with
+		match decl with
+		Var(ty, id) -> check_var_decl_and_update_env env id ty
+		| Var_Decl_Assign(id, ty, expr) -> check_var_decl_assign_and_update_env env id ty expr
+		(*let((_,ty,_),find_var) = try (fun f -> ((f env name),true)) (List.find (s,_,_) env.variables with
 			Not_found-> raise Not_found ) with
 			Not_found -> (((name,typ,None),false) in
 				let ret = if(found=false) then
@@ -226,26 +241,67 @@ let rec check_stmt env stmt = match stmt with
 								(*new_env?*)
 								SVar(sdecl)(*, new_env?*)
 					else raise (Error("Mismatched types"))
-				else raise (Error("Multiple declarations")) in ret
+				else raise (Error("Multiple declarations")) in ret*)
+
+let check_var_decl_and_update_env env id ty = 
+	if env.scope = "global" then 
+	let var_exists = List.exists (fun n -> n = id) env.scope.globals in
+		let new_env = (if var_exists then reset_var_in_env env id ty else
+			add_to_global_table env id ty set_default_value ty) in new_env
+	else let var_exists = List.exists (fun n -> n = id) env.scope.locals in
+		let new_env = (if var_exists then reset_var_in_env env id ty else 
+			add_to_local_table env id ty set_default_value ty) in new_env
+	 
+let reset_var_in_env env id ty = 
+	let var_list, is_local = (match env.cur_scope with
+	"local" -> env.scope.locals, true
+	| "global" -> env.scope.globals, false) in 
+	let new_vars = List.rev (List.fold_left (fun l (n, t, v) -> if n = id then 
+												(n, ty, set_default_value ty) :: l else
+												(n, t, v) :: l ) [] var_list) in
+	let new_env = env in 
+	(if is_local then new_env.scope.locals = new_vars else new_env.scope.globals = new_vars) in new_env
+
+let check_var_decl_assign_and_update_env env id ty ex = 
+	let var_list, is_local = (match env.cur_scope with
+	"local" -> env.scope.locals, true
+	| "global" -> env.scope.globals
+
+let add_to_local_table env id ty val = 
+	let new_vars = (id, ty, val) :: env.scope.locals in
+	let new_env = env in new_env.scope.locals = new_vars in new_env
+
+let add_to_global_table env id ty val = 
+	let new_vars = (id, ty, val) :: env.scope.globals in
+	let new_env = env in new_env.scope.globals = new_vars in new_env 
+
+let set_default_value ty = 
+	match ty with
+	Int -> 0
+	| String -> ""
+	| Double -> 0.0
+	| Bool -> false
+	| Node -> []
+	| Rel -> []
+	| Graph -> []
 
 let get_sstmt_list env stmt_list =
 	List.fold_left (fun (sstmt_list,env) stmt ->
 		let (sstmt, new_env) = check_stmt env stmt in
 		(sstmt::sstmt_list, new_env)) ([],env) stmt_list
 
-let get_decl_name decl = match decl with
-	| Var(n2n_type,id) -> (id,n2n_type)
-	| Constructor(n2n_type,id,formals) -> (id,n2n_type)
-	| VarDeclLiteral(n2n_type,id,complex_literal) -> (id,n2n_type)
+(*let get_decl_name decl = match decl with
+	| Var(n2n_type,id) -> (id, n2n_type)
+	| Constructor(n2n_type,id,formals) -> (id, n2n_type)
+	| VarDeclLiteral(n2n_type,id,complex_literal) -> (id, n2n_type)*)
 
 let check_func env func_decl =
 	let locals = List.fold_left(fun a (Formal(n2n_type,id)) -> (id,n2n_type,None)::a)[] func_decl.formals in
 	(*var scope and new environments?*)
 
-let add_variable env id type value = 
-	let new_var = (id,type,value)::env.variables in
-	let new_env = {env with variables = new_var} in
-	new_env
+let add_local_variable env id ty value =
+	let new_var = (id, ty, value) in
+
 
 let add_all_functions_to_env env func_decl_list = 
 	let (checked_functions, new_env) = (fun e fl -> let new_env)

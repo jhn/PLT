@@ -45,10 +45,10 @@ var_declarations:
   | var_declarations var_declaration TERMINATION { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type                                          { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type                                          { Var($3, $1) } /* foo: String */
   | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE         { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
-  | expr ASSIGN expr                                           { AccessAssign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
-  | ID COLON n2n_type ASSIGN expr                              { VarDeclAssign($1, $3)}
+  | expr ASSIGN expr                                           { Access_Assign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
+  | ID COLON n2n_type ASSIGN expr                              { Var_Decl_Assign($1, $3)}
 
 n2n_type:
   | primitive_type { $1 }
@@ -104,7 +104,7 @@ statement:
   | LBRACE statements RBRACE                                  { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
   | IF LPAREN expr RPAREN statement %prec NOELSE              { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN statement ELSE statement            { If($3, $5, $7) }
-  | var_declaration TERMINATION                               { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
+  | var_declaration TERMINATION                               { Var_Decl($1) } /* actor: Node, number: Int, graph_example: Graph */
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
@@ -135,7 +135,7 @@ complex_literal_list:
 
 graph_type:
   | ID                                   { Graph_Type_ID($1) }
-  | node_or_rel_literal                  { Graph_Type($1) }
+  | node_or_rel_literal                  { Graph_Type$1 }
 
 node_or_rel_literal:
   | ID LBRACKET literal_list RBRACKET         { Graph_Element($1, List.Rev $3) }

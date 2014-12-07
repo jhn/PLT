@@ -48,13 +48,18 @@ type return_ty =
 type formal =
   | Formal of type_spec * string
 
-type expr =
+type var_decl =
+  | Var of n2n_type * string
+  | Constructor of n2n_type * string * formal list
+  | Var_Decl_Assign of string * expr
+  | Access_Assign of expr * expr
+
+and expr =
   | Literal of literal
   | Complex of complex_literal
   | Id of string
   | Binop of expr * op * expr
   | Unop of uop * expr
-  | Assign of expr * expr
   | Access of string * string
   | Call of string * expr list
   | Func of built_in_function_call
@@ -93,12 +98,7 @@ and statement =
   | Expr of expr
   | Return of expr
   | If of expr * statement * statement
-  | Var_Declaration of var_decl
-
-and var_decl =
-  | Var of n2n_type * string
-  | Constructor of n2n_type * string * formal list
-  | VarDeclLiteral of n2n_type * string * complex_literal
+  | Var_Decl of var_decl
 
 type func_decl = {
   fname : string;
