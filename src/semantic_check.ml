@@ -56,16 +56,6 @@ let find_var_in_local_scope env name =
 			Not_found -> try List.find (fun (id, _, _) -> id = name) env.var_scope.globals with
 			Nog_found -> raise(Error("Variable does not exist globally or locally")) in (n, t, v)
 
-(* Can't do like this because rhs not just int etc. but (var_name:Type)
-
-let check_data_insert t1 t2 =
-	match(t1, t2) with
-	| (Node, Int) -> Type_spec(Node) (*Can we match with node token?*)
-	| (Node, Double) -> Type_spec(Node)
-	| (Node, Bool) -> Type_spec(Node)
-	| (Node, String) -> Type_spec(Node)
-*)
-
 let is_node env id =
 	let isNode = List.exists (fun (fid, _) -> fid = id) env.node_types in
 	isNode
@@ -152,11 +142,6 @@ let rec check_expr env expr = match expr with
 			| Graph_Remove -> check_graph_op t1 t2
 			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
 			| Data_remove -> check_data_op t1 t2) in binop_t
-
-	(*| Assign(e1, e2) -> let (_,t1,_) = try List.find (fun (fe1, _, _) -> fe1 = e1) env.variables and t2 = check_expr env e2
-				in (if not (t1=t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e2
-			Not_found -> raise (Error("Identifier doesn't exist!")) in e1
-	(*For access, check if e1 is a variable, check its type, check if that type has e2 as data object*)*)
 	| Access(e1, e2) -> let(_,t1,_) = try List.find (e1, _, _) env.variables in
 		(if is_node env t1 then let(_,_,p) = try List.find(e2,) env e2 env.node_types
 		else if is_rel env t1 then check_rel_literal env e2 env.rel_types
@@ -179,13 +164,6 @@ let rec check_expr env expr = match expr with
 
 let get_name_type_from_formal env = function
 	Formal(type_spec,id) -> (id, type_spec, None)
-
-	(* 	ARITHMETIC -> Ints, floats
-		EQ/NEQ -> All
-		Other Logical -> Not complex types 
-		Concat -> Strings
-		Graph_ops -> Graph op (Nodes and/or rel) OR node-rel-node tuple
-		Data_insert/remove -> Node and primitive *)
 
 let rec get_sexpr env expr = match expr with
 	Int_Literal(i) -> SInt_Literal(i, Type_spec(Int))
@@ -230,26 +208,6 @@ let rec check_stmt env stmt = match stmt with
 			match e1 with 
 				Id(v) -> 
 				| Access(vid, aid) -> 
-		(*let((_,ty,_),find_var) = try (fun f -> ((f env name),true)) (List.find (s,_,_) env.variables with
-			Not_found-> raise Not_found ) with
-			Not_found -> (((name,typ,None),false) in
-				let ret = if(found=false) then
-					match decl with
-						Var(n2n_type,id) -> 
-						let (sdecl,_) = (SVar(Svar(id,n2n_type),var_type),env)) in
-						let (i, n, v) = (id, n2n_type, None) in
-						let new_env = add_variable env i, n, v in
-						(SVar_Declaration(sdecl), new_env) 
-						| Constructor(dt,id,formals) -> (*Missing from SAST!*)
-						| VarDeclLiteral(dt,id,coplx))) ->
-							let t1 = t and t2 = check_expr env coplx in
-							if(t1=t2) then
-								let(sdecl,_) = (SVar(SVarDecLiteral(id,dt,coplx),env)) in
-								let (i, n, v) = (id, n2n_type, coplx) in
-								(*new_env?*)
-								SVar(sdecl)(*, new_env?*)
-					else raise (Error("Mismatched types"))
-				else raise (Error("Multiple declarations")) in ret*)
 
 let check_var_decl_and_update_env env id ty val = 
 	let var_list = (match env.cur_scope with
@@ -286,28 +244,6 @@ let get_sstmt_list env stmt_list =
 	List.fold_left (fun (sstmt_list,env) stmt ->
 		let (sstmt, new_env) = check_stmt env stmt in
 		(sstmt::sstmt_list, new_env)) ([],env) stmt_list
-
-(*let get_decl_name decl = match decl with
-	| Var(n2n_type,id) -> (id, n2n_type)
-	| Constructor(n2n_type,id,formals) -> (id, n2n_type)
-	| VarDeclLiteral(n2n_type,id,complex_literal) -> (id, n2n_type)*)
-
-let check_func env func_decl =
-	let locals = List.fold_left(fun a (Formal(n2n_type,id)) -> (id,n2n_type,None)::a)[] func_decl.formals in
-	(*var scope and new environments?*)
-
-let add_local_variable env id ty value =
-	let new_var = (id, ty, value) in
-
-
-let add_all_functions_to_env env func_decl_list = 
-	let (checked_functions, new_env) = (fun e fl -> let new_env)
-
-let add_function_to_table env func_def = 
-	let old_func_list = env.functions in
-	let new_func = (func_def.name, func_def.return_type, func_def.formals, func_def.body) in
-	let final_env = (fun nf of -> nf :: of) new_func old_func_list in
-	final_env
 
 let run_program program = 
 	let (vars, funcs) = program in
