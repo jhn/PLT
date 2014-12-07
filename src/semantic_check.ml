@@ -10,6 +10,7 @@ type environment = {
 	node_types: (string * (string * n2n_type) list);
 	rel_types: (string * (string * n2n_type) list);
 	var_table: var_scope;
+	has_return: bool;
 }
 
 type var_scope = {
@@ -185,9 +186,9 @@ let rec check_stmt env stmt = match stmt with
 		and new_exceptions = { excep_parent = Some(env.exception_scope); exceptions = [] } in
 		let new_env = { env with scope = new_scope;
 						exception_scope = new_exceptions } in
-		let sl = List.map (fun s -> stmt new_env s) sl in
+		let stmt_list = List.map (fun s -> stmt new_env s) stmt_list in
 			new_scope.var_scope.locals <- List.rev new_scope.var_scope.locals in
-			SBlock(sl, new_scope)
+			(SBlock(stmt_list, new_scope),new_env)
 
 	| Expr(e) -> let _ = check_expr env e in
 		(SExpr(get_sexpr env e),env)
@@ -196,14 +197,14 @@ let rec check_stmt env stmt = match stmt with
 		let t1 = check_expr env e in 
 		(if not((t1=env.return_type)) then
 			raise (Error("Incompatible Return Type")));
+		let new_env = {env with has_return = true } in
+		(SReturn(get_sexpr env e), new_env)
 
 	| If(e,s1,s2) -> let t1 = check_expr env e in
 		(if not(t1=Boolean) then
 			raise (Error("If statement must be a boolean")));
-		let (st1,env1)= check_stmt env s1
-		and (st2, env2) = check_stmt env s2 in
-		(*let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
-		let new_env = {env with return_seen=ret_seen} in *)
+		let (st1,new_env)= check_stmt env s1
+		and (st2,new_env) = check_stmt env s2 in
 		(SIf((get_sexpr env e),st1,st2),new_env)
 
 	| Var_Declaration(decl) -> (*Make sure var with same name doesn't exist already and check for correct type*)
