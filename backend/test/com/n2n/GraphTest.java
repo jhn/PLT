@@ -132,18 +132,33 @@ public class GraphTest {
     }
 
     @Test
-    public void testFindManyNodeRelationship() throws Exception {
+    public void testFindManyNodeRelationshipWithLooseEquality() throws Exception {
         Set<Node> moviesKeanuActedIn = graph.findMany(keanu, ACTED_IN);
         assertThat(moviesKeanuActedIn, hasSize(3));
         assertThat(moviesKeanuActedIn, containsInAnyOrder(theMatrix, theMatrixReloaded, constantine));
+
         Set<Node> moviesLeoActedIn = graph.findMany(leo, ACTED_IN);
         assertThat(moviesLeoActedIn, hasSize(2));
         assertThat(moviesLeoActedIn, containsInAnyOrder(wolfOfWallSt, titanic));
 
         Set<Node> moviesKeanuProduced = graph.findMany(keanu, PRODUCED);
+        assertThat(moviesKeanuProduced, hasSize(1));
         assertThat(moviesKeanuProduced, contains(sideBySide));
+
         Set<Node> moviesLeoProduced = graph.findMany(leo, PRODUCED);
+        assertThat(moviesLeoProduced, hasSize(2));
         assertThat(moviesLeoProduced, containsInAnyOrder(wolfOfWallSt, theAviator));
+    }
+
+    @Test
+    public void testFindManyNodeRelationshipWithStrictEquality() throws Exception {
+        Set<Node> moviesKeanuActedInAsNeo = graph.findMany(keanu, neoRole);
+        assertThat(moviesKeanuActedInAsNeo, hasSize(2));
+        assertThat(moviesKeanuActedInAsNeo, containsInAnyOrder(theMatrix, theMatrixReloaded));
+
+        Set<Node> moviesLeoActedInAsJack = graph.findMany(leo, jackRole);
+        assertThat(moviesLeoActedInAsJack, hasSize(1));
+        assertThat(moviesLeoActedInAsJack, contains(titanic));
     }
 
     @Test
