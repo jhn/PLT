@@ -1,6 +1,5 @@
 package com.n2n;
 
-import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -8,9 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 public class GraphTest {
@@ -30,6 +27,9 @@ public class GraphTest {
     public static Relationship nelsonRole;
     public static Node sweetNovember;
 
+    public static Relationship produced;
+    public static Node sideBySide;
+
     // DiCaprio
     public static Node leo;
 
@@ -39,93 +39,115 @@ public class GraphTest {
     public static Relationship jackRole;
     public static Node titanic;
 
+    public static Node theAviator;
+
+    public final static String ACTOR = "actor";
+    public final static String ACTED_IN = "actedIn";
+    public final static String PRODUCED = "produced";
+    public final static String MOVIE = "movie";
+
     @BeforeClass
     public static void setUp() throws Exception {
 
-        final String actorNode = "actor";
-        final String actedInRelationship = "actedIn";
-        final String movieNode = "movie";
-
-        keanu = new Node(actorNode, new HashMap<String, Object>() {{
+        keanu = new Node(ACTOR, new HashMap<String, Object>() {{
             put("name", "Keanu");
         }});
 
-        neoRole = new Relationship(actedInRelationship, new HashMap<String, Object>() {{
+        neoRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "Neo");
         }});
 
-        theMatrix = new Node(movieNode, new HashMap<String, Object>() {{
+        theMatrix = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "The Matrix");
             put("year", 1999);
         }});
 
-        theMatrixReloaded = new Node(movieNode, new HashMap<String, Object>() {{
+        theMatrixReloaded = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "The Matrix Reloaded");
             put("year", 2003);
         }});
 
-        johnRole = new Relationship(actedInRelationship, new HashMap<String, Object>() {{
+        johnRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "John Constantine");
         }});
 
-        constantine = new Node(movieNode, new HashMap<String, Object>() {{
+        constantine = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "Constantine");
             put("year", 2005);
         }});
 
-        nelsonRole= new Relationship(actedInRelationship, new HashMap<String, Object>() {{
+        nelsonRole= new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "Nelson Moss");
         }});
 
-        sweetNovember = new Node(movieNode, new HashMap<String, Object>() {{
+        sweetNovember = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "Sweet November");
             put("year", 2001);
         }});
 
-        leo = new Node(actorNode, new HashMap<String, Object>() {{
+        leo = new Node(ACTOR, new HashMap<String, Object>() {{
             put("name", "Leo DiCaprio");
         }});
 
-        jordanRole = new Relationship(actedInRelationship, new HashMap<String, Object>() {{
+        jordanRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "Jordan Belfort");
         }});
 
-        wolfOfWallSt = new Node(movieNode, new HashMap<String, Object>() {{
+        wolfOfWallSt = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "Wolf Of Wall Street");
             put("year", 2013);
         }});
 
-        jackRole = new Relationship(actedInRelationship, new HashMap<String, Object>() {{
+        jackRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "Jack Dawson");
         }});
 
-        titanic = new Node(movieNode, new HashMap<String, Object>() {{
+        titanic = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "Titanic");
             put("year", 1997);
+        }});
+
+        produced = new Relationship(PRODUCED);
+
+        sideBySide = new Node(MOVIE, new HashMap<String, Object>() {{
+            put("title", "Side By Side");
+            put("year", 2012);
+        }});
+
+        theAviator = new Node(MOVIE, new HashMap<String, Object>() {{
+            put("title", "The Aviator");
+            put("year", 2004);
         }});
 
         graph = new Graph(Arrays.asList(
                     new Graph.Member<>(keanu, neoRole,    theMatrix),
                     new Graph.Member<>(keanu, neoRole,    theMatrixReloaded),
                     new Graph.Member<>(keanu, johnRole,   constantine),
+                    new Graph.Member<>(keanu, produced,   sideBySide),
                     new Graph.Member<>(leo,   jordanRole, wolfOfWallSt),
-                    new Graph.Member<>(leo,   jackRole,   titanic)
+                    new Graph.Member<>(leo,   jackRole,   titanic),
+                    new Graph.Member<>(leo,   produced,   wolfOfWallSt),
+                    new Graph.Member<>(leo,   produced,   theAviator)
                 ));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-
-    }
-
-    @Test
-    public void testFindManyRelationshipNode() throws Exception {
-        Set<Node> moviesKeanuActedIn = graph.findMany(keanu, "actedIn");
-        assertThat(moviesKeanuActedIn, containsInAnyOrder(theMatrix, theMatrixReloaded, constantine));
     }
 
     @Test
     public void testFindManyNodeRelationship() throws Exception {
+        Set<Node> moviesKeanuActedIn = graph.findMany(keanu, ACTED_IN);
+        assertThat(moviesKeanuActedIn, hasSize(3));
+        assertThat(moviesKeanuActedIn, containsInAnyOrder(theMatrix, theMatrixReloaded, constantine));
+        Set<Node> moviesLeoActedIn = graph.findMany(leo, ACTED_IN);
+        assertThat(moviesLeoActedIn, hasSize(2));
+        assertThat(moviesLeoActedIn, containsInAnyOrder(wolfOfWallSt, titanic));
+
+        Set<Node> moviesKeanuProduced = graph.findMany(keanu, PRODUCED);
+        assertThat(moviesKeanuProduced, contains(sideBySide));
+        Set<Node> moviesLeoProduced = graph.findMany(leo, PRODUCED);
+        assertThat(moviesLeoProduced, containsInAnyOrder(wolfOfWallSt, theAviator));
+    }
+
+    @Test
+    public void testFindManyRelationshipNode() throws Exception {
 
     }
 

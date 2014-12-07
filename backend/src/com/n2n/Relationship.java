@@ -6,13 +6,16 @@ public class Relationship {
 
     private String type;
     private Map<String, Object> data;
-    private Map<Node, Set<Node>> fromTo;
+    private Map<Node, Set<Node>> fromTo = new HashMap<>();
 
 
     public Relationship(String type, Map<String, Object> data) {
         this.type = type;
         this.data = data;
-        this.fromTo = new HashMap<>();
+    }
+
+    public Relationship(String type) {
+        this(type, Collections.emptyMap());
     }
 
     public String getType() {
