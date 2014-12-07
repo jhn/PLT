@@ -55,12 +55,8 @@ public class Graph {
      * @param relationshipType The relationship type (its name) that joins source node and potential target nodes.
      * @return The set of target nodes, or an empty set if no nodes are found.
      */
-    // TODO: enforce having only relationship of the same type.
     public Set<Node> findMany(Node node, String relationshipType) {
-        return relationships.stream()
-                .filter(r -> r.looselyEquals(relationshipType))
-                .flatMap(r -> r.getNodesFrom(node).stream())
-                .collect(Collectors.toSet());
+        return findManyHelper(node, r -> r.looselyEquals(relationshipType));
     }
 
     /**
@@ -81,13 +77,14 @@ public class Graph {
      * @return The set of target nodes, or an empty set if no nodes are found.
      */
     public Set<Node> findMany(Node node, Relationship relationship) {
-        return findManyHelper(n -> n.equals(node) && n.hasRelationshipStrictlyEquals(relationship));
+        return findManyHelper(node, r -> r.strictlyEquals(relationship));
     }
 
-    private Set<Node> findManyHelper(Predicate<Node> predicate) {
-        return nodes.stream()
-                    .filter(predicate)
-                    .collect(Collectors.toSet());
+    private Set<Node> findManyHelper(Node sourceNode, Predicate<Relationship> predicate) {
+        return relationships.stream()
+                .filter(predicate)
+                .flatMap(r -> r.getNodesFrom(sourceNode).stream())
+                .collect(Collectors.toSet());
     }
 
     // find one actor that was in the matrix named “Neo”
