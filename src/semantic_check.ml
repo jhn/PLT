@@ -7,8 +7,9 @@ type environment = {
 	scope: string;
 	return_type: return_ty;
 	globals: (string * n2n_type * expr) list;
+	node_types: (string * (string * n2n_type) list);
+	rel_types: (string * (string * n2n_type) list);
 	var_table: var_scope;
-
 }
 
 type var_scope = {
