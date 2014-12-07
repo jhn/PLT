@@ -181,33 +181,44 @@ let rec get_sexpr env expr = match expr with
 
 let rec check_stmt env stmt = match stmt with
 	| Block(stmt_list) -> 
+		let new_scope = { var_scope.parent = env.scope; var_scope.locals = [] }
+		and new_exceptions = { excep_parent = Some(env.exception_scope); exceptions = [] } in
+		let new_env = { env with scope = new_scope;
+						exception_scope = new_exceptions } in
+		let sl = List.map (fun s -> stmt new_env s) sl in
+			new_scope.var_scope.locals <- List.rev new_scope.var_scope.locals in
+			SBlock(sl, new_scope)
+
 	| Expr(e) -> let _ = check_expr env e in
 		(SExpr(get_sexpr env e),env)
+
 	| Return(e) -> 
 		let t1 = check_expr env e in 
-		(if not((t1=return_ty)) then (*Allowed? Really want to do env.functions.return_ty - is that allowed?*)
+		(if not((t1=env.return_type)) then
 			raise (Error("Incompatible Return Type")));
-		(*In slang it then sets return_seen in environment to be true but we don't have that. Needed?*)
+
 	| If(e,s1,s2) -> let t1 = check_expr env e in
 		(if not(t1=Boolean) then
 			raise (Error("If statement must be a boolean")));
-		let (s1,env1)= check_stmt env s1
+		let (st1,env1)= check_stmt env s1
 		and (st2, env2) = check_stmt env s2 in
 		(*let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
-		let new_env = {env with return_seen=ret_seen} in
-		(SIf((get_sexpr env e),st1,st2),new_env)*) (*Encorporating SAST functions in here???*)
+		let new_env = {env with return_seen=ret_seen} in *)
+		(SIf((get_sexpr env e),st1,st2),new_env)
 
 	| Var_Declaration(decl) -> (*Make sure var with same name doesn't exist already and check for correct type*)
 		match decl with
-		Var(ty, id) -> check_var_decl_and_update_env env id ty set_default_value ty
+		  Var(ty, id) -> check_var_decl_and_update_env env id ty set_default_value ty
 		| Var_Decl_Assign(id, ty, ex) -> let t_ex = check_expr ex in 
-		 if (t_ex = ty) then check_var_decl_assign_and_update_env env id ty expr
-		else raise(Error("Type mismatch between variable and assigned value"))
+		 	if (t_ex = ty) then check_var_decl_assign_and_update_env env id ty expr
+			else raise(Error("Type mismatch between variable and assigned value"))
 		| Access_Assign(e1, e2) -> let t1 = check_expr e1 and t2 = check_expr e2 in
-		if (t1 = t2) then 
-			match e1 with 
-				Id(v) -> 
-				| Access(vid, aid) -> 
+			if (t1 = t2) then 
+				match e1 with 
+					Id(v) -> 
+					| Access(vid, aid) -> 
+		| Constructor
+
 
 let check_var_decl_and_update_env env id ty val = 
 	let var_list = (match env.cur_scope with
