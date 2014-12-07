@@ -14,7 +14,7 @@ type environment = {
 }
 
 type var_scope = {
-	parent: var_scope;
+	parent: var_scope option;
 	locals: (string * n2n_type * expr) list;
 }
 
@@ -260,5 +260,6 @@ let get_sstmt_list env stmt_list =
 let run_program program = 
 	let (vars, funcs) = program in
 	let env = beginning_environment in
-	let (checked_globals, new_env) = start_globals
-
+	let (checked_globals, new_env) = check_globals env vars in
+	let checked_functions = check_functions new_env funcs in
+	Prog(checked_globals, checked_functions)

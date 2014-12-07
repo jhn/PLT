@@ -34,15 +34,9 @@
 %%
 
 program:
- | /* nothing */                  { [], [] }
- | program global_var_declaration { ($2 :: fst $1), snd $1 }
+ | /* nothing */                  { ([], []) }
+ | program var_declaration { ($2 :: fst $1), snd $1 }
  | program function_declaration   { fst $1, ($2 :: snd $1) }
-
-global_var_declaration:
-  | var_declarations  { $1 }
-
-var_declarations:
-  | var_declarations var_declaration TERMINATION { ($2::$1) }
 
 var_declaration:
   | ID COLON n2n_type                                          { Var($3, $1) } /* foo: String */
@@ -107,7 +101,7 @@ statement:
   | var_declaration TERMINATION                               { Var_Decl($1) } /* actor: Node, number: Int, graph_example: Graph */
 
 expr:
-  | literal                      { $1 } /* 42, "Jerry", 4.3, true */
+  | literal                      { Literal($1) } /* 42, "Jerry", 4.3, true */
   | complex_literal              { Complex($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
@@ -135,7 +129,7 @@ complex_literal_list:
 
 graph_type:
   | ID                                   { Graph_Type_ID($1) }
-  | node_or_rel_literal                  { Graph_Type$1 }
+  | node_or_rel_literal                  { Graph_Type($1) }
 
 node_or_rel_literal:
   | ID LBRACKET literal_list RBRACKET         { Graph_Element($1, List.Rev $3) }
