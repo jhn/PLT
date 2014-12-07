@@ -10,6 +10,11 @@ type environment = {
 	rel_types: var_decl list;
 }
 
+type var_scope = {
+	globals: (string * n2n_type * expr) list;
+	locals: (string * n2n_type * expr) list;
+}
+
 let beginning_environment = { functions = [], variables = [], node_types = [], rel_types = [] }
 
 let check_arithmetic_binary_op t1 t2 = 
