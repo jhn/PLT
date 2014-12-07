@@ -17,5 +17,5 @@ open Sast;;\n
 \n
 let lexbuf = Lexing.from_channel stdin in\n
 let program = Parser.program Scanner.token lexbuf in\n
-Semantic_check.check_program program;;'
+Semantic_check.run_program program;;'
 (echo -e $PARSE; cat -) | ocaml scanner.cmo parser.cmo semantic_check.cmo
