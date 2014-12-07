@@ -1,5 +1,6 @@
 package com.n2n;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -8,7 +9,7 @@ public class Node {
 
     private String type;
     private Map<String, Object> data;
-    private List<Relationship> relationships;
+    private List<Relationship> relationships = new ArrayList<>();
 
     public Node(String type, Map<String, Object> data) {
         this.type = type;
@@ -35,8 +36,8 @@ public class Node {
         return relationships;
     }
 
-    public void setRelationships(List<Relationship> relationships) {
-        this.relationships = relationships;
+    public void addRelationship(Relationship relationship) {
+        this.relationships.add(relationship);
     }
 
     public boolean hasRelationshipLooselyEquals(String relationshipType) {

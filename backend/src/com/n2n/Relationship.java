@@ -1,16 +1,18 @@
 package com.n2n;
 
-import java.util.Map;
+import java.util.*;
 
-public class Relationship<From, To> {
+public class Relationship {
 
     private String type;
     private Map<String, Object> data;
-    // TODO: idea: use a Multimap and hold Node->Set<Nodes> for easy querying
+    private Map<Node, Set<Node>> fromTo;
+
 
     public Relationship(String type, Map<String, Object> data) {
         this.type = type;
         this.data = data;
+        this.fromTo = new HashMap<>();
     }
 
     public String getType() {
@@ -27,6 +29,18 @@ public class Relationship<From, To> {
 
     public void setData(Map<String, Object> data) {
         this.data = data;
+    }
+
+    public void addNodes(Node from, Node to) {
+        if (fromTo.containsKey(from)) {
+            fromTo.get(from).add(to);
+        } else {
+            fromTo.put(from, new HashSet<>(Arrays.asList(to)));
+        }
+    }
+
+    public Set<Node> getNodesFrom(Node from) {
+        return fromTo.get(from);
     }
 
     public boolean looselyEquals(String type) {

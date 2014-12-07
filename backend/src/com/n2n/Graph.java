@@ -1,18 +1,43 @@
 package com.n2n;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Graph {
 
-    private Set<Node> nodes;
-    private Set<Relationship> relationships;
+    private Set<Node> nodes = new HashSet<>();
+    private Set<Relationship> relationships = new HashSet<>();
 
-    // TODO: constructor syntax -> Graph(Node, Rel, Node)
-    // TODO: adding nodes and relationships to the fields
-    public Graph(Set<Node> nodes) {
-        this.nodes = nodes;
+    public static class Member<N, R> {
+        private N from;
+        private R rel;
+        private N to;
+
+        public Member(N from, R rel, N to) {
+            this.from = from;
+            this.rel  = rel;
+            this.to   = to;
+        }
+
+        public N getFrom() { return from; }
+        public R getRel()  { return rel; }
+        public N getTo()   { return to; }
+    }
+
+    public Graph(List<Member<Node, Relationship>> relatedMemberList) {
+        relatedMemberList.stream()
+                .forEach((members) -> {
+                    // Connects nodes and relationships
+                    members.getFrom().addRelationship(members.getRel());
+                    members.getRel().addNodes(members.getFrom(), members.getTo());
+                    // Adds all the information to the graph
+                    nodes.add(members.getFrom());
+                    relationships.add(members.getRel());
+                    nodes.add(members.getTo());
+                });
     }
 
     /**
@@ -30,8 +55,12 @@ public class Graph {
      * @param relationshipType The relationship type (its name) that joins source node and potential target nodes.
      * @return The set of target nodes, or an empty set if no nodes are found.
      */
+    // TODO: enforce having only relationship of the same type.
     public Set<Node> findMany(Node node, String relationshipType) {
-        return findManyHelper(n -> n.equals(node) && n.hasRelationshipLooselyEquals(relationshipType));
+        return relationships.stream()
+                .filter(r -> r.looselyEquals(relationshipType) && r.getNodesFrom(node) != null)
+                .flatMap(r -> r.getNodesFrom(node).stream())
+                .collect(Collectors.toSet());
     }
 
     /**
