@@ -58,7 +58,7 @@ public class Graph {
     // TODO: enforce having only relationship of the same type.
     public Set<Node> findMany(Node node, String relationshipType) {
         return relationships.stream()
-                .filter(r -> r.looselyEquals(relationshipType) && r.getNodesFrom(node) != null)
+                .filter(r -> r.looselyEquals(relationshipType))
                 .flatMap(r -> r.getNodesFrom(node).stream())
                 .collect(Collectors.toSet());
     }

@@ -43,7 +43,7 @@ public class Relationship {
     }
 
     public Set<Node> getNodesFrom(Node from) {
-        return fromTo.get(from);
+        return fromTo.containsKey(from) ? fromTo.get(from) : Collections.emptySet();
     }
 
     public boolean looselyEquals(String type) {
