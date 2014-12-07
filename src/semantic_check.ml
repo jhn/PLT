@@ -1,5 +1,6 @@
 open Ast
 
+<<<<<<< HEAD
 exception Error of string;;
 
 type environment = {
@@ -136,8 +137,8 @@ let rec check_expr env expr = match expr with
 			| Graph_Insert -> check_graph_op t1 t2 (*Func not written yet*)
 			| Graph_Remove -> check_graph_op t1 t2
 			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
-			| Data_remove -> check_data_op t1 t2
-		) in binop_t
+			| Data_remove -> check_data_op t1 t2) in binop_t
+
 	| Assign(e1, e2) -> let (_,t1,_) = try List.find (fun (fe1, _, _) -> fe1 = e1) env.variables and t2 = check_expr env e2
 				in (if not (t1=t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e2
 			Not_found -> raise (Error("Identifier doesn't exist!")) in e1

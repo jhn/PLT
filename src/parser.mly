@@ -18,7 +18,6 @@
 
 %nonassoc NOELSE
 %nonassoc ELSE
-%right ASSIGN
 %right GRAPH_INSERT GRAPH_REMOVE DATA_INSERT DATA_REMOVE
 %left OR
 %left AND
@@ -43,12 +42,13 @@ global_var_declaration:
   | var_declarations  { $1 }
 
 var_declarations:
-  | var_declarations var_declaration { ($2::$1) }
+  | var_declarations var_declaration TERMINATION { ($2::$1) }
 
 var_declaration:
-  | ID COLON n2n_type TERMINATION                                   { Var ($3, $1) } /* foo: String */
-  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE TERMINATION  { Constructor(N2N_type($3), Id($1), List.rev $6)}
-  | ID COLON n2n_type ASSIGN complex_literal TERMINATION            { VarDeclLiteral(N2N_type($3), Id($1), Complex($5))}
+  | ID COLON n2n_type                                          { Var ($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE         { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
+  | expr ASSIGN expr                                           { AccessAssign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
+  | ID COLON n2n_type ASSIGN expr                              { VarDeclAssign($1, $3)}
 
 n2n_type:
   | primitive_type { $1 }
@@ -99,12 +99,12 @@ statements:
   | statements statement { $2 :: $1 }
 
 statement:
-  | expr TERMINATION                               { Expr($1) } /* 1 + 2 */
-  | RETURN expr TERMINATION                        { Return($2) } /* return 1 + 2 */
-  | LBRACE statements RBRACE                       { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
-  | IF LPAREN expr RPAREN statement %prec NOELSE   { If($3, $5, Block([])) }
-  | IF LPAREN expr RPAREN statement ELSE statement { If($3, $5, $7) }
-  | var_declaration                                { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
+  | expr TERMINATION                                          { Expr($1) } /* 1 + 2 */
+  | RETURN expr TERMINATION                                   { Return($2) } /* return 1 + 2 */
+  | LBRACE statements RBRACE                                  { Block(List.rev $2) } /* { 1 + 2 \n 3 + 4 } */
+  | IF LPAREN expr RPAREN statement %prec NOELSE              { If($3, $5, Block([])) }
+  | IF LPAREN expr RPAREN statement ELSE statement            { If($3, $5, $7) }
+  | var_declaration TERMINATION                               { Var_Declaration($1) } /* actor: Node, number: Int, graph_example: Graph */
 
 expr:
   | literal                      { $1 } /* 42, "Jerry", 4.3, true */
@@ -112,11 +112,10 @@ expr:
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | unary_operation              { $1 } /* -1 */
   | ID                           { Id($1) } /* actor, number, graph_example */
-  | ID ACCESS ID                 { Access($1, $3) } /* actor.name */
-  | expr ASSIGN expr             { Assign($1, $3) } /* number = 1, node_ex: Node = actor("Keanu")*/
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
   | built_in_function_call       { Func($1) }
   | LPAREN expr RPAREN           { $2 } /* (4 + 6) */
+  | ID ACCESS ID                 { Access($1, $3)}
 
 literal:
   | INT_LITERAL                  { Int_Literal($1) } /* 4, 3, 27 */
@@ -155,24 +154,24 @@ actuals_list:
   | actuals_list COMMA expr { $3 :: $1 }
 
 binary_operation:
-  | expr PLUS   expr             { Binop($1, Add,   $3) }
-  | expr MINUS  expr             { Binop($1, Sub,   $3) }
-  | expr TIMES  expr             { Binop($1, Mult,  $3) }
-  | expr DIVIDE expr             { Binop($1, Div,   $3) }
-  | expr MOD    expr             { Binop($1, Mod,   $3) }
-  | expr EQ     expr             { Binop($1, Equal, $3) }
-  | expr NEQ    expr             { Binop($1, Neq,   $3) }
-  | expr LT     expr             { Binop($1, Less,  $3) }
-  | expr LEQ    expr             { Binop($1, Leq,   $3) }
-  | expr GT     expr             { Binop($1, Greater,  $3) }
-  | expr GEQ    expr             { Binop($1, Geq,   $3) }
-  | expr AND    expr             { Binop($1, And, $3) }
-  | expr OR     expr             { Binop($1, Or, $3) }
-  | expr CONCAT expr             { Binop($1, Concat, $3) }
-  | expr GRAPH_INSERT expr       { Binop($1, Graph_Insert, $3) }
-  | expr GRAPH_REMOVE expr       { Binop($1, Grame_Remove, $3) }
-  | expr DATA_INSERT expr        { Binop($1, Data_Insert, $3) }
-  | expr DATA_REMOVE expr        { Binop($1, Data_remove, $3) }
+  | expr PLUS   expr                                                       { Binop($1, Add,   $3) }
+  | expr MINUS  expr                                                       { Binop($1, Sub,   $3) }
+  | expr TIMES  expr                                                       { Binop($1, Mult,  $3) }
+  | expr DIVIDE expr                                                       { Binop($1, Div,   $3) }
+  | expr MOD    expr                                                       { Binop($1, Mod,   $3) }
+  | expr EQ     expr                                                       { Binop($1, Equal, $3) }
+  | expr NEQ    expr                                                       { Binop($1, Neq,   $3) }
+  | expr LT     expr                                                       { Binop($1, Less,  $3) }
+  | expr LEQ    expr                                                       { Binop($1, Leq,   $3) }
+  | expr GT     expr                                                       { Binop($1, Greater,  $3) }
+  | expr GEQ    expr                                                       { Binop($1, Geq,   $3) }
+  | expr AND    expr                                                       { Binop($1, And, $3) }
+  | expr OR     expr                                                       { Binop($1, Or, $3) }
+  | expr CONCAT expr                                                       { Binop($1, Concat, $3) }
+  | expr GRAPH_INSERT LPAREN graph_type graph_type graph_type RPAREN       { Binop($1, Graph_Insert, ($4, $5, $6)) }/* ^+ */
+  | expr GRAPH_REMOVE LPAREN graph_type graph_type graph_type RPAREN       { Binop($1, Graph_Remove, ($4, $5, $6)) }/* ^- */
+  | expr DATA_INSERT expr                                                  { Binop($1, Data_Insert, $3) }/* [+] */
+  | expr DATA_REMOVE expr                                                  { Binop($1, Data_remove, $3) }/* [-] */
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
@@ -184,7 +183,7 @@ built_in_function_call:
   | ID ACCESS neighbors_function           { Neighbors_Func($1, $3) } /* graph_example.neighbors(node_ID) */
 
 map_function:
-  | MAP LPAREN expr COMMA LBRACE ID IN statement RBRACE RPAREN { Map_Func($3, $6, $8) }  /* map(graph_or_list, {node in function_call(node)}) */
+  | MAP LPAREN ID IN LBRACE statements RBRACE RPAREN { Map_Func($3, $6) }  /* map(node in {...}) */
 
 neighbors_function:
   | NEIGHBORS LPAREN ID RPAREN { $3 }
