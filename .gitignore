@@ -7,3 +7,4 @@ parser.conflicts
 ast.cm*
 backend/.idea/
 backend/*.iml
+backend/out/
