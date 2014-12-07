@@ -4,18 +4,16 @@ exception Error of string;;
 
 type environment = {
 	functions: (string * return_ty * formal list * statement list) list;
-	variables: var_scope;
-	(*Added Nodes and Rel types for instance "acted_in" and "actor" type rels and nodes, respectively*)
-	node_types: (string * (string * n2n_type) list) list;
-	rel_types: (string * (string * n2n_type) list) list;
-	cur_scope: string;
+	scope: string;
+	return_type: return_ty;
+	globals: (string * n2n_type * expr) list;
+	var_table: var_scope;
+
 }
 
 type var_scope = {
-	globals: (string * n2n_type * expr) list;
+	parent: var_scope;
 	locals: (string * n2n_type * expr) list;
-	global_complex: (string * n2n_type * var_decl list) list; 
-	local_complex: (string * n2n_type * var_decl list) list;
 }
 
 let beginning_scope = { globals = [], locals = []}
@@ -313,5 +311,5 @@ let add_function_to_table env func_def =
 let run_program program = 
 	let (vars, funcs) = program in
 	let env = beginning_environment in
-	let 
+	let (checked_globals, new_env) = start_globals
 
