@@ -6,14 +6,16 @@ type environment = {
 	functions: (string * return_ty * formal list * statement list) list;
 	variables: var_scope;
 	(*Added Nodes and Rel types for instance "acted_in" and "actor" type rels and nodes, respectively*)
-	node_types: var_decl list;
-	rel_types: var_decl list;
+	node_types: (string * (string * n2n_type) list) list;
+	rel_types: (string * (string * n2n_type) list) list;
 	cur_scope: string;
 }
 
 type var_scope = {
 	globals: (string * n2n_type * expr) list;
 	locals: (string * n2n_type * expr) list;
+	global_complex: (string * n2n_type * var_decl list) list; 
+	local_complex: (string * n2n_type * var_decl list) list;
 }
 
 let beginning_scope = { globals = [], locals = []}
@@ -220,8 +222,15 @@ let rec check_stmt env stmt = match stmt with
 
 	| Var_Declaration(decl) -> (*Make sure var with same name doesn't exist already and check for correct type*)
 		match decl with
-		Var(ty, id) -> check_var_decl_and_update_env env id ty
-		| Var_Decl_Assign(id, ty, expr) -> check_var_decl_assign_and_update_env env id ty expr
+		Var(ty, id) -> check_var_decl_and_update_env env id ty set_default_value ty
+		| Var_Decl_Assign(id, ty, ex) -> let t_ex = check_expr ex in 
+		 if (t_ex = ty) then check_var_decl_assign_and_update_env env id ty expr
+		else raise(Error("Type mismatch between variable and assigned value"))
+		| Access_Assign(e1, e2) -> let t1 = check_expr e1 and t2 = check_expr e2 in
+		if (t1 = t2) then 
+			match e1 with 
+				Id(v) -> 
+				| Access(vid, aid) -> 
 		(*let((_,ty,_),find_var) = try (fun f -> ((f env name),true)) (List.find (s,_,_) env.variables with
 			Not_found-> raise Not_found ) with
 			Not_found -> (((name,typ,None),false) in
@@ -243,29 +252,18 @@ let rec check_stmt env stmt = match stmt with
 					else raise (Error("Mismatched types"))
 				else raise (Error("Multiple declarations")) in ret*)
 
-let check_var_decl_and_update_env env id ty = 
-	if env.scope = "global" then 
-	let var_exists = List.exists (fun n -> n = id) env.scope.globals in
-		let new_env = (if var_exists then reset_var_in_env env id ty else
-			add_to_global_table env id ty set_default_value ty) in new_env
-	else let var_exists = List.exists (fun n -> n = id) env.scope.locals in
-		let new_env = (if var_exists then reset_var_in_env env id ty else 
-			add_to_local_table env id ty set_default_value ty) in new_env
-	 
-let reset_var_in_env env id ty = 
-	let var_list, is_local = (match env.cur_scope with
-	"local" -> env.scope.locals, true
+let check_var_decl_and_update_env env id ty val = 
+	let var_list = (match env.cur_scope with
+	"local" -> env.scope.locals
 	| "global" -> env.scope.globals, false) in 
-	let new_vars = List.rev (List.fold_left (fun l (n, t, v) -> if n = id then 
+	let new_vars = 
+		(match List.exists (fun fid -> fid = id) var_list with
+		true ->List.rev (List.fold_left (fun l (n, t, v) -> if n = id then 
 												(n, ty, set_default_value ty) :: l else
-												(n, t, v) :: l ) [] var_list) in
+												(n, t, v) :: l ) [] var_list)
+		| false -> (id, ty, val) :: var_list) in
 	let new_env = env in 
 	(if is_local then new_env.scope.locals = new_vars else new_env.scope.globals = new_vars) in new_env
-
-let check_var_decl_assign_and_update_env env id ty ex = 
-	let var_list, is_local = (match env.cur_scope with
-	"local" -> env.scope.locals, true
-	| "global" -> env.scope.globals
 
 let add_to_local_table env id ty val = 
 	let new_vars = (id, ty, val) :: env.scope.locals in
