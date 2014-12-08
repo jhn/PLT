@@ -1,55 +1,15 @@
 package com.n2n;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 public class Node {
 
     private String type;
     private Map<String, Object> data;
-    private List<Relationship> relationships = new ArrayList<>();
 
     public Node(String type, Map<String, Object> data) {
         this.type = type;
         this.data = data;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Map<String, Object> getData() {
-        return data;
-    }
-
-    public void setData(Map<String, Object> data) {
-        this.data = data;
-    }
-
-    public List<Relationship> getRelationships() {
-        return relationships;
-    }
-
-    public void addRelationship(Relationship relationship) {
-        this.relationships.add(relationship);
-    }
-
-    public boolean hasRelationshipLooselyEquals(String relationshipType) {
-        return hasRelationship(r -> r.looselyEquals(relationshipType));
-    }
-
-    public boolean hasRelationshipStrictlyEquals(Relationship relationship) {
-        return hasRelationship(r -> r.strictlyEquals(relationship));
-    }
-
-    private boolean hasRelationship(Predicate<Relationship> predicate) {
-        return relationships.stream().anyMatch(predicate);
     }
 
     @Override
