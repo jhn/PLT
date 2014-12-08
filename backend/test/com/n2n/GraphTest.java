@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
@@ -16,8 +17,13 @@ public class GraphTest {
 
     // Reeves
     public static Node keanu;
+    public static Node laurence;
+    public static Node carrie;
 
     public static Relationship neoRole;
+    public static Relationship morpheusRole;
+    public static Relationship trinityRole;
+
     public static Node theMatrix;
     public static Node theMatrixReloaded;
 
@@ -53,8 +59,24 @@ public class GraphTest {
             put("name", "Keanu");
         }});
 
+        laurence = new Node(ACTOR, new HashMap<String, Object>() {{
+            put("name", "Laurence");
+        }});
+
+        carrie = new Node(ACTOR, new HashMap<String, Object>() {{
+            put("name", "Carrie");
+        }});
+
         neoRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "Neo");
+        }});
+
+        morpheusRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
+            put("role", "Morpheus");
+        }});
+
+        trinityRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
+            put("role", "Trinity");
         }});
 
         theMatrix = new Node(MOVIE, new HashMap<String, Object>() {{
@@ -120,14 +142,16 @@ public class GraphTest {
         }});
 
         graph = new Graph(Arrays.asList(
-                    new Graph.Member<>(keanu, neoRole,    theMatrix),
-                    new Graph.Member<>(keanu, neoRole,    theMatrixReloaded),
-                    new Graph.Member<>(keanu, johnRole,   constantine),
-                    new Graph.Member<>(keanu, produced,   sideBySide),
-                    new Graph.Member<>(leo,   jordanRole, wolfOfWallSt),
-                    new Graph.Member<>(leo,   jackRole,   titanic),
-                    new Graph.Member<>(leo,   produced,   wolfOfWallSt),
-                    new Graph.Member<>(leo,   produced,   theAviator)
+                    new Graph.Member<>(keanu,    neoRole,      theMatrix),
+                    new Graph.Member<>(laurence, morpheusRole, theMatrix),
+                    new Graph.Member<>(carrie,   trinityRole,  theMatrix),
+                    new Graph.Member<>(keanu,    neoRole,      theMatrixReloaded),
+                    new Graph.Member<>(keanu,    johnRole,     constantine),
+                    new Graph.Member<>(keanu,    produced,     sideBySide),
+                    new Graph.Member<>(leo,      jordanRole,   wolfOfWallSt),
+                    new Graph.Member<>(leo,      jackRole,     titanic),
+                    new Graph.Member<>(leo,      produced,     wolfOfWallSt),
+                    new Graph.Member<>(leo,      produced,     theAviator)
                 ));
     }
 
@@ -163,9 +187,32 @@ public class GraphTest {
 
     @Test
     public void testFindManyRelationshipNodeWithStrictEquality() throws Exception {
-        Set<Node> actorsWithNeoRole = graph.findMany(neoRole, theMatrix);
-        assertThat(actorsWithNeoRole, hasSize(1));
-        assertThat(actorsWithNeoRole, contains(keanu));
+        Set<Node> actorsWithNeoRoleInTheMatrix = graph.findMany(neoRole, theMatrix);
+        assertThat(actorsWithNeoRoleInTheMatrix, hasSize(1));
+        assertThat(actorsWithNeoRoleInTheMatrix, contains(keanu));
+
+        Set<Node> actorsWithNeoRoleInTitanic = graph.findMany(neoRole, titanic);
+        assertThat(actorsWithNeoRoleInTitanic, hasSize(0));
+    }
+
+    @Test
+    public void testFindManyRelationshipNodeWithLooseEquality() throws Exception {
+        Set<Node> actorsInTheMatrix = graph.findMany(ACTED_IN, theMatrix);
+        assertThat(actorsInTheMatrix, hasSize(3));
+        assertThat(actorsInTheMatrix, containsInAnyOrder(keanu, laurence, carrie));
+
+        Set<Node> producedTheAviator = graph.findMany(PRODUCED, theAviator);
+        assertThat(producedTheAviator, hasSize(1));
+        assertThat(producedTheAviator, contains(leo));
+
+        Set<Node> actorsInWolfOfWallSt = graph.findMany(ACTED_IN, wolfOfWallSt);
+        Set<Node> actorsInTitanic = graph.findMany(ACTED_IN, titanic);
+        Set<Node> actorsInWolfOfWallStAndTitanic = new HashSet<Node>(){{
+            addAll(actorsInWolfOfWallSt);
+            addAll(actorsInTitanic);
+        }};
+        assertThat(actorsInWolfOfWallStAndTitanic, hasSize(1));
+        assertThat(actorsInWolfOfWallStAndTitanic, contains(leo));
     }
 
     @Test

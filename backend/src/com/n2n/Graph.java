@@ -89,11 +89,23 @@ public class Graph {
         return findManyHelper(r -> r.strictlyEquals(relationship), r -> r.getNodesFrom(node).stream());
     }
 
-    private Set<Node> findManyHelper(Node sourceNode, Predicate<Relationship> predicate) {
-        return relationships.stream()
-                .filter(predicate)
-                .flatMap(r -> r.getNodesFrom(sourceNode).stream())
-                .collect(Collectors.toSet());
+    /**
+     * An operation for finding nodes based on an inverse, loose relationship equality.
+     *
+     * Loose equality is defined as a match on the 'type' of the relationship.
+     *
+     * Example:
+     * + Find movies in which Keanu acted_in
+     *      matrix_actors: List<Node> = find_many(acted_in matrix)
+     *
+     *   Will search the graph for actor nodes that point to node 'matrix' through an 'acted_in' relationship
+     *
+     * @param node The source node from which relationships start.
+     * @param relationshipType The relationship type (its name) that joins source node and potential target nodes.
+     * @return The set of target nodes, or an empty set if no nodes are found.
+     */
+    public Set<Node> findMany(String relationshipType, Node node) {
+        return findManyHelper(r -> r.looselyEquals(relationshipType), r -> r.getNodesTo(node).stream());
     }
 
     /**
