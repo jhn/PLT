@@ -11,6 +11,13 @@ public class Graph {
     private Set<Node> nodes = new HashSet<>();
     private Set<Relationship> relationships = new HashSet<>();
 
+    /**
+     * A class that encapsulates {Node, Relationship, Node} triplets. Used
+     * when constructing graphs to enforce this type union.
+     *
+     * @param <N> A node.
+     * @param <R> A relationship.
+     */
     public static class Member<N, R> {
         private N from;
         private R rel;
@@ -87,14 +94,29 @@ public class Graph {
                 .collect(Collectors.toSet());
     }
 
-    // find one actor that was in the matrix named “Neo”
-    // keanu:             Node       = find_one(acted_in(“Neo”) matrix) ;
+    /**
+     * An operation for finding nodes based on strict relationship equality.
+     *
+     * Strict equality is defined as a match on the 'type' of the relationship and all the fields provided in the
+     * relationship.
+     *
+     * Example:
+     * + Find actors that acted_in as 'Neo' in 'matrix'
+     *
+     *      neo_actors: List<Node> = find_many(acted_in(“Neo”) matrix)
+     *
+     *   Will search the graph for matches on an 'acted_in' relationship node with first field as 'Neo' on a
+     *   'matrix' node.
+     *
+     * @param node The destination node at which the relationship ends.
+     * @param relationship A relationship that joins source node and target nodes.
+     * @return The set of target nodes, or an empty set if no nodes are found.
+     */
     public Set<Node> findMany(Relationship relationship, Node node) {
-        return null;
-    }
-
-    private Set<Node> findHelper(Relationship relationship, Node node) {
-        return null;
+        return relationships.stream()
+                .filter(r -> r.strictlyEquals(relationship))
+                .flatMap(r -> r.getNodesTo(node).stream())
+                .collect(Collectors.toSet());
     }
 
     // find relationships between keanu and matrix

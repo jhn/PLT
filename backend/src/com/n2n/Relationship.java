@@ -7,7 +7,7 @@ public class Relationship {
     private String type;
     private Map<String, Object> data;
     private Map<Node, Set<Node>> fromTo = new HashMap<>();
-
+    private Map<Node, Set<Node>> toFrom = new HashMap<>();
 
     public Relationship(String type, Map<String, Object> data) {
         this.type = type;
@@ -40,10 +40,19 @@ public class Relationship {
         } else {
             fromTo.put(from, new HashSet<>(Arrays.asList(to)));
         }
+        if (toFrom.containsKey(to)) {
+            toFrom.get(to).add(from);
+        } else {
+            toFrom.put(to, new HashSet<>(Arrays.asList(from)));
+        }
     }
 
     public Set<Node> getNodesFrom(Node from) {
         return fromTo.containsKey(from) ? fromTo.get(from) : Collections.emptySet();
+    }
+
+    public Set<Node> getNodesTo(Node to) {
+        return toFrom.containsKey(to) ? toFrom.get(to) : Collections.emptySet();
     }
 
     public boolean looselyEquals(String type) {

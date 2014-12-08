@@ -162,8 +162,10 @@ public class GraphTest {
     }
 
     @Test
-    public void testFindManyRelationshipNode() throws Exception {
-
+    public void testFindManyRelationshipNodeWithStrictEquality() throws Exception {
+        Set<Node> actorsWithNeoRole = graph.findMany(neoRole, theMatrix);
+        assertThat(actorsWithNeoRole, hasSize(1));
+        assertThat(actorsWithNeoRole, contains(keanu));
     }
 
     @Test
