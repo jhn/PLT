@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 public class Graph {
 
-    private Set<Node> nodes = new HashSet<>();
     private Set<Relationship> relationships = new HashSet<>();
 
     /**
@@ -39,10 +38,7 @@ public class Graph {
                 .forEach((members) -> {
                     // Hooks up relationships
                     members.getRel().addNodes(members.getFrom(), members.getTo());
-                    // Adds all the information to the graph
-                    nodes.add(members.getFrom());
                     relationships.add(members.getRel());
-                    nodes.add(members.getTo());
                 });
     }
 

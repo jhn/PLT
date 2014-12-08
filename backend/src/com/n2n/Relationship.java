@@ -18,22 +18,6 @@ public class Relationship {
         this(type, Collections.emptyMap());
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Map<String, Object> getData() {
-        return data;
-    }
-
-    public void setData(Map<String, Object> data) {
-        this.data = data;
-    }
-
     public void addNodes(Node from, Node to) {
         if (fromTo.containsKey(from)) {
             fromTo.get(from).add(to);
