@@ -48,11 +48,11 @@ public class Relationship {
     }
 
     public Set<Node> getNodesFrom(Node from) {
-        return fromTo.containsKey(from) ? fromTo.get(from) : Collections.emptySet();
+        return fromTo.containsKey(from) ? new HashSet<>(fromTo.get(from)) : Collections.emptySet();
     }
 
     public Set<Node> getNodesTo(Node to) {
-        return toFrom.containsKey(to) ? toFrom.get(to) : Collections.emptySet();
+        return toFrom.containsKey(to) ? new HashSet<>(toFrom.get(to)) : Collections.emptySet();
     }
 
     public boolean looselyEquals(String type) {
