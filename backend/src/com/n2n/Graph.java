@@ -3,8 +3,10 @@ package com.n2n;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Graph {
 
@@ -63,7 +65,7 @@ public class Graph {
      * @return The set of target nodes, or an empty set if no nodes are found.
      */
     public Set<Node> findMany(Node node, String relationshipType) {
-        return findManyHelper(node, r -> r.looselyEquals(relationshipType));
+        return findManyHelper(r -> r.looselyEquals(relationshipType), r -> r.getNodesFrom(node).stream());
     }
 
     /**
@@ -84,7 +86,7 @@ public class Graph {
      * @return The set of target nodes, or an empty set if no nodes are found.
      */
     public Set<Node> findMany(Node node, Relationship relationship) {
-        return findManyHelper(node, r -> r.strictlyEquals(relationship));
+        return findManyHelper(r -> r.strictlyEquals(relationship), r -> r.getNodesFrom(node).stream());
     }
 
     private Set<Node> findManyHelper(Node sourceNode, Predicate<Relationship> predicate) {
@@ -95,7 +97,7 @@ public class Graph {
     }
 
     /**
-     * An operation for finding nodes based on strict relationship equality.
+     * An operation for finding nodes based on an inverse, strict relationship equality.
      *
      * Strict equality is defined as a match on the 'type' of the relationship and all the fields provided in the
      * relationship.
@@ -105,24 +107,28 @@ public class Graph {
      *
      *      neo_actors: List<Node> = find_many(acted_in(“Neo”) matrix)
      *
-     *   Will search the graph for matches on an 'acted_in' relationship node with first field as 'Neo' on a
-     *   'matrix' node.
+     *   Will search the graph for actor nodes that point to node 'matrix' through an 'acted_in' relationship with
+     *   first field as 'Neo'
      *
      * @param node The destination node at which the relationship ends.
      * @param relationship A relationship that joins source node and target nodes.
      * @return The set of target nodes, or an empty set if no nodes are found.
      */
     public Set<Node> findMany(Relationship relationship, Node node) {
-        return relationships.stream()
-                .filter(r -> r.strictlyEquals(relationship))
-                .flatMap(r -> r.getNodesTo(node).stream())
-                .collect(Collectors.toSet());
+        return findManyHelper(r -> r.strictlyEquals(relationship), r -> r.getNodesTo(node).stream());
     }
 
     // find relationships between keanu and matrix
     // keanu_matrix_relationships: List<Rel> = find_many(keanu matrix) ;
     public Set<Relationship> findMany(Node leftNode, Node rightNode) {
         return null;
+    }
+
+    private Set<Node> findManyHelper(Predicate<Relationship> predicate, Function<Relationship, Stream<? extends Node>> mapper) {
+        return relationships.stream()
+                .filter(predicate)
+                .flatMap(mapper)
+                .collect(Collectors.toSet());
     }
 
 }
