@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class GraphTest {
@@ -217,6 +218,18 @@ public class GraphTest {
 
     @Test
     public void testFindManyNodeNode() throws Exception {
+        Set<Relationship> keanuMatrixRelationship = graph.findMany(keanu, theMatrix);
+        assertThat(keanuMatrixRelationship, hasSize(1));
+        assertThat(keanuMatrixRelationship, contains(neoRole));
 
+        Set<Relationship> matrixKeanuRelationship = graph.findMany(theMatrix, keanu);
+        assertEquals(keanuMatrixRelationship, matrixKeanuRelationship);
+
+        Set<Relationship> leoWolfRelationships = graph.findMany(leo, wolfOfWallSt);
+        assertThat(leoWolfRelationships, hasSize(2));
+        assertThat(leoWolfRelationships, containsInAnyOrder(jordanRole, produced));
+
+        Set<Relationship> leoKeanuRelationships = graph.findMany(leo, keanu);
+        assertThat(leoKeanuRelationships, hasSize(0));
     }
 }

@@ -1,8 +1,6 @@
 package com.n2n;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -39,8 +37,7 @@ public class Graph {
     public Graph(List<Member<Node, Relationship>> relatedMemberList) {
         relatedMemberList.stream()
                 .forEach((members) -> {
-                    // Connects nodes and relationships
-                    members.getFrom().addRelationship(members.getRel());
+                    // Hooks up relationships
                     members.getRel().addNodes(members.getFrom(), members.getTo());
                     // Adds all the information to the graph
                     nodes.add(members.getFrom());
@@ -130,10 +127,34 @@ public class Graph {
         return findManyHelper(r -> r.strictlyEquals(relationship), r -> r.getNodesTo(node).stream());
     }
 
-    // find relationships between keanu and matrix
-    // keanu_matrix_relationships: List<Rel> = find_many(keanu matrix) ;
+    /**
+     * Finds all relationships that join leftNode and RightNode.
+     * TODO: Ugly and inefficient. Fix me.
+     *
+     * @param leftNode Left side of the relationship.
+     * @param rightNode Right side of the relationship.
+     * @return A set that contains relationships between the two nodes.
+     */
     public Set<Relationship> findMany(Node leftNode, Node rightNode) {
-        return null;
+        Set<Relationship> result = new HashSet<>();
+        result.addAll(relationshipFinder(leftNode, rightNode));
+        result.addAll(relationshipFinder(rightNode, leftNode));
+        return result;
+    }
+
+    private Set<Relationship> relationshipFinder(Node left, Node right) {
+        Set<Relationship> result = new HashSet<>();
+        for (Relationship relationship : relationships) {
+            Set<Node> nodesFromLeft = relationship.getNodesFrom(left);
+            Set<Node> nodesToRight = relationship.getNodesTo(right);
+            if (!nodesToRight.isEmpty()) {
+                boolean modified = nodesFromLeft.retainAll(nodesToRight);
+                if (modified) {
+                    result.add(relationship);
+                }
+            }
+        }
+        return result;
     }
 
     private Set<Node> findManyHelper(Predicate<Relationship> predicate, Function<Relationship, Stream<? extends Node>> mapper) {
