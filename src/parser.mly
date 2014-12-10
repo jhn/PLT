@@ -124,12 +124,15 @@ literal:
 
 complex_literal:
   | node_or_rel_literal                  { $1 } /* actor("Keanu"), "true" */
-  | LPAREN complex_literal_list RPAREN   { Graph_Literal(List.rev $2) }
+  | LPAREN graph_component_list RPAREN   { Graph_Literal(List.rev $2) }
 
-complex_literal_list:
-  |                                                             { [] }
-  | graph_type graph_type graph_type                            { Node_Rel_Node_Tup($1, $2, $3) } /* :: or commas? */
-  | complex_literal_list COMMA graph_type graph_type graph_type { ($3, $4, $5):: $1 }
+graph_component:
+  graph_type graph_type graph_type       { Node_Rel_Node_Tup($1, $2, $3) } /* :: or commas? */
+
+graph_component_list:
+  |                                            { [] }
+  | graph_component                            { $1 } /* :: or commas? */
+  | graph_component_list COMMA graph_component { $2 :: $1 }
 
 graph_type:
   | ID                                   { Graph_Type_ID($1) }
@@ -187,5 +190,5 @@ neighbors_function:
   | NEIGHBORS LPAREN ID RPAREN { $3 }
 
 find_many:
-  | FINDMANY LPAREN node_or_rel_literal RPAREN   { Find_Many_Node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
+  | FINDMANY LPAREN node_or_rel_literal RPAREN         { Find_Many_Node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
   | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { Find_Many_Gen($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
