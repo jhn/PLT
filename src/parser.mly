@@ -131,8 +131,7 @@ graph_component:
 
 graph_component_list:
   |                                            { [] }
-  | graph_component                            { $1 } /* :: or commas? */
-  | graph_component_list COMMA graph_component { $2 :: $1 }
+  | graph_component_list COMMA graph_component { $3 :: $1 }
 
 graph_type:
   | ID                                   { Graph_Type_ID($1) }
