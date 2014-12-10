@@ -35,29 +35,33 @@
 
 program:
  | /* nothing */                  { ([], []) }
- | program var_declaration { ($2 :: fst $1), snd $1 }
+ | program global_var_declaration { ($2 :: fst $1), snd $1 }
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 var_declaration:
   | ID COLON n2n_type                                          { Var($3, $1) } /* foo: String */
-  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE         { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
+  | ID COLON complex_type ASSIGN LBRACE formal_list RBRACE     { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
   | expr ASSIGN expr                                           { Access_Assign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
-  | ID COLON n2n_type ASSIGN expr                              { Var_Decl_Assign($1, $3, $5)}
+  | ID COLON complex_type ASSIGN expr                          { Var_Complex_Decl_Assign($1, $3, $5)} /* Split the declaration and initializatio for complex */
+  | ID COLON primitive_type ASSIGN expr                        { Var_Primitive_Decl_Assign($1, $3, $5)} /* and primitive type */
+
+global_var_declaration:
+  var_declaration TERMINATION { $1 }
 
 n2n_type:
-  | primitive_type { $1 }
-  | complex_type   { $1 }
+  | primitive_type { N2N_primitive($1) }
+  | complex_type   { N2N_complex($1) }
 
 primitive_type:
-  | INT       { N2N_primitive(Int) }
-  | STRING    { N2N_primitive(String) }
-  | DOUBLE    { N2N_primitive(Double) }
-  | BOOL      { N2N_primitive(Bool) }
+  | INT       { Int }
+  | STRING    { String }
+  | DOUBLE    { Double }
+  | BOOL      { Bool }
 
 complex_type:
-  | GRAPH     { N2N_complex(Graph) }
-  | NODE      { N2N_complex(Node) }
-  | REL       { N2N_complex(Rel) }
+  | GRAPH     { Graph }
+  | NODE      { Node }
+  | REL       { Rel }
 
 function_declaration:
  | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */

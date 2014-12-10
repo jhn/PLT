@@ -51,7 +51,8 @@ type formal =
 type var_decl =
   | Var of n2n_type * string
   | Constructor of complex_type * string * formal list
-  | Var_Decl_Assign of string * n2n_type * expr
+  | Var_Complex_Decl_Assign of string * complex_type * expr
+  | Var_Primitive_Decl_Assign of string * primitive_type * expr
   | Access_Assign of expr * expr
 
 and expr =
@@ -72,7 +73,7 @@ and literal =
 
 and built_in_function_call =
   | Find_Many of string * find_many
-  | Map of expr * map_function
+  | Map of string * map_function
   | Neighbors_Func of string * string
 
 and complex_literal =
