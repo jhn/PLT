@@ -50,7 +50,7 @@ type formal =
 
 type var_decl =
   | Var of n2n_type * string
-  | Constructor of n2n_type * string * formal list
+  | Constructor of complex_type * string * formal list
   | Var_Decl_Assign of string * n2n_type * expr
   | Access_Assign of expr * expr
 

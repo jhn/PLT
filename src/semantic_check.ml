@@ -18,7 +18,7 @@ type var_scope = {
 	locals: (string * n2n_type * expr) list;
 }
 
-let beginning_scope = { globals = [], locals = []}
+let beginning_scope = { parent = None locals = []}
 
 let beginning_environment = { functions = [], variables = beginning_scope, cur_scope = "global", node_types = [], rel_types = [] }
 
@@ -238,10 +238,6 @@ let add_to_local_table env id ty val =
 	let new_vars = (id, ty, val) :: env.scope.locals in
 	let new_env = env in new_env.scope.locals = new_vars in new_env
 
-let add_to_global_table env id ty val = 
-	let new_vars = (id, ty, val) :: env.scope.globals in
-	let new_env = env in new_env.scope.globals = new_vars in new_env 
-
 let set_default_value ty = 
 	match ty with
 	Int -> 0
@@ -257,9 +253,70 @@ let get_sstmt_list env stmt_list =
 		let (sstmt, new_env) = check_stmt env stmt in
 		(sstmt::sstmt_list, new_env)) ([],env) stmt_list
 
+let add_new_var_to_global_table env id ty val = 
+	let new_vars = (id, ty, val) :: env.globals in 
+	let new_env = {env with globals = new_vars} in new_env
+
+let check_for_existing_var_and_update_gloabl_table env id ty val = 
+	let var_already_exists = List.exists(fun vid -> vid=id) env.globals in
+	if var_already_exists then
+		let (oid, oty, oval) = List.find (fun oid -> oid=id) env.globals in
+		if(oty=ty) then
+			let new_vars = List.fold_left (fun l (vid, vty, val) -> if (vid=id) then
+													(id, ty, val) :: l else
+													(vid, vty, val) :: l) [] env.globals in
+			let new_env = {env with globals = new_vars} in
+				new_env
+			else 
+				raise(Error("Trying to declare two variables with same ID but different types"))
+	else
+		let new_env = add_new_var_to_global_table env id ty val in
+		new_env
+
+let check_global env var = 
+	let (checked_global, up_env) = 
+		(match var with
+		Var(ty, id) -> let new_env = check_for_existing_var_and_update_gloabl_table env id ty set_default_value ty in
+			(SVar(ty, id), new_env)
+		| Var_Decl_Assign(id, ty, e) -> let t_ex = check_expr e in
+			if (t_ex = ty) then
+				let new_env = check_for_existing_var_and_update_gloabl_table env id ty e in
+				(SVar_Decl_Assign(id, ty, SExpr(e)), new_env)
+			else 
+				raise(Error("Type mismatch in global variable assignment"))
+		| Access_Assign(e1, e2) -> 
+			let t1 = check_expr e1 and t2 = check_expr t2 in
+			if (t1=t2) then
+				match e1 with
+				Id(s) -> 
+					let var_to_find = List.find (fun vid -> vid=s) env.globals 
+		| Constructor(ty, id, l) -> 
+			let list_to_check = (match ty with
+				Node -> env.node_types
+				| Rel -> env.rel_types) in
+			let does_type_exist = List.exists (fun cid -> cid=id) list_to_check in
+			if does_type_exist then
+				raise(Error("Already have a constructor of this name for this type"))
+			else
+				let new_constructors = (id, l) :: list_to_check in
+				let new_env = (match ty with
+				Node -> {env with node_types = new_constructors}
+				| Rel -> {env with rel_types = new_constructors}) in
+				(SConstructor(ty, id, l), new_env)) in
+	(checked_global, up_env)
+
+let rec check_globals_and_update_env env vars checked_vars = 
+	let (checked_globals, new_env) = 
+		(match vars with
+		| var :: tail -> 
+			let (checked_global, up_env) = check_global env var in
+			check_globals_and_update_env up_env tail (checked_global::checked_vars)
+		| [] -> (checked_vars, env))
+	in (checked_globals, new_env)
+
 let run_program program = 
 	let (vars, funcs) = program in
 	let env = beginning_environment in
-	let (checked_globals, new_env) = check_globals env vars in
+	let (checked_globals, new_env) = check_globals_and_update_env env vars [] in
 	let checked_functions = check_functions new_env funcs in
 	Prog(checked_globals, checked_functions)
