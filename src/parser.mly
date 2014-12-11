@@ -108,6 +108,7 @@ expr:
   | literal                      { Literal($1) } /* 42, "Jerry", 4.3, true */
   | complex_literal              { Complex($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
+  | graph_operation              { $1 }
   | unary_operation              { $1 } /* -1 */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
@@ -123,7 +124,7 @@ literal:
   /*Do we need NULL or not*/
 
 complex_literal:
-  | node_or_rel_literal                  { $1 } /* actor("Keanu"), "true" */
+  | ID LBRACKET literal_list RBRACKET    { Graph_Element($1, List.rev $3) } /* actor("Keanu"), "true" */
   | LPAREN graph_component_list RPAREN   { Graph_Literal(List.rev $2) }
 
 graph_component:
@@ -134,16 +135,12 @@ graph_component_list:
   | graph_component_list COMMA graph_component { $3 :: $1 }
 
 graph_type:
-  | ID                                   { Graph_Type_ID($1) }
-  | node_or_rel_literal                  { Graph_Type($1) }
-
-node_or_rel_literal:
-  | ID LBRACKET literal_list RBRACKET         { Graph_Element($1, List.Rev $3) }
+  | ID                             { Graph_Id($1) }
+  | complex_literal                { Graph_Type($1) }
 
 literal_list:
   |                              { [] }
-  | literal                      { [$1] }
-  | literal_list COMMA literal   { $3:: $1 }
+  | literal_list COMMA literal   { $3 :: $1 }
 
 actuals_opt:
   | /* nothing */ { [] }
@@ -168,10 +165,14 @@ binary_operation:
   | expr AND    expr                                                       { Binop($1, And, $3) }
   | expr OR     expr                                                       { Binop($1, Or, $3) }
   | expr CONCAT expr                                                       { Binop($1, Concat, $3) }
-  | expr GRAPH_INSERT LPAREN graph_type graph_type graph_type RPAREN       { Binop($1, Graph_Insert, ($4, $5, $6)) }/* ^+ */
-  | expr GRAPH_REMOVE LPAREN graph_type graph_type graph_type RPAREN       { Binop($1, Graph_Remove, ($4, $5, $6)) }/* ^- */
-  | expr DATA_INSERT expr                                                  { Binop($1, Data_Insert, $3) }/* [+] */
-  | expr DATA_REMOVE expr                                                  { Binop($1, Data_remove, $3) }/* [-] */
+
+graph_operation:
+  | expr GRAPH_INSERT LPAREN graph_component RPAREN                        { Grop($1, Graph_Insert, $4)}/* ^+ */
+  | expr GRAPH_REMOVE LPAREN graph_component RPAREN                        { Grop($1, Graph_Remove, $4)}/* ^- */
+
+graph_element_operation:
+  | expr DATA_INSERT expr                                                  { Geop($1, Data_Insert, $3) }/* [+] */
+  | expr DATA_REMOVE expr                                                  { Geop($1, Data_Remove, $3) }/* [-] */
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
@@ -189,5 +190,5 @@ neighbors_function:
   | NEIGHBORS LPAREN ID RPAREN { $3 }
 
 find_many:
-  | FINDMANY LPAREN node_or_rel_literal RPAREN         { Find_Many_Node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
-  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN { Find_Many_Gen($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */
+  | FINDMANY LPAREN complex_literal RPAREN                  { Find_Many_Node($3) } /* Find all nodes that match a literal, i.e. find_many(actor("Neo")) returns all nodes of type actor that have the name field equal to "Neo" */
+  | FINDMANY LPAREN graph_type COMMA graph_type RPAREN      { Find_Many_Gen($3, $5) } /* Return what's missing, i.e. nodes pointed to, nodes pointed from, or rel between nodes */

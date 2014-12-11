@@ -13,8 +13,12 @@ type op =
   | And
   | Or
   | Concat
+
+type grop =
   | Graph_Insert
   | Graph_Remove
+
+type geop =
   | Data_Insert
   | Data_Remove
 
@@ -60,6 +64,8 @@ and expr =
   | Complex of complex_literal
   | Id of string
   | Binop of expr * op * expr
+  | Grop of expr * grop * graph_component
+  | Geop of expr * geop * expr
   | Unop of uop * expr
   | Access of string * string
   | Call of string * expr list
@@ -77,22 +83,22 @@ and built_in_function_call =
   | Neighbors_Func of string * string
 
 and complex_literal =
-  | Graph_Literal of node_rel_node_tuple list
-  | Graph_Element of string * expr list
+  | Graph_Literal of graph_component list
+  | Graph_Element of string * literal list
 
 and map_function =
   | Map_Func of string * statement list
 
 and find_many =
-  | Find_Many_Node of expr
-  | Find_Many_Gen of expr * expr
+  | Find_Many_Node of complex_literal
+  | Find_Many_Gen of graph_type * graph_type
 
-and node_rel_node_tuple =
+and graph_component =
   | Node_Rel_Node_Tup of graph_type * graph_type * graph_type
 
 and graph_type =
-  | Graph_Type_ID of string
-  | Graph_Type of string * expr list
+  | Graph_Id of string
+  | Graph_Type of complex_literal
 
 and statement =
   | Block of statement list
