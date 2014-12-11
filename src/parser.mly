@@ -109,6 +109,7 @@ expr:
   | complex_literal              { Complex($1) } /* constructor(literal,literal), { node rel node, node_literal rel_literal node_literal } */
   | binary_operation             { $1 } /* 4 + 3, "Johan" ^ "Mena" */
   | graph_operation              { $1 }
+  | graph_element_operation      { $1 }
   | unary_operation              { $1 } /* -1 */
   | ID                           { Id($1) } /* actor, number, graph_example */
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) } /* fucntion_ID_String_param("Keanu") */
