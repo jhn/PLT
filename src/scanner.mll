@@ -8,9 +8,9 @@
   match s with
      "\\n" -> '\n'
    | "\\t" -> '\t'
-   | "\\" -> '\'
+   (*| "\\" -> '\'*)
    | "\"" ->  '"'
-   | "\'" ->  '''
+   (*| "\'" ->  '''*)
    | c -> raise (Failure("unsupported character " ^ c))
 }
 
@@ -83,11 +83,10 @@ rule token = parse
    | "Double"                { DOUBLE }
    | "String"                { STRING }
    | "Bool"                  { BOOL }
-   | "Null"                  { NULL }
    | "Void"                  { VOID }
 
  | digit+ as lit 										  { INT_LITERAL(int_of_string lit) }
- | decimal as lit 										  { FLOAT_LITERAL(float_of_string lit) }
+ | decimal as lit 										  { DOUBLE_LITERAL(float_of_string lit) }
  | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(verify_escape lit) }
  | ("true" | "false") as lit							  { BOOL_LITERAL(bool_of_string lit) }
  | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }  (*every ID should start with a letter*)

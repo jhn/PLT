@@ -1,20 +1,15 @@
-OBJS = ast.cmo parser.cmo scanner.cmo
+OBJS = parser.cmo scanner.cmo
 
-compiler: $(OBJS)
-	ocamlc -o compiler $(OBJS)
-
-scanner.ml : scanner.mll
-	ocamllex scanner.mll
-
-parser.ml parser.mli : parser.mly
+.PHONY: compile
+compile:
 	ocamlyacc parser.mly
-
-%.cmo : %.ml
-	ocamlc -w A -c $<
-
-%.cmi : %.mli
-	ocamlc -w A -c $<
+	ocamlc -c ast.mli
+	ocamlc -c parser.mli
+	ocamlc -c parser.ml
+	ocamllex scanner.mll
+	ocamlc -c scanner.ml
+	ocamlc -c semantic_check.ml
 
 .PHONY : clean
 clean :
-	rm -f microc parser.ml parser.mli scanner.ml *.cmo *.cmi
+	rm -f compiler parser.ml parser.mli scanner.ml *.cmo *.cmi
