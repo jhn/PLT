@@ -3,12 +3,14 @@ open Ast
 exception Error of string;;
 
 type environment = {
-	functions: (string * return_ty * formal list * statement list) list;
+	functions: func_decl list;
 	scope: string;
 	return_type: return_ty;
-	globals: (string * n2n_type * expr) list;
-	node_types: (string * (string * n2n_type) list);
-	rel_types: (string * (string * n2n_type) list);
+	globals: (string * primitive_type * expr) list;
+	node_types: (string * formal list) list;
+	global_nodes: (string * (string * primitive_type * expr) list) list;
+	rel_types: (string * formal list) list;
+	global_rels: (string * (string * primitive_type * expr) list) list;
 	var_table: var_scope;
 	has_return: bool;
 }
@@ -16,6 +18,8 @@ type environment = {
 type var_scope = {
 	parent: var_scope option;
 	locals: (string * n2n_type * expr) list;
+	nodes: (string * (string * primitive_type * expr) list) list;
+	rels: (string * (string * primitive_type * expr) list) list;
 }
 
 let beginning_scope = { parent = None locals = []}
@@ -45,17 +49,6 @@ let check_logic t1 t2 =
 	| (Double, Double) -> Bool
 	| (String, String) -> Bool
 	| (_,_) -> raise(Error("Logical operation fails, arguments not of correct types"))
-
-let find_global_var env name = 
-	let (n, t, v) = try List.find (fun (id, _, _) -> id = name) env.var_scope.globals with
-	Not_found -> raise(Error("Couldn't find the requested global variable")) in
-	(n, t, v)
-
-let find_var_in_local_scope env name = 
-	let (n, t, v) = if List.exists (fun (id, _, _) -> id = name) env.var_scope.locals then
-		try List.find (fun (id, _, _) -> id = name) env.var_scope.locals with
-			Not_found -> try List.find (fun (id, _, _) -> id = name) env.var_scope.globals with
-			Nog_found -> raise(Error("Variable does not exist globally or locally")) in (n, t, v)
 
 let is_node env id =
 	let isNode = List.exists (fun (fid, _) -> fid = id) env.node_types in
@@ -143,11 +136,7 @@ let rec check_expr env expr = match expr with
 			| Graph_Remove -> check_graph_op t1 t2
 			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
 			| Data_remove -> check_data_op t1 t2) in binop_t
-	| Access(e1, e2) -> let(_,t1,_) = try List.find (e1, _, _) env.variables in
-		(if is_node env t1 then let(_,_,p) = try List.find(e2,) env e2 env.node_types
-		else if is_rel env t1 then check_rel_literal env e2 env.rel_types
-		else raise(Error("Could not find constructor for your node or rel"))
-		)
+	| Access(e1, e2) -> check_expr e1
 	| Call(id, e1) -> try (let (fname, ret_ty, args, body) = List.find (s,_,_,_) env.functions id in
 		let passed_type = List.map (fun exp -> check_expr env exp) e1 in
 		let func_types = List.map (fun arg -> let(_,typ,_) = get_name_type_from_formal env arg in typ) args in
@@ -220,20 +209,6 @@ let rec check_stmt env stmt = match stmt with
 					| Access(vid, aid) -> 
 		| Constructor
 
-
-let check_var_decl_and_update_env env id ty val = 
-	let var_list = (match env.cur_scope with
-	"local" -> env.scope.locals
-	| "global" -> env.scope.globals, false) in 
-	let new_vars = 
-		(match List.exists (fun fid -> fid = id) var_list with
-		true ->List.rev (List.fold_left (fun l (n, t, v) -> if n = id then 
-												(n, ty, set_default_value ty) :: l else
-												(n, t, v) :: l ) [] var_list)
-		| false -> (id, ty, val) :: var_list) in
-	let new_env = env in 
-	(if is_local then new_env.scope.locals = new_vars else new_env.scope.globals = new_vars) in new_env
-
 let add_to_local_table env id ty val = 
 	let new_vars = (id, ty, val) :: env.scope.locals in
 	let new_env = env in new_env.scope.locals = new_vars in new_env
@@ -248,14 +223,47 @@ let set_default_value ty =
 	| Rel -> []
 	| Graph -> []
 
-let get_sstmt_list env stmt_list =
-	List.fold_left (fun (sstmt_list,env) stmt ->
-		let (sstmt, new_env) = check_stmt env stmt in
-		(sstmt::sstmt_list, new_env)) ([],env) stmt_list
+let rec get_checked_statements env stmts checked_statments =
+	match stmts with
+	| stmt :: tail -> 
+		let (checked_statement, new_env) = check_stmt env stmt in
+		get_checked_statements new_env tail (checked_statement::checked_statments)
+	| [] -> (checked_statments, env)
+
+let new_func_env env func =
+	let (l, n, r) = List.fold_left (fun (l,n,r), (ty, id) ->
+		match ty with
+		Node -> (l, (id, ty, set_default_value ty) :: n, r)
+		| Rel -> (l, n, (id, ty, set_default_value ty) :: r)
+		| _ -> ((id, ty, set_default_value ty) :: l, n, r) ) ([],[],[]) func.formals 
+	and new_funcs = func :: env.funcs in
+	let new_var_scope = {parent = env.var_scope, locals = l, nodes = n, rels = r} in
+	let new_env = {env with functions = new_funcs, var_table = new_var_scope; scope = func.fname; return_type = func.return_type} in
+	new_env
+
+let check_function env func =
+	let new_env = new_func_env env func in
+	let checked_statements = get_checked_statements new_env 
+
+let rec check_functions env funcs checked_funcs =
+	let checked_functions = 
+		(match funcs with
+		func :: tail ->
+			let (checked_func, up_env) = check_function env func in
+			check_functions up_env tail (checked_func :: checked_funcs)
+		| [] -> checked_funcs) in
+	checked_functions
 
 let add_new_var_to_global_table env id ty val = 
 	let new_vars = (id, ty, val) :: env.globals in 
 	let new_env = {env with globals = new_vars} in new_env
+
+let add_new_complex_var_to_global_table env id ty vals =
+	match ty with 
+		| Node -> let new_vars = (id, vals) :: env.global_nodes in
+			{env with global_nodes=new_vars}
+		| Rel -> let new_vars = (id, vals) :: env.global_rels in
+			{env with global_rels=new_vars}
 
 let check_for_existing_var_and_update_gloabl_table env id ty val = 
 	let var_already_exists = List.exists(fun vid -> vid=id) env.globals in
@@ -273,23 +281,48 @@ let check_for_existing_var_and_update_gloabl_table env id ty val =
 		let new_env = add_new_var_to_global_table env id ty val in
 		new_env
 
+let check_for_existing_complex_var_and_update_global_table env id ty val =
+	let list_to_check = (match ty with
+		| Node -> env.global_nodes
+		| Rel -> env.global_rels) in
+	let var_already_exists = List.exists(fun cid -> cid = id) list_to_check in
+	if var_already_exists then
+		let(cid, cvals) = List.find (fun cid -> cid=id) list_to_check in
+		let new_varys = List.fold_left (fun l (vid, vals) -> if (cid=id) then
+													(cid, cvals) :: l else
+													(vid, vals) :: l) [] list_to_check in
+		let new_env = (match ty with
+			| Node -> {env with global_nodes = new_vars}
+			| Rel -> {env with global_rels = new_vars}) in
+		new_env
+	else
+		let new_env = add_new_complex_var_to_global_table env id ty val
+
 let check_global env var = 
 	let (checked_global, up_env) = 
 		(match var with
-		Var(ty, id) -> let new_env = check_for_existing_var_and_update_gloabl_table env id ty set_default_value ty in
+		Var(ty, id) -> let new_env = 
+			(match ty with
+			Node -> check_for_existing_complex_var_and_update_global_table env id ty set_default_value ty
+			| Rel -> check_for_existing_complex_var_and_update_global_table env id ty set_default_value ty
+			| _ -> check_for_existing_var_and_update_gloabl_table env id ty set_default_value ty) in
 			(SVar(ty, id), new_env)
-		| Var_Decl_Assign(id, ty, e) -> let t_ex = check_expr e in
+		| Var_Primitive_Decl_Assign(id, ty, e) -> let t_ex = check_expr e in
 			if (t_ex = ty) then
 				let new_env = check_for_existing_var_and_update_gloabl_table env id ty e in
-				(SVar_Decl_Assign(id, ty, SExpr(e)), new_env)
+				(SVar_Primitive_Decl_Assign(id, ty, SExpr(e)), new_env)
 			else 
 				raise(Error("Type mismatch in global variable assignment"))
+		| Var_Complex_Decl_Assign(id, ty, e) -> let t_ex = check_expr e in
+			if (t_ex = ty) then
+				let new_env = check_for_existing_complex_var_and_update_global_table env id ty e in
+				(SVar_Complex_Decl_Assign(id, ty, SExpr(e)), new_env);
 		| Access_Assign(e1, e2) -> 
 			let t1 = check_expr e1 and t2 = check_expr t2 in
 			if (t1=t2) then
 				match e1 with
 				Id(s) -> 
-					let var_to_find = List.find (fun vid -> vid=s) env.globals 
+
 		| Constructor(ty, id, l) -> 
 			let list_to_check = (match ty with
 				Node -> env.node_types
@@ -300,8 +333,13 @@ let check_global env var =
 			else
 				let new_constructors = (id, l) :: list_to_check in
 				let new_env = (match ty with
-				Node -> {env with node_types = new_constructors}
-				| Rel -> {env with rel_types = new_constructors}) in
+				Node -> if List.exists (fun vid -> vid=id) env.global_rels then
+					raise(Error("Can't have a constructor for both Node and Rel types")) else
+					{env with node_types = new_constructors}
+				| Rel -> if List.exists (fun vid -> vid=id) env.global_nodes then
+					raise(Error("Can't have a constructor for both Rel and Node types"))
+						else {env with rel_types = new_constructors}
+				| _ -> raise(Error("Can only have constructors for Node and Rel types"))) in
 				(SConstructor(ty, id, l), new_env)) in
 	(checked_global, up_env)
 
