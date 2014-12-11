@@ -105,7 +105,7 @@ let rec check_expr env expr = match expr with
 		| Bool_Literal(b) -> Bool
 		| String_Literal(str) -> String)
 	| Complex(c) -> match c with 
-		Graph_Literal(nrn_list) -> print_str(nrn)
+		Graph_Literal(nrn_list) -> check_nrn_list env nrn_list
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
 	| Id(v) -> 
 		let (_, t, _) = if env.cur_scope = "global" then find_global_var v else
@@ -151,6 +151,18 @@ let rec check_expr env expr = match expr with
 			(match e2 with 
 				Map_Func(e3,id,s1) -> let (*I got lost understanding how we're using map!*)
 		| Neighbors_Func(id,e1) -> let (_,t1,_) = try List.find(e1,_,_) env.variables and
+
+let rec find_var vars_list id =
+	let var_to_return = 
+		try List.find (fun vid -> vid = id) vars_list.locals with
+			Not_found -> let (id, l) = try List.find (fun nid -> nid=id) vars_list.nodes with
+			Not_found -> try List.find(fun rid -> rid=id) vars_list.nodes with
+			Not_found -> (match vars_list with
+				Some(p) -> find_var p id
+				| None(p) -> raise Not_found)
+
+let find_global_var env id =
+	let var_to_return = 
 
 let get_name_type_from_formal env = function
 	Formal(type_spec,id) -> (id, type_spec, None)
