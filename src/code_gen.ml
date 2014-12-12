@@ -9,53 +9,60 @@ let imports =
   "import com.n2n.Node;\n" ^
   "import com.n2n.Relationship;\n"
 
-let translate (globals, functions) =
+(* Returns the string name for a data type *)
+let rec get_type_name = function
+  | Int(id)    -> id
+  | Double(id) -> id
+  | String(id) -> id
+  | Bool(id)   -> id
+  | Map(id)    -> id
+  | List(id)   -> id
+  | Rel(id)    -> id
+  | Node(id)   -> id
+  | Graph(id)  -> id
+  | Void(id)   -> id
 
-  (* Returns the string name for a data type *)
-  let rec get_type_name = function
-    | Int(id)    -> id
-    | Double(id) -> id
-    | String(id) -> id
-    | Bool(id)   -> id
-    | Map(id)    -> id
-    | List(id)   -> id
-    | Rel(id)    -> id
-    | Node(id)   -> id
-    | Graph(id)  -> id
-    | Void(id)   -> id
+(* Returns the java declaration for a type *)
+let rec string_of_data_type with_id = function
+  | Int(id)    -> "int " ^ (if with_id then id else "")
+  | Double(id) -> "double " ^ (if with_id then id else "")
+  | String(id) -> "String " ^ (if with_id then id else "")
+  | Bool(id)   -> "boolean " ^ (if with_id then id else "")
+  | Map(id)    -> "Map<Object, Object> " ^ (if with_id then id else "")
+  | List(id)   -> "List<Object> " ^ (if with_id then id else "")
+  | Rel(id)    -> "Relationship " ^ (if with_id then id else "")
+  | Node(id)   -> "Node " ^ (if with_id then id else "")
+  | Graph(id)  -> "Graph " ^ (if with_id then id else "")
+  | Void(id)   -> "void " ^ (if with_id then id else "")
 
-  (* Returns the java declaration for a type *)
-    in let rec string_of_data_type with_id = function
-      | Int(id)    -> "int " ^ (if with_id then id else "")
-      | Double(id) -> "double " ^ (if with_id then id else "")
-      | String(id) -> "String " ^ (if with_id then id else "")
-      | Bool(id)   -> "boolean " ^ (if with_id then id else "")
-      | Map(id)    -> "Map<Object, Object> " ^ (if with_id then id else "")
-      | List(id)   -> "List<Object> " ^ (if with_id then id else "")
-      | Rel(id)    -> "Relationship " ^ (if with_id then id else "")
-      | Node(id)   -> "Node " ^ (if with_id then id else "")
-      | Graph(id)  -> "Graph " ^ (if with_id then id else "")
-      | Void(id)   -> "void " ^ (if with_id then id else "")
+(* Turns a literal object into a java expr. TODO: More literals *)
+in let rec string_of_literal = function
+  | String_Literal(s)  -> "\"" ^ s ^ "\""
+  | Boolean_Literal(s) -> string_of_bool s
+  | Int_Literal(s) -> string_of_int s
+  | Double_Literal(s) -> string_of_float s
 
-  (* Turns a literal object into a java expr. TODO: More literals *)
-  in let rec string_of_literal = function
-    | String_Literal(s)  -> "\"" ^ s ^ "\""
-    | Boolean_Literal(s) -> string_of_bool s
-    | Int_Literal(s) -> string_of_int s
-    | Double_Literal(s) -> string_of_float s
+let gen_id = function
+  | Id(id) -> id
 
-    in let gen_id = function
-    | Id(id) -> id
+let gen_formal = function
+  | Formal(type_spec,id) -> gen_var_type type_spec gen_id id
 
-    in let gen_formal = function
-    | Formal(type_spec,id) -> gen_var_type type_spec gen_id id
+let gen_formal_list fl = match fl with
+  | [] -> ""
+  | head::[] -> gen_formal head
+  | head::tail -> gen_formal head ^ ", " ^ gen_formal_list tail
 
-	in let gen_formal_list fl = match fl with
-	[] -> ""
-	| head::[] -> gen_formal head
-	| head::tail -> gen_formal head ^ ", " ^ gen_formal_list tail
+let gen_unop = function
+  | Not -> "!"
+  | Neg -> "-"
 
-    in let gen_binop = function
+(* TODO: this probably should be another category for builtin functions *)
+let gen_graph_op = function
+  | Graph_Insert -> ".insert("
+  | Graph_Remove -> ".remove("
+
+let gen_binop = function
     | Add     -> "+"
     | Sub     -> "-"
     | Mult    -> "*"
@@ -71,13 +78,6 @@ let translate (globals, functions) =
     | Or      -> "||"
     | Concat  -> "+="
 
-    in let gen_unop = function
-    | Not -> "!"
-    | Neg -> "-"
-
-    in let gen_graph_op = function
-    | Graph_Insert -> 
-    | Graph_Remove ->
 
 let gen_expr expr = match expr with
 Literal(l) -> (match l with
