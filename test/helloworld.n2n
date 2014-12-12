@@ -1,0 +1,4 @@
+fn helloworld () -> Void {
+	print("hello world")
+		
+}

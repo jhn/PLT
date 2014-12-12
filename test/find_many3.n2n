@@ -1,0 +1,27 @@
+fn find_many3() -> Void {
+
+	actor: Node = { name: String, age: Int }
+	Keanu: Node = actor["Keanu", 35]
+	Leo: Node = actor["Leo", 20]
+
+	actedIn: Rel = { role: String }
+	neo: Rel = actedIn["Neo"]
+	jordan: Rel = actedIn["Jordan"]
+	nelson: Rel = acted_in["Nelson"]
+
+	movie: Node = { title: String, year: Int }
+	matrix: Node = movie["Matrix", 1999]
+	wolf: Node = movie["Wolf", 1994]
+	sweet_nov: Node = movie["Sweet November", 2000]
+
+	Cast: Graph = (
+		Keanu neo matrix,
+		Leo jordan wolf,
+		Keanu nelson sweet_nov
+	)
+
+	point_from: List<Node> = Cast.find_many(neo, matrix)
+
+	print(point_from)
+
+}

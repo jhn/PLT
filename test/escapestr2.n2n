@@ -1,0 +1,5 @@
+fn  escapestr2() -> Void {
+	a: String = "a\\t"
+	print(a)
+
+}
