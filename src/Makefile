@@ -9,6 +9,7 @@ compile:
 	ocamllex scanner.mll
 	ocamlc -c scanner.ml
 	ocamlc -c semantic_check.ml
+	ocmalc -c sast.mli
 
 .PHONY : clean
 clean :
