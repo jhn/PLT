@@ -1,8 +1,12 @@
 .DS_Store
 *.automaton
 *.conflicts
+scanner.ml
+scanner.cm*
 parser.mli
 parser.ml
+parser.cm*
+parser.output
 parser.conflicts
 ast.cm*
 backend/.idea/

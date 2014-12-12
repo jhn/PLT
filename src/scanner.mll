@@ -87,7 +87,7 @@ rule token = parse
 
  | digit+ as lit 										  { INT_LITERAL(int_of_string lit) }
  | decimal as lit 										  { DOUBLE_LITERAL(float_of_string lit) }
- | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(verify_escape lit) }
+ | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(lit) }
  | ("true" | "false") as lit							  { BOOL_LITERAL(bool_of_string lit) }
  | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }  (*every ID should start with a letter*)
  | eof { EOF }
