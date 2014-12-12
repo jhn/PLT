@@ -2,27 +2,40 @@ open Ast
 open Sast
 open Printf
 
-let import_stmts = "import java.util.ArrayList;\nimport  " //what else?
+let imports =
+  "import java.util.List;\n" ^
+  "import java.util.Map;\n" ^
+  "import com.n2n.Graph;\n" ^
+  "import com.n2n.Node;\n" ^
+  "import com.n2n.Relationship;\n"
 
-let gen_var_type = function
-Int -> "int"
-| Double -> "double"
-| String -> "String"
-| Bool -> "boolean"
-| Void -> "void"
-| Rel -> "Relationship"
-| Node -> "Node"
-| Graph -> "Graph"
-| List(var_type) -> "LinkedList<" ^ gen_var_type var_type ^ ">"//what kind of list are we using?
+let translate (globals, functions) =
 
-let gen_id = function
-	Id(id) -> id
+  (* Returns the string name for a data type *)
+  let rec get_type_name = function
+    | Int(id)    -> id
+    | Double(id) -> id
+    | String(id) -> id
+    | Bool(id)   -> id
+    | Map(id)    -> id
+    | List(id)   -> id
+    | Rel(id)    -> id
+    | Node(id)   -> id
+    | Graph(id)  -> id
+    | Void(id)   -> id
 
-let gen_formal = function
-	Formal(type_spec,id) -> gen_var_type type_spec gen_id id
-
-let gen_binop = function
-Add -> "+"
+  (* Returns the java declaration for a type *)
+    in let rec string_of_data_type with_id = function
+      | Int(id)    -> "int " ^ (if with_id then id else "")
+      | Double(id) -> "double " ^ (if with_id then id else "")
+      | String(id) -> "String " ^ (if with_id then id else "")
+      | Bool(id)   -> "boolean " ^ (if with_id then id else "")
+      | Map(id)    -> "Map<Object, Object> " ^ (if with_id then id else "")
+      | List(id)   -> "List<Object> " ^ (if with_id then id else "")
+      | Rel(id)    -> "Relationship " ^ (if with_id then id else "")
+      | Node(id)   -> "Node " ^ (if with_id then id else "")
+      | Graph(id)  -> "Graph " ^ (if with_id then id else "")
+      | Void(id)   -> "void " ^ (if with_id then id else "")
 | Sub -> "-"
 | Mult -> "*"
 | Div -> "/"
