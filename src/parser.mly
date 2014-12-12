@@ -15,6 +15,7 @@
 %token <string> STRING_LITERAL ID
 %token <float> DOUBLE_LITERAL
 %token <bool> BOOL_LITERAL
+%token EOF
 
 %nonassoc NOELSE
 %nonassoc ELSE
@@ -78,7 +79,7 @@ formal_parameters:
   | formal_list   { List.rev $1 }
 
 formal_list:
-  | parameter                   { $1 }     /* foo: Int */
+  | parameter                   { [$1] }     /* foo: Int */
   | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
@@ -124,22 +125,30 @@ literal:
   | BOOL_LITERAL                 { Bool_Literal($1) } /* true, false */
 
 complex_literal:
-  | ID LBRACKET literal_list RBRACKET    { Graph_Element($1, List.rev $3) } /* actor("Keanu"), "true" */
-  | LPAREN graph_component_list RPAREN   { Graph_Literal(List.rev $2) }
+  | ID LBRACKET literal_opt RBRACKET    { Graph_Element($1, List.rev $3) } /* actor("Keanu"), "true" */
+  | LT graph_components GT              { Graph_Literal(List.rev $2) } /* < graph_literals > */
 
 graph_component:
   graph_type graph_type graph_type       { Node_Rel_Node_Tup($1, $2, $3) } /* :: or commas? */
 
+graph_components:
+  |                         { [] }
+  | graph_component_list    { List.rev $1 }
+
 graph_component_list:
-  |                                            { [] }
+  | graph_component                            { [$1] }
   | graph_component_list COMMA graph_component { $3 :: $1 }
 
 graph_type:
   | ID                             { Graph_Id($1) }
   | complex_literal                { Graph_Type($1) }
 
+literal_opt:
+  |               { [] }
+  | literal_list  { List.rev $1 }
+
 literal_list:
-  |                              { [] }
+  | literal                      { [] }
   | literal_list COMMA literal   { $3 :: $1 }
 
 actuals_opt:
