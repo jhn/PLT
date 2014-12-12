@@ -65,7 +65,7 @@ and expr =
   | Id of string
   | Binop of expr * op * expr
   | Grop of expr * grop * graph_component
-  | Geop of expr * geop * expr
+  | Geop of expr * geop * formal
   | Unop of uop * expr
   | Access of string * string
   | Call of string * expr list

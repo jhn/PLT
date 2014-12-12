@@ -78,11 +78,11 @@ formal_parameters:
   | formal_list   { List.rev $1 }
 
 formal_list:
-  | parameter                   { [$1] }     /* foo: Int */
+  | parameter                   { $1 }     /* foo: Int */
   | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec { Formal($3, $1) } /* foo: Int */
+  | ID COLON type_spec    { Formal($3, $1) } /* foo: Int */
 
 type_spec:
   | n2n_type              { N2N_type($1) }
@@ -171,8 +171,8 @@ graph_operation:
   | expr GRAPH_REMOVE LPAREN graph_component RPAREN                        { Grop($1, Graph_Remove, $4)}/* ^- */
 
 graph_element_operation:
-  | expr DATA_INSERT expr                                                  { Geop($1, Data_Insert, $3) }/* [+] */
-  | expr DATA_REMOVE expr                                                  { Geop($1, Data_Remove, $3) }/* [-] */
+  | expr DATA_INSERT parameter                                       { Geop($1, Data_Insert, $3) }/* [+] */
+  | expr DATA_REMOVE parameter                                       { Geop($1, Data_Remove, $3) }/* [-] */
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }
