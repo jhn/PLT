@@ -1,0 +1,4 @@
+fn arithmetic1 () -> Void {
+	print(2+4)
+
+}

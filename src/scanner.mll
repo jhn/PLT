@@ -8,8 +8,9 @@
   match s with
      "\\n" -> '\n'
    | "\\t" -> '\t'
-   | "\\\\" -> '\\'
+   (*| "\\" -> '\'*)
    | "\"" ->  '"'
+   (*| "\'" ->  '''*)
    | c -> raise (Failure("unsupported character " ^ c))
 }
 
@@ -38,7 +39,7 @@ rule token = parse
    | '/'                     { DIVIDE }
    | '%'                     { MOD }
 
-   | ';'                     { SEMI }
+(*   | ';'                     { SEMI }*)
    | ':'                     { COLON }
    | ","                     { COMMA }
    | '='                     { ASSIGN }
@@ -57,18 +58,15 @@ rule token = parse
    | "||"                    { OR }
 
    | "if"                    { IF }
-   | "elif"                  { ELIF }
    | "else"                  { ELSE }
 
-   | "each"                  { EACH }
+(*   | "elif"                  { ELIF }*)
    | "map"                   { MAP }
-   | "reduce"                { REDUCE }
-   | "filter"                { FILTER }
+   | "find_many"             { FINDMANY }
 
    | "fn"                    { FUNCTION}
    | "return"                { RETURN }
 
-   | "let"                   { LET }
    | "in"                    { IN }
 
    | "^+"                    { GRAPH_INSERT }
@@ -80,16 +78,15 @@ rule token = parse
    | "Graph"                 { GRAPH }
    | "Rel"                   { REL }
    | "Node"                  { NODE }
+   | "List"                  { LIST }
    | "Int"                   { INT }
    | "Double"                { DOUBLE }
    | "String"                { STRING }
    | "Bool"                  { BOOL }
-   | "Data"                  { DATA }
-   | "Null"                  { NULL }
    | "Void"                  { VOID }
 
  | digit+ as lit 										  { INT_LITERAL(int_of_string lit) }
- | decimal as lit 										  { FLOAT_LITERAL(float_of_string lit) }
+ | decimal as lit 										  { DOUBLE_LITERAL(float_of_string lit) }
  | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(verify_escape lit) }
  | ("true" | "false") as lit							  { BOOL_LITERAL(bool_of_string lit) }
  | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }  (*every ID should start with a letter*)

@@ -1,0 +1,9 @@
+fn foo () -> Void {
+	print(5)
+
+}
+
+fn init1 () -> Void {
+	foo()
+	
+}

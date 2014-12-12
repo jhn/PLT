@@ -1,0 +1,5 @@
+fn comparison1 () -> Void {
+	print(2>3)
+	print(2<3)
+	
+}
