@@ -122,7 +122,6 @@ literal:
   | STRING_LITERAL               { String_Literal($1) } /* "Me", "You", "Bill Clinton" */
   | DOUBLE_LITERAL               { Double_Literal($1) } /* 4.2, 3.7, 7.4 */
   | BOOL_LITERAL                 { Bool_Literal($1) } /* true, false */
-  /*Do we need NULL or not*/
 
 complex_literal:
   | ID LBRACKET literal_list RBRACKET    { Graph_Element($1, List.rev $3) } /* actor("Keanu"), "true" */
