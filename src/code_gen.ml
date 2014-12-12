@@ -36,27 +36,42 @@ let translate (globals, functions) =
       | Node(id)   -> "Node " ^ (if with_id then id else "")
       | Graph(id)  -> "Graph " ^ (if with_id then id else "")
       | Void(id)   -> "void " ^ (if with_id then id else "")
-| Sub -> "-"
-| Mult -> "*"
-| Div -> "/"
-| Mod -> "%"
-| Equal -> "=="
-| Neq -> "!="
-| Less -> "<"
-| Leq -> "<="
-| Greater -> ">"
-| Geq -> ">="
-| And -> "&&"
-| Or -> "||"
-| Concat -> "+="
 
-let gen_unop = function
-Not -> "!"
-| Neg -> "-"
+  (* Turns a literal object into a java expr. TODO: More literals *)
+  in let rec string_of_literal = function
+    | StringLiteral(s)  -> "\"" ^ s ^ "\""
+    | BooleanLiteral(s) -> string_of_bool s
 
-let gen_graph_op = function
-Graph_Insert -> 
-| Graph_Remove -> 
+    in let gen_id = function
+    | Id(id) -> id
+
+    in let gen_formal = function
+    | Formal(type_spec,id) -> gen_var_type type_spec gen_id id
+
+    in let gen_binop = function
+    | Add     -> "+"
+    | Sub     -> "-"
+    | Mult    -> "*"
+    | Div     -> "/"
+    | Mod     -> "%"
+    | Equal   -> "=="
+    | Neq     -> "!="
+    | Less    -> "<"
+    | Leq     -> "<="
+    | Greater -> ">"
+    | Geq     -> ">="
+    | And     -> "&&"
+    | Or      -> "||"
+    | Concat  -> "+="
+
+    in let gen_unop = function
+    | Not -> "!"
+    | Neg -> "-"
+
+
+     in let gen_graph_op = function
+     | Graph_Insert ->
+     | Graph_Remove ->
 
 let gen_expr expr = match expr with
 Literal(l) -> (match l with
@@ -106,3 +121,5 @@ main method
 
     public static String[] readFile(String fileName){
       public static void main(String[] args) { 
+
+
