@@ -17,7 +17,8 @@ fn main() -> Void {
 		Leo jordan wolf
 	>
 
-	visited_node: List<Node> = Cast.map(node in {node [+] visited:Bool = true})
+	visited_node: List<Node>
+	visited_node = Cast.map(node in {node [+] visited:Bool = true})
 
 	print(visited_node)
 
