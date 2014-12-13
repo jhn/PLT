@@ -1,4 +1,4 @@
-fn graph2() -> Void {
+fn main() -> Void {
 	actor: Node = { name: String, age: Int }
 	actedIn: Rel = { role: String }
 	movie: Node = { title: String, year: Int }

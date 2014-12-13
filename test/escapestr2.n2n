@@ -1,4 +1,4 @@
-fn  escapestr2() -> Void {
+fn  main() -> Void {
 	a: String = "a\\t"
 	print(a)
 

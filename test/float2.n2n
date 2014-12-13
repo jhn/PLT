@@ -1,4 +1,4 @@
-fn float2 () -> Void {
+fn main () -> Void {
 	print(8.0/6.0)
 	
 }
