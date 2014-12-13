@@ -61,14 +61,14 @@ let is_rel env id =
 let check_node_literal env id lit_list =
 	let (_, l) = List.find (fun (fid, _) -> fid = id) env.node_types in
 	try List.iter2 (fun lit (t2, _) -> 
-		let t1 = check_expr lit in
+		let t1 = check_expr env lit in
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
 	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Node
 
 let check_rel_literal env id lit_list = 
 	let (_, l) = List.find (fun (fid, _) -> fid = id) env.rel_types in 
 	try List.iter2 (fun lit (t2, _) ->
-		let t1 = check_expr lit in
+		let t1 = check_expr env lit in
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
 	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Rel 
 
@@ -111,12 +111,12 @@ let rec check_expr env expr = match expr with
 		Not_found -> try get_type_from_id env.globals v with
 		Not_found -> raise(Error("Id does not appear in program"))
 	| Unop(u, e) -> match u with
-		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
-		| Neg -> if check_expr e = Type_spec(Double) then Type_spec(Double)
-			else if check_expr e = Type_spec(Int) then Type_spec(Int) 
+		Not -> if check_expr env e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
+		| Neg -> if check_expr env e = Type_spec(Double) then Type_spec(Double)
+			else if check_expr env e = Type_spec(Int) then Type_spec(Int) 
 			else raise (Error("Using a neg on a non int or float expr"))
 	| Binop(e1, op, e2) -> 
-		let t1 = check_expr e1 and t2 = check_expr e2 in
+		let t1 = check_expr env e1 and t2 = check_expr env e2 in
 		let binop_t = (match op with
 			  Add -> check_arithmetic_binary_op t1 t2
 			| Sub -> check_arithmetic_binary_op t1 t2  
@@ -143,7 +143,7 @@ let rec check_expr env expr = match expr with
 				(match gc with
 				Node_Rel_Node_Tup(n1, r, n2) -> check_nrn_expr env n1 r n2
 				| _ -> raise(Error("Not a node_rel_node"))))
-	| Geop(e1, geop, f) -> let t = check_expr e1 and tf = (match f with
+	| Geop(e1, geop, f) -> let t = check_expr env e1 and tf = (match f with
 			Formal(ty, s) -> ty;
 			| _ -> raise(Error("Right hand side not a variable declaration of form id:type"))) in
 		(match t with
@@ -151,7 +151,7 @@ let rec check_expr env expr = match expr with
 			Int | String | Bool | Double -> t
 			| _ -> raise(Error("Can only insert or remove field of primitive type")))
 		| _ -> raise(Error("Can only insert field into a Node or Rel")))
-	| Access(e1, e2) -> let t = check_expr e1 and id = 
+	| Access(e1, e2) -> let t = check_expr env e1 and id = 
 		(match e1 with
 		Id(v) -> v
 		| _ -> raise(Error("Expression to left of access operator must be an Identifier"))) 
@@ -172,7 +172,7 @@ let rec check_expr env expr = match expr with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t   
 	| Call(id, el) -> let (_, formals, _, rt) = try List.find (fun (fn, _, _, _) -> fn = id) env.functions with
 		Not_found -> raise(Error("Function definition not found")) in
-		try List.iter2 (fun e (ty, _) -> let t = check_expr e in
+		try List.iter2 (fun e (ty, _) -> let t = check_expr env e in
 										if t <> ty then raise(Error("Argument does not match expected argument type"))) el formals with
 		Invalid_argument -> raise(Error("Entered the wrong number of arguments into function")); rt
 	| Func(fname) -> (match fname with
@@ -212,13 +212,13 @@ let rec get_sexpr env ex = match ex with
 		| String_Literal(s) -> SLiteral(SString_Literal(s), String)
 		| Bool_Literal(b) -> SLiteral(SBool_Literal(vb), Bool))
 	| Id(v) -> SId(v, check_expr env v)
-	| Unop(u, e) -> SUnop(u, get_sexpr env e, check_expr env expr)
-	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr ex)
+	| Unop(u, e) -> SUnop(u, get_sexpr env e, check_expr env ex)
+	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr env ex)
 	| Grop(e, grop, gc) -> SGrop(get_sexpr env e, grop, gc, check_expr env ex)
 	| Geop (e, geop, form) -> SGeop(get_sexpr env e, geop, form, check_expr env ex)
 	| Access(str, str) -> SAccess(str, str, check_expr env ex)
 	| Call(str, el) -> SCall(str, el, check_expr env ex)
-	| Func(f) -> SFunc(f, check_expr env f) 
+	| Func(f) -> (*Still needs implementation for each funciton*)
 	| Complex(comp) -> (match comp with
 		| Graph_Literal(l) -> SComplex(SGraph_Literal(l), check_expr env ex)
 		| Graph_Element(e) -> SComplex(SGraph_Element(e), check_expr env ex))
@@ -253,10 +253,10 @@ let rec check_stmt env stmt = match stmt with
 	| Var_Declaration(decl) -> (*Make sure var with same name doesn't exist already and check for correct type*)
 		match decl with
 		  Var(ty, id) -> check_var_decl_and_update_env env id ty set_default_value ty
-		| Var_Decl_Assign(id, ty, ex) -> let t_ex = check_expr ex in 
+		| Var_Decl_Assign(id, ty, ex) -> let t_ex = check_expr env ex in 
 		 	if (t_ex = ty) then check_var_decl_assign_and_update_env env id ty expr
 			else raise(Error("Type mismatch between variable and assigned value"))
-		| Access_Assign(e1, e2) -> let t1 = check_expr e1 and t2 = check_expr e2 in
+		| Access_Assign(e1, e2) -> let t1 = check_expr env e1 and t2 = check_expr env e2 in
 			if (t1 = t2) then 
 				match e1 with 
 					Id(v) -> 
@@ -276,6 +276,7 @@ let set_default_value ty =
 	| Node -> []
 	| Rel -> []
 	| Graph -> []
+	| List -> []
 
 let rec get_checked_statements env stmts checked_statments =
 	match stmts with
@@ -283,17 +284,6 @@ let rec get_checked_statements env stmts checked_statments =
 		let (checked_statement, new_env) = check_stmt env stmt in
 		get_checked_statements new_env tail (checked_statement::checked_statments)
 	| [] -> (checked_statments, env)
-
-let new_func_env env func =
-	let (l, n, r) = List.fold_left (fun (l,n,r), (ty, id) ->
-		match ty with
-		Node -> (l, (id, ty, set_default_value ty) :: n, r)
-		| Rel -> (l, n, (id, ty, set_default_value ty) :: r)
-		| _ -> ((id, ty, set_default_value ty) :: l, n, r) ) ([],[],[]) func.formals 
-	and new_funcs = func :: env.funcs in
-	let new_var_scope = {parent = env.var_scope, locals = l, nodes = n, rels = r} in
-	let new_env = {env with functions = new_funcs, var_table = new_var_scope; scope = func.fname; return_type = func.return_type} in
-	new_env
 
 let check_function env func =
 	let new_env = new_func_env env func in
@@ -308,75 +298,51 @@ let rec check_functions env funcs checked_funcs =
 		| [] -> checked_funcs) in
 	checked_functions
 
-let add_new_var_to_global_table env id ty val = 
-	let new_vars = (id, ty, val) :: env.globals in 
-	let new_env = {env with globals = new_vars} in new_env
-
-let add_new_complex_var_to_global_table env id ty vals =
-	match ty with 
-		| Node -> let new_vars = (id, vals) :: env.global_nodes in
-			{env with global_nodes=new_vars}
-		| Rel -> let new_vars = (id, vals) :: env.global_rels in
-			{env with global_rels=new_vars}
-
-let check_for_existing_var_and_update_gloabl_table env id ty val = 
-	let var_already_exists = List.exists(fun vid -> vid=id) env.globals in
-	if var_already_exists then
-		let (oid, oty, oval) = List.find (fun oid -> oid=id) env.globals in
-		if(oty=ty) then
-			let new_vars = List.fold_left (fun l (vid, vty, val) -> if (vid=id) then
-													(id, ty, val) :: l else
-													(vid, vty, val) :: l) [] env.globals in
-			let new_env = {env with globals = new_vars} in
-				new_env
-			else 
-				raise(Error("Trying to declare two variables with same ID but different types"))
-	else
-		let new_env = add_new_var_to_global_table env id ty val in
-		new_env
-
-let check_for_existing_complex_var_and_update_global_table env id ty val =
-	let list_to_check = (match ty with
-		| Node -> env.global_nodes
-		| Rel -> env.global_rels) in
-	let var_already_exists = List.exists(fun cid -> cid = id) list_to_check in
-	if var_already_exists then
-		let(cid, cvals) = List.find (fun cid -> cid=id) list_to_check in
-		let new_varys = List.fold_left (fun l (vid, vals) -> if (cid=id) then
-													(cid, cvals) :: l else
-													(vid, vals) :: l) [] list_to_check in
-		let new_env = (match ty with
-			| Node -> {env with global_nodes = new_vars}
-			| Rel -> {env with global_rels = new_vars}) in
-		new_env
-	else
-		let new_env = add_new_complex_var_to_global_table env id ty val
+let check_for_existing_var_and_update_table var_table id ty val =
+	let does_exist = 
+		(List.exists (fun gid -> gid=id) var_table.graphs
+		|| List.exists(fun rid -> rid=id) var_table.rels
+		|| List.exists(fun nid -> nid=id) var_table.nodes
+		|| List.exists(fun vid -> vid=id) var_table.prims
+		|| List.exists(fun lid -> lid=id) var_table.lists) in
+	match does_exist with 
+	true -> raise(Error("Variable to declare already exists"))
+	| false ->
+		match ty with
+			Node -> let new_nodes = (id, val)::var_table.nodes in
+				{var_table with nodes = new_nodes}
+			| Rel -> let new_rels = (id, val)::var_table.rels in
+				{var_table with rels = new_rels}
+	 		| Graph -> let new_graphs = (id, val)::var_table.graphs in
+	 			{var_table with graphs = new_graphs}
+	 		| List -> let new_lists = (id, List, val)::var_table.lists (* PROBLEM! *) in
+	 			{var_table with lists = new_lists}
+			| _ -> let new_prims = (id, ty, val)::var_table.prims in
+				{var_table with prims = new_prims}
 
 let check_global env var = 
 	let (checked_global, up_env) = 
 		(match var with
-		Var(ty, id) -> let new_env = 
-			(match ty with
-			Node -> check_for_existing_complex_var_and_update_global_table env id ty set_default_value ty
-			| Rel -> check_for_existing_complex_var_and_update_global_table env id ty set_default_value ty
-			| _ -> check_for_existing_var_and_update_gloabl_table env id ty set_default_value ty) in
+		Var(ty, id) -> let new_table = check_for_existing_var_and_update_table env.globals id ty set_default_value ty in
+			let new_env = {env with globals = new_table} in 
 			(SVar(ty, id), new_env)
-		| Var_Primitive_Decl_Assign(id, ty, e) -> let t_ex = check_expr e in
+		| Var_Primitive_Decl_Assign(id, ty, e) -> let t_ex = check_expr env e in
 			if (t_ex = ty) then
-				let new_env = check_for_existing_var_and_update_gloabl_table env id ty e in
-				(SVar_Primitive_Decl_Assign(id, ty, SExpr(e)), new_env)
+				let new_table = check_for_existing_var_and_update_table env.globals id ty e in 
+				let new_env = {env with globals = new_table} in 
+				(SVar_Decl_Assign(id, ty, SExpr(get_sexpr e)), new_env)
 			else 
 				raise(Error("Type mismatch in global variable assignment"))
-		| Var_Complex_Decl_Assign(id, ty, e) -> let t_ex = check_expr e in
+		| Var_Complex_Decl_Assign(id, ty, e) -> let t_ex = check_expr env e in
 			if (t_ex = ty) then
-				let new_env = check_for_existing_complex_var_and_update_global_table env id ty e in
-				(SVar_Complex_Decl_Assign(id, ty, SExpr(e)), new_env);
-		| Access_Assign(e1, e2) -> 
-			let t1 = check_expr e1 and t2 = check_expr t2 in
-			if (t1=t2) then
-				match e1 with
-				Id(s) -> 
-
+				let new_table = check_for_existing_var_and_update_table env.globals id ty e in 
+				let new_env = {env with globals = new_table} in 
+				(SVar_Decl_Assign(id, ty, SExpr(get_sexpr e)), new_env)
+			else 
+				raise(Error("Type mismatch in global variable assignment"))	
+		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2
+			if (tl = tr) then
+				(SAccess_Assign(SExpr(get_sexpr e1), SExpr(get_sexpr e2), env)
 		| Constructor(ty, id, l) -> 
 			let list_to_check = (match ty with
 				Node -> env.node_types
