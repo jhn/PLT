@@ -143,14 +143,14 @@ let rec check_expr env expr = match expr with
 				(match gc with
 				Node_Rel_Node_Tup(n1, r, n2) -> check_nrn_expr env n1 r n2
 				| _ -> raise(Error("Not a node_rel_node"))))
-	| Geop(e1 geop f) -> let t = check_expr e1 and tf = (match f with
+	| Geop(e1, geop, f) -> let t = check_expr e1 and tf = (match f with
 			Formal(ty, s) -> ty;
 			| _ -> raise(Error("Right hand side not a variable declaration of form id:type"))) in
-		match t with
+		(match t with
 		Node | Rel -> (match tf with
 			Int | String | Bool | Double -> t
 			| _ -> raise(Error("Can only insert or remove field of primitive type")))
-		| _ -> raise(Error("Can only insert field into a Node or Rel"))
+		| _ -> raise(Error("Can only insert field into a Node or Rel")))
 	| Access(e1, e2) -> let t = check_expr e1 and id = 
 		(match e1 with
 		Id(v) -> v
@@ -160,17 +160,18 @@ let rec check_expr env expr = match expr with
 		Id(v) -> v
 		| _ -> raise(Error("Expression to right of access operator must be an Identifier"))) in
 		match t with 
-		| Node -> let (_,_,l) = try List.find (fun (nid, _, _) -> nid = id) env.locals.nodes in
+		| Node -> let (_,_,l) = try List.find (fun (nid, _, _) -> nid = id) env.locals.nodes with
 			Not_found -> try List.find (fun (nid, _, _) -> nid =id) env.globals.nodes with
 			Not_found -> raise(Error("Node Id not found to left of access")) in 
 			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in node list")) in t
-		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = id) env.locals.rels in
-			Not_found -> try List.find (fun (rid, _, _) -> rid=id) env.globals.rels in 
+		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = id) env.locals.rels with
+			Not_found -> try List.find (fun (rid, _, _) -> rid=id) env.globals.rels with 
 			Not_found -> raise(Error("Rel Id not found to left of access")) in
 			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t   
-	| Call(id, el) -> let (_, formals, _, rt) = try List.find (fun (fn, _, _, _) -> fn = id) env.functions in
+	| Call(id, el) -> let (_, formals, _, rt) = try List.find (fun (fn, _, _, _) -> fn = id) env.functions with
+		Not_found -> raise(Error("Function definition not found")) in
 		try List.iter2 (fun e (ty, _) -> let t = check_expr e in
 										if t <> ty then raise(Error("Argument does not match expected argument type"))) el formals with
 		Invalid_argument -> raise(Error("Entered the wrong number of arguments into function")); rt
@@ -192,7 +193,7 @@ let find_var var_table id =
 		Not_found -> try List.find (fun (rid, _) -> rid = id) var_table.rels with 
 		Not_found -> try List.find (fun (gid, _) -> gid = id) var_table.graphs with
 		Not_found -> try List.find (fun (lid, _) -> lid = id) var_table.lists with
-		Not_found -> raise Not_found
+		Not_found -> raise Not_found in found_var
 
 let get_type_from_id var_table id = 
 	let var = try find_var var_table id with 
