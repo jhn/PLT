@@ -5,26 +5,25 @@ exception Error of string;;
 type environment = {
 	functions: func_decl list;
 	scope: string;
-	return_type: return_ty;
-	globals: (string * primitive_type * expr) list;
 	node_types: (string * formal list) list;
-	global_nodes: (string * (string * primitive_type * expr) list) list;
 	rel_types: (string * formal list) list;
-	global_rels: (string * (string * primitive_type * expr) list) list;
-	var_table: var_scope;
+	locals: var_scope;
+	globals: var_scope;
 	has_return: bool;
+	return_type: return_ty;
 }
 
 type var_scope = {
 	parent: var_scope option;
-	locals: (string * n2n_type * expr) list;
-	nodes: (string * (string * primitive_type * expr) list) list;
-	rels: (string * (string * primitive_type * expr) list) list;
+	prims: (string * n2n_type * expr) list;
+	nodes: (string * string * (string * primitive_type * expr) list) list; (* Form (id, node_type, field storage list) *)
+	rels: (string * string * (string * primitive_type * expr) list) list; (* Form (id, node_type, field storage list) *)
+	graphs: (string * graph_component list) list;
 }
 
-let beginning_scope = { parent = None locals = []}
+let beginning_scope = { parent = None, prims = [], nodes = [], rels = [], graphs = [] }
 
-let beginning_environment = { functions = [], variables = beginning_scope, cur_scope = "global", node_types = [], rel_types = [] }
+let beginning_environment = { functions = [], globals = beginning_scope, locals = beginning_scope, scope = "global", node_types = [], rel_types = [], has_return = false}
 
 let check_arithmetic_binary_op t1 t2 = 
 	match (t1, t2) with
@@ -78,12 +77,12 @@ let check_node_or_rel_literal env id lit_list =
 	else raise(Error("Could not find constructor for your node or rel"))
 
 let check_graph_ID env id = 
-	let (_, t, _) = try List.find (fun (fid, _, _) -> fid = id) env.variables with
-	Not_found -> raise (Error("Graph type identifier does not exist!")) in t
+	let does_exist = List.exists (fun (fid, _) -> fid = id) env.var_table.graphs in
+	if does_exist then Graph else raise(Error("Requested graph ID does not exist"))
 
 let check_graph_type env gt = 
 	let t = (match gt with
-	Graph_type_ID(gid) -> check_graph_ID env gid
+	Graph_Id(gid) -> check_graph_ID env gid
 	|Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list) in t
 
 let check_nrn_expr env n1 r n2 = 
@@ -107,9 +106,9 @@ let rec check_expr env expr = match expr with
 	| Complex(c) -> match c with 
 		Graph_Literal(nrn_list) -> check_nrn_list env nrn_list
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
-	| Id(v) -> 
-		let (_, t, _) = if env.cur_scope = "global" then find_global_var v else
-			find_var_in_local_scope v in t
+	| Id(v) -> try get_type_from_id env.locals v with 
+		Not_found -> try get_type_from_id env.globals v with
+		Not_found -> raise(Error("Id does not appear in program"))
 	| Unop(u, e) -> match u with
 		Not -> if check_expr e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
 		| Neg -> if check_expr e = Type_spec(Double) then Type_spec(Double)
@@ -131,18 +130,48 @@ let rec check_expr env expr = match expr with
 			| Geq -> check_logic t1 t2
 			| And -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using AND on a non-boolean expr"))
 			| Or -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using OR on a non-boolean expr"))
-			| Concat -> if (t1, t2) = (String, String) then String else raise (Error("Using Concat on non-string expr"))
-			| Graph_Insert -> check_graph_op t1 t2 (*Func not written yet*)
-			| Graph_Remove -> check_graph_op t1 t2
-			| Data_Insert -> check_data_op t1 t2 (*Func not written yet*)
-			| Data_remove -> check_data_op t1 t2) in binop_t
-	| Access(e1, e2) -> check_expr e1
-	| Call(id, e1) -> try (let (fname, ret_ty, args, body) = List.find (s,_,_,_) env.functions id in
-		let passed_type = List.map (fun exp -> check_expr env exp) e1 in
-		let func_types = List.map (fun arg -> let(_,typ,_) = get_name_type_from_formal env arg in typ) args in
-		if not(passed_type = func_types) then
-			raise (Error("Mismatched types in func call")) else Type_spec(ret_ty))
-		with Not_found -> raise (Error("Undeclared Function"))
+			| Concat -> if (t1, t2) = (String, String) then String else raise (Error("Using Concat on non-string expr"))) in binop_t
+	| Grop(e1, grop, gc) -> let t1 = check_expr env e1 in
+		if t1 = Graph then
+			(match grop with 
+			| Graph_Insert -> 
+				(match gc with
+				Node_Rel_Node_Tup(n1, r, n2) -> check_nrn_expr env n1 r n2
+				| _ -> raise(Error("Not a node_rel_node")))
+			| Graph_Remove ->  
+				(match gc with
+				Node_Rel_Node_Tup(n1, r, n2) -> check_nrn_expr env n1 r n2
+				| _ -> raise(Error("Not a node_rel_node"))))
+	| Geop(e1 geop f) -> let t = check_expr e1 and tf = (match f with
+			Formal(ty, s) -> ty;
+			| _ -> raise(Error("Right hand side not a variable declaration of form id:type"))) in
+		match t with
+		Node | Rel -> (match tf with
+			Int | String | Bool | Double -> t
+			| _ -> raise(Error("Can only insert or remove field of primitive type")))
+		| _ -> raise(Error("Can only insert field into a Node or Rel"))
+	| Access(e1, e2) -> let t = check_expr e1 and id = 
+		(match e1 with
+		Id(v) -> v
+		| _ -> raise(Error("Expression to left of access operator must be an Identifier"))) 
+		and ida = 
+		(match e2 with 
+		Id(v) -> v
+		| _ -> raise(Error("Expression to right of access operator must be an Identifier"))) in
+		match t with 
+		| Node -> let (_,_,l) = try List.find (fun (nid, _, _) -> nid = id) env.locals.nodes in
+			Not_found -> try List.find (fun (nid, _, _) -> nid =id) env.globals.nodes with
+			Not_found -> raise(Error("Node Id not found to left of access")) in 
+			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
+			Not_found -> raise(Error("Couldn't find that accessed identifier in node list")) in t
+		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = id) env.locals.rels in
+			Not_found -> try List.find (fun (rid, _, _) -> rid=id) env.globals.rels in 
+			Not_found -> raise(Error("Rel Id not found to left of access")) in
+			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
+			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t   
+	| Call(id, el) -> let (_, formals, _, rt) = try List.find (fun (fn, _, _, _) -> fn = id) env.functions in
+		List.iter2 (fun e (ty, _) -> let t = check_expr e in
+										if t <> ty then raise(Error("Argument does not match expected argument type"))) el formals; rt
 	| Func(fname) -> let built_in_func = (match fname with
 		Find_Many(id,e1) ->
 		| Map(e1,e2) -> 
@@ -152,20 +181,21 @@ let rec check_expr env expr = match expr with
 				Map_Func(e3,id,s1) -> let (*I got lost understanding how we're using map!*)
 		| Neighbors_Func(id,e1) -> let (_,t1,_) = try List.find(e1,_,_) env.variables and
 
-let rec find_var vars_list id =
-	let var_to_return = 
-		try List.find (fun vid -> vid = id) vars_list.locals with
-			Not_found -> let (id, l) = try List.find (fun nid -> nid=id) vars_list.nodes with
-			Not_found -> try List.find(fun rid -> rid=id) vars_list.nodes with
-			Not_found -> (match vars_list with
-				Some(p) -> find_var p id
-				| None(p) -> raise Not_found)
+let find_var var_table id =
+	let found_var = try List.find (fun (vid, _, _) -> vid = id) var_table.prims with
+		Not_found -> try List.find (fun (nid, _) -> nid = id) var_table.nodes with
+		Not_found -> try List.find (fun (rid, _) -> rid = id) var_table.rels with 
+		Not_found -> try List.find (fun (gid, _) -> gid = id) var_table.graphs with
+		Not_found -> raise Not_found
 
-let find_global_var env id =
-	let var_to_return = 
-
-let get_name_type_from_formal env = function
-	Formal(type_spec,id) -> (id, type_spec, None)
+let get_type_from_id var_table id = 
+	let var = try find_var var_table id with 
+		Not_found -> raise Not_found in
+	(match var with
+	(_, ty, _) -> ty
+	| (_, _) -> if List.mem var env.var_scope.nodes then Node
+				else if List.mem var env.var_scope.rels then Rel
+				else Graph)
 
 let rec get_sexpr env expr = match expr with
 	Int_Literal(i) -> SInt_Literal(i, Type_spec(Int))
