@@ -12,10 +12,10 @@ fn find_many1() -> Void {
 	matrix: Node = movie["Matrix", 1999]
 	wolf: Node = movie["Wolf", 1994]
 
-	Cast: Graph = (
+	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf
-	)
+	>
 
 	missing_rel: List<Rel> = Cast.find_many(Keanu, matrix)
 

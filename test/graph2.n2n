@@ -3,10 +3,10 @@ fn graph2() -> Void {
 	actedIn: Rel = { role: String }
 	movie: Node = { title: String, year: Int }
 
-	Cast: Graph = (
+	Cast: Graph = <
 		actor["Keanu", 35] actedIn["Neo"] movie["Matrix", 1999],
 		actor["Leo", 20] actedIn["Jordan"] movie["Wolf", 1994]
-	)
+	>
 
 	print(Cast)
 
