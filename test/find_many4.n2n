@@ -20,8 +20,9 @@ fn main() -> Void {
 		Keanu nelson sweet_nov
 	>
 
-	node_lit: List<Node> = Cast.find_many(actor["Keanu"])
-
+	node_lit: List<Node> 
+	node_lit = Cast.find_many(actor["Keanu"])
+	
 	print(node_lit)
 
 }

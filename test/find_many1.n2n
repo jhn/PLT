@@ -17,7 +17,8 @@ fn main() -> Void {
 		Leo jordan wolf
 	>
 
-	missing_rel: List<Rel> = Cast.find_many(Keanu, matrix)
+	missing_rel: List<Rel>
+	missing_rel = Cast.find_many(Keanu, matrix)
 
 	print(missing_rel)
 

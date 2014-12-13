@@ -20,8 +20,9 @@ fn main() -> Void {
 		Keanu nelson sweet_nov
 	>
 
-	point_to: List<Node> = Cast.find_many(Keanu, neo)
-
+	point_to: List<Node> 
+	point_to = Cast.find_many(Keanu, neo)
+	
 	print(point_to)
 
 }
