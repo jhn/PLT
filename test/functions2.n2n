@@ -4,7 +4,7 @@ fn foo () -> Void {
 
 }
 
-fn init1 () -> Void {
+fn main () -> Void {
 	a: Int = foo()
 	print(a)
 }

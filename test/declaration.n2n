@@ -2,7 +2,7 @@
 
 a: Int = 100
 
-fn declaration () -> Void {
+fn main () -> Void {
 	print(a)
 	a = 300
 	print(a)

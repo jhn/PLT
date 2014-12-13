@@ -1,4 +1,4 @@
-fn find_many4() -> Void {
+fn main() -> Void {
 
 	actor: Node = { name: String, age: Int }
 	Keanu: Node = actor["Keanu", 35]

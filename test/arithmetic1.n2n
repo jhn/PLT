@@ -1,4 +1,4 @@
-fn arithmetic1 () -> Void {
+fn main () -> Void {
 	print(2+4)
 
 }

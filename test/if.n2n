@@ -1,4 +1,4 @@
-fn if_test() -> Void {
+fn main() -> Void {
 	if (true) {
 		print("success")
 

@@ -9,7 +9,7 @@ fn bar (a: Int) -> Int {
 	return foo(b)
 }
 
-fn functions3 () -> Void {
+fn main () -> Void {
 	a: Int = bar(61)
 	print(a)
 	

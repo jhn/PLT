@@ -1,4 +1,4 @@
-fn helloworld () -> Void {
+fn main () -> Void {
 	print("hello world")
 		
 }
