@@ -14,11 +14,11 @@ fn find_many3() -> Void {
 	wolf: Node = movie["Wolf", 1994]
 	sweet_nov: Node = movie["Sweet November", 2000]
 
-	Cast: Graph = (
+	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf,
 		Keanu nelson sweet_nov
-	)
+	>
 
 	point_from: List<Node> = Cast.find_many(neo, matrix)
 

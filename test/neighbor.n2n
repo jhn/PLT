@@ -12,10 +12,10 @@ fn neighbor() -> Void {
 	matrix: Node = movie["Matrix", 1999]
 	wolf: Node = movie["Wolf", 1994]
 
-	Cast: Graph = (
+	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf
-	)
+	>
 
 	Keanu_movies: List<Node> = Cast.neighbors(Keanu)
 

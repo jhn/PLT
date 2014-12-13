@@ -12,10 +12,10 @@ fn map() -> Void {
 	matrix: Node = movie["Matrix", 1999]
 	wolf: Node = movie["Wolf", 1994]
 
-	Cast: Graph = (
+	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf
-	)
+	>
 
 	visited_node: List<Node> = Cast.map(node in {node [+] visited:Bool = true})
 
