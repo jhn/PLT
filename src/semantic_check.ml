@@ -19,6 +19,7 @@ type var_scope = {
 	nodes: (string * string * (string * primitive_type * expr) list) list; (* Form (id, node_type, field storage list) *)
 	rels: (string * string * (string * primitive_type * expr) list) list; (* Form (id, node_type, field storage list) *)
 	graphs: (string * graph_component list) list;
+	lists: (string * n2n_type * expr list) list (*Form (list_id, type, list contents) *)
 }
 
 let beginning_scope = { parent = None, prims = [], nodes = [], rels = [], graphs = [] }
@@ -170,46 +171,56 @@ let rec check_expr env expr = match expr with
 			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t   
 	| Call(id, el) -> let (_, formals, _, rt) = try List.find (fun (fn, _, _, _) -> fn = id) env.functions in
-		List.iter2 (fun e (ty, _) -> let t = check_expr e in
-										if t <> ty then raise(Error("Argument does not match expected argument type"))) el formals; rt
-	| Func(fname) -> let built_in_func = (match fname with
-		Find_Many(id,e1) ->
-		| Map(e1,e2) -> 
-			let (_,t1,_) = try List.find(e1,_,_) env.variables and
-			let map_func = 
-			(match e2 with 
-				Map_Func(e3,id,s1) -> let (*I got lost understanding how we're using map!*)
-		| Neighbors_Func(id,e1) -> let (_,t1,_) = try List.find(e1,_,_) env.variables and
+		try List.iter2 (fun e (ty, _) -> let t = check_expr e in
+										if t <> ty then raise(Error("Argument does not match expected argument type"))) el formals with
+		Invalid_argument -> raise(Error("Entered the wrong number of arguments into function")); rt
+	| Func(fname) -> (match fname with
+		Find_Many(id,e1) | Neighbors_Func(id, e1) -> 
+			if List.exists (fun gid -> gid = id) env.locals.graphs then Graph
+			else if List.exists (fun gid -> gid = id) env.globals.graphs then Graph
+			else raise(Error("Could not find List or Graph ID to run this function on"))
+		| Map(id,e2) -> 
+			if List.exists (fun gid -> gid=id) env.locals.graphs then Graph
+			else if List.exists (fun lid -> lid=id) env.locals.lists then List
+			else if List.exists (fun gid -> gid=id) env.globals.graphs then Graph
+			else if List.exists (fun lid -> lid=id) env.globals.lists then List
+			else raise(Error("Could not find List or Graph ID to run map on")))
 
 let find_var var_table id =
 	let found_var = try List.find (fun (vid, _, _) -> vid = id) var_table.prims with
 		Not_found -> try List.find (fun (nid, _) -> nid = id) var_table.nodes with
 		Not_found -> try List.find (fun (rid, _) -> rid = id) var_table.rels with 
 		Not_found -> try List.find (fun (gid, _) -> gid = id) var_table.graphs with
+		Not_found -> try List.find (fun (lid, _) -> lid = id) var_table.lists with
 		Not_found -> raise Not_found
 
 let get_type_from_id var_table id = 
 	let var = try find_var var_table id with 
 		Not_found -> raise Not_found in
 	(match var with
-	(_, ty, _) -> ty
-	| (_, _) -> if List.mem var env.var_scope.nodes then Node
-				else if List.mem var env.var_scope.rels then Rel
+	(_, ty, _) -> if List.mem var var_table.prims then ty
+				else List
+	| (_, _) -> if List.mem var var_table.nodes then Node
+				else if List.mem var var_table.rels then Rel
 				else Graph)
 
-let rec get_sexpr env expr = match expr with
-	Int_Literal(i) -> SInt_Literal(i, Type_spec(Int))
-	| Double_Literal(d) -> SDouble_Literal(d, Type_spec(Double))
-	| Bool_Literal(b) -> SBool_Literal(b, Type_spec(Bool))
-	| String_Literal(str) -> SString(str, Type_spec(String))
-	| ID(v) -> SID(v, check_expr env v)
+let rec get_sexpr env ex = match ex with
+	Literal(l) -> (match l with
+		Int_Literal(i) -> SLiteral(SInt_Literal(i), Int)
+		| Double_Literal(d)-> SLiteral(SDouble_Literal(d), Double)
+		| String_Literal(s) -> SLiteral(SString_Literal(s), String)
+		| Bool_Literal(b) -> SLiteral(SBool_Literal(vb), Bool))
+	| Id(v) -> SId(v, check_expr env v)
 	| Unop(u, e) -> SUnop(u, get_sexpr env e, check_expr env expr)
-	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr env e2, check_expr expr)
-	| Assign(e1, e2) -> SAssign(get_sexpr env e1, get_sexpr env e2, check_expr env expr)
-	| Access(str, str) -> SAccess(str, str, check_expr env expr)
-	| Call(str, el) -> SCall(str, (*get s_expr on list? do list.map?*) , check_expr env expr)
-	| Func (f) -> SFunc() 
-	| Complex(comp) -> SComplex() 
+	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr ex)
+	| Grop(e, grop, gc) -> SGrop(get_sexpr env e, grop, gc, check_expr env ex)
+	| Geop (e, geop, form) -> SGeop(get_sexpr env e, geop, form, check_expr env ex)
+	| Access(str, str) -> SAccess(str, str, check_expr env ex)
+	| Call(str, el) -> SCall(str, el, check_expr env ex)
+	| Func(f) -> SFunc(f, check_expr env f) 
+	| Complex(comp) -> (match comp with
+		| Graph_Literal(l) -> SComplex(SGraph_Literal(l), check_expr env ex)
+		| Graph_Element(e) -> SComplex(SGraph_Element(e), check_expr env ex))
 
 let rec check_stmt env stmt = match stmt with
 	| Block(stmt_list) -> 
