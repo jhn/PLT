@@ -53,7 +53,7 @@ type formal =
   | Formal of type_spec * string
 
 type var_decl =
-  | Var of n2n_type * string
+  | Var of type_spec * string
   | Constructor of complex_type * string * formal list
   | Var_Complex_Decl_Assign of string * complex_type * expr
   | Var_Primitive_Decl_Assign of string * primitive_type * expr

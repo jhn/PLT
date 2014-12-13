@@ -40,7 +40,7 @@ program:
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 var_declaration:
-  | ID COLON n2n_type                                          { Var($3, $1) } /* foo: String */
+  | ID COLON type_spec                                         { Var($3, $1) } /* foo: String */
   | ID COLON complex_type ASSIGN LBRACE formal_list RBRACE     { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
   | expr ASSIGN expr                                           { Access_Assign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
   | ID COLON complex_type ASSIGN expr                          { Var_Complex_Decl_Assign($1, $3, $5)} /* Split the declaration and initializatio for complex */
