@@ -152,8 +152,8 @@ and gen_graph_elem_op geop = match geop with
   | Data_Insert -> ".insert("
   | Data_Remove -> ".remove("
 
-let gen_func_dec func =
-"public static " ^ func.return_type ^ " " ^ gen_expr func.fname ^
+and gen_func_dec func =
+"public static " ^ func.return_type ^ " " ^ gen_id func.fname ^
 "(" ^ gen_formal_list ^ func.formals ^ ") {\n" ^ gen_stmt_list func.body ^ "}\n"
 
 and gen_func_dec_list fl = match fl with 

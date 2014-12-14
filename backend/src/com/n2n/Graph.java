@@ -34,12 +34,14 @@ public class Graph {
     }
 
     public Graph(List<Member<Node, Relationship>> relatedMemberList) {
-        relatedMemberList.stream()
-                .forEach((members) -> {
-                    // Hooks up relationships
-                    members.getRel().addNodes(members.getFrom(), members.getTo());
-                    relationships.add(members.getRel());
-                });
+        addToGraph(relatedMemberList);
+    }
+
+    private void addToGraph(List<Member<Node, Relationship>> relatedMemberList) {
+        relatedMemberList.stream().forEach((members) -> {
+            members.getRel().addNodes(members.getFrom(), members.getTo());
+            relationships.add(members.getRel());
+        });
     }
 
     /**
@@ -158,6 +160,10 @@ public class Graph {
                 .filter(predicate)
                 .flatMap(mapper)
                 .collect(Collectors.toSet());
+    }
+
+    public void insert(List<Member<Node, Relationship>> relatedMemberList) {
+        addToGraph(relatedMemberList);
     }
 
 }
