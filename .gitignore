@@ -12,3 +12,5 @@ ast.cm*
 backend/.idea/
 backend/*.iml
 backend/out/
+sast.cmi
+tags
