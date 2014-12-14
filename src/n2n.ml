@@ -4,7 +4,7 @@ type action = Ast | Symtab | SAnalysis | Compile | Binary | Help
 
 let usage (name:string) =
   "usage:\n" ^ name ^ "\n" ^
-    "        -a source.ml              (Print AST of source)\n"
+    "        -a source.n2n              (Print AST of source)\n"
 
 let _ =
   let action = 
