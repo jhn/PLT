@@ -57,9 +57,10 @@ n2n_type:
   | NODE                { Node }
   | REL                 { Rel }
   | LIST LT n2n_type GT { List($3)}
+  | VOID                { Void }
 
 function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW n2n_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
      {
        { fname = $2;
          formals = $4;
@@ -78,10 +79,6 @@ formal_list:
 
 parameter:
   | ID COLON n2n_type    { Formal($3, $1) } /* foo: Int */
-
-return_type:
-  | n2n_type  { N2N_type($1) }
-  | VOID      { Void }
 
 statements:
   | /* nothing */        { [] }

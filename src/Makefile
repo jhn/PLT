@@ -8,8 +8,8 @@ compile:
 	ocamlc -c parser.ml
 	ocamllex scanner.mll
 	ocamlc -c scanner.ml
+	ocamlc -c sast.mli
 	ocamlc -c semantic_check.ml
-	ocmalc -c sast.mli
 
 .PHONY : clean
 clean :
