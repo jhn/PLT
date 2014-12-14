@@ -39,9 +39,16 @@ and sliteral =
   | SBool_Literal of bool
 
 and sbuilt_in_function_call =
-  SFindMany of string * sexpr * sexpr option
-  | SMap of sexpr * sexpr * string * sstatement
+  SFindMany of string * sfind_many
+  | SMap of string * smap_function
   | SNeighbors_Func of string * string
+
+and sfind_many =
+  | SFind_Many_Node of scomplex_literal
+  | SFind_Many_Gen of sgraph_type * sgraph_type
+
+and smap_function =
+  |  SMap_Func of string * sstatement list
 
 and scomplex_literal =
   | SGraph_Literal of sNode_rel_Node_tuple list
