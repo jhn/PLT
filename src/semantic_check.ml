@@ -1,4 +1,5 @@
 open Ast
+open Sast
 
 exception Error of string;;
 
@@ -10,21 +11,20 @@ type environment = {
 	locals: var_scope;
 	globals: var_scope;
 	has_return: bool;
-	return_type: return_ty;
+	return_type: n2n_type;
 }
 
-type var_scope = {
-	parent: var_scope option;
+and var_scope = {
 	prims: (string * n2n_type * expr) list;
-	nodes: (string * string * (string * primitive_type * expr) list) list; (* Form (id, node_type, field storage list) *)
-	rels: (string * string * (string * primitive_type * expr) list) list; (* Form (id, node_type, field storage list) *)
+	nodes: (string * string * (string * n2n_type * expr) list) list; (* Form (id, node_type, field storage list) *)
+	rels: (string * string * (string * n2n_type * expr) list) list; (* Form (id, node_type, field storage list) *)
 	graphs: (string * graph_component list) list;
 	lists: (string * n2n_type * expr list) list (*Form (list_id, type, list contents) *)
 }
 
-let beginning_scope = { parent = None, prims = [], nodes = [], rels = [], graphs = [] }
+let beginning_scope = { prims = []; nodes = []; rels = []; graphs = []; lists = [] }
 
-let beginning_environment = { functions = [], globals = beginning_scope, locals = beginning_scope, scope = "global", node_types = [], rel_types = [], has_return = false}
+let beginning_environment = { functions = []; globals = beginning_scope; locals = beginning_scope; scope = "global"; node_types = []; rel_types = []; has_return = false; return_type = Void}
 
 let check_arithmetic_binary_op t1 t2 = 
 	match (t1, t2) with
@@ -50,71 +50,33 @@ let check_logic t1 t2 =
 	| (String, String) -> Bool
 	| (_,_) -> raise(Error("Logical operation fails, arguments not of correct types"))
 
-let is_node env id =
-	let isNode = List.exists (fun (fid, _) -> fid = id) env.node_types in
-	isNode
+let get_literal_type l = match l with
+	Int_Literal(i) -> Int
+	| Double_Literal(d) -> Double
+	| String_Literal(s) -> String
+	| Bool_Literal(b) -> Bool
 
-let is_rel env id = 
-	let isRel = List.exists (fun (fid, _) -> fid = id) env.rel_types in 
-	isRel
-
-let check_node_literal env id lit_list =
-	let (_, l) = List.find (fun (fid, _) -> fid = id) env.node_types in
-	try List.iter2 (fun lit (t2, _) -> 
-		let t1 = check_expr env lit in
-		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
-	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Node
-
-let check_rel_literal env id lit_list = 
-	let (_, l) = List.find (fun (fid, _) -> fid = id) env.rel_types in 
-	try List.iter2 (fun lit (t2, _) ->
-		let t1 = check_expr env lit in
-		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
-	Invalid_argument -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.")); Rel 
-
-let check_node_or_rel_literal env id lit_list = 
-	if is_node id then check_node_literal env id lit_list
-	else if is_rel env id then check_rel_literal env id lit_list
-	else raise(Error("Could not find constructor for your node or rel"))
-
-let check_graph_ID env id = 
-	let does_exist = List.exists (fun (fid, _) -> fid = id) env.var_table.graphs in
-	if does_exist then Graph else raise(Error("Requested graph ID does not exist"))
-
-let check_graph_type env gt = 
-	let t = (match gt with
-	Graph_Id(gid) -> check_graph_ID env gid
-	|Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list) in t
-
-let check_nrn_expr env n1 r n2 = 
-	let t1 = check_graph_type env n1 and t2 = check_graph_type env n2 and tr = check_graph_type env r in
-	match (t1, tr, t2) with
-	(Node, Rel, Node) -> true
-	| _ -> false
-
-let check_nrn_list env nrn_list =
-	List.iter (fun nrn_expr -> 
-		match nrn_expr with
-		Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 != true then
-										raise(Error("Combination is not a Node-Rel-Node combination"))) nrn_list; Graph
+let get_type_from_id var_table id = 
+	(*if List.exists (fun (lid,_,_) -> lid=id) var_table.lists then List
+else*) if List.exists (fun (nid,_,_) -> nid=id) var_table.nodes then Node
+else if List.exists (fun (rid,_,_) -> rid=id) var_table.rels then Rel
+else if List.exists (fun (gid, _) -> gid=id) var_table.graphs then Graph
+else let (_,ty,_) = try List.find (fun (vid, _, _) -> vid=id) var_table.prims with
+	Not_found -> raise Not_found in ty
 
 let rec check_expr env expr = match expr with
-	| Literal(l) -> (match l with
-		| Int_Literal(i) -> Int
-		| Double_Literal(d) -> Double
-		| Bool_Literal(b) -> Bool
-		| String_Literal(str) -> String)
-	| Complex(c) -> match c with 
+	| Literal(l) -> get_literal_type l
+	| Complex(c) -> (match c with 
 		Graph_Literal(nrn_list) -> check_nrn_list env nrn_list
-		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
-	| Id(v) -> try get_type_from_id env.locals v with 
+		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list)
+	| Id(v) -> (try get_type_from_id env.locals v with 
 		Not_found -> try get_type_from_id env.globals v with
-		Not_found -> raise(Error("Id does not appear in program"))
-	| Unop(u, e) -> match u with
-		Not -> if check_expr env e = Type_spec(Bool) then Type_spec(Bool) else raise (Error("Using NOT on a non-boolean expr"))
-		| Neg -> if check_expr env e = Type_spec(Double) then Type_spec(Double)
-			else if check_expr env e = Type_spec(Int) then Type_spec(Int) 
-			else raise (Error("Using a neg on a non int or float expr"))
+		Not_found -> raise(Error("Id does not appear in program")))
+	| Unop(u, e) -> (match u with
+		Not -> if check_expr env e = Bool then Bool else raise (Error("Using NOT on a non-boolean expr"))
+		| Neg -> if check_expr env e = Double then Double
+			else if check_expr env e = Int then Int 
+			else raise (Error("Using a neg on a non int or float expr")))
 	| Binop(e1, op, e2) -> 
 		let t1 = check_expr env e1 and t2 = check_expr env e2 in
 		let binop_t = (match op with
@@ -133,16 +95,19 @@ let rec check_expr env expr = match expr with
 			| Or -> if(t1, t2) = (Bool, Bool) then Bool else raise (Error("Using OR on a non-boolean expr"))
 			| Concat -> if (t1, t2) = (String, String) then String else raise (Error("Using Concat on non-string expr"))) in binop_t
 	| Grop(e1, grop, gc) -> let t1 = check_expr env e1 in
-		if t1 = Graph then
-			(match grop with 
+		(match t1 with
+		Graph -> (match grop with 
 			| Graph_Insert -> 
 				(match gc with
-				Node_Rel_Node_Tup(n1, r, n2) -> check_nrn_expr env n1 r n2
+				Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 then Graph else
+					raise(Error("Invalid input for node_rel_node tuple"))
 				| _ -> raise(Error("Not a node_rel_node")))
 			| Graph_Remove ->  
 				(match gc with
-				Node_Rel_Node_Tup(n1, r, n2) -> check_nrn_expr env n1 r n2
+				Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 then Graph else
+					raise(Error("Invalid input for node_rel_node tuple"))
 				| _ -> raise(Error("Not a node_rel_node"))))
+		| _ -> raise(Error("Trying to perform a graph insert on a non-graph")))
 	| Geop(e1, geop, f) -> let t = check_expr env e1 and tf = (match f with
 			Formal(ty, s) -> ty;
 			| _ -> raise(Error("Right hand side not a variable declaration of form id:type"))) in
@@ -151,59 +116,101 @@ let rec check_expr env expr = match expr with
 			Int | String | Bool | Double -> t
 			| _ -> raise(Error("Can only insert or remove field of primitive type")))
 		| _ -> raise(Error("Can only insert field into a Node or Rel")))
-	| Access(e1, e2) -> let t = check_expr env e1 and id = 
-		(match e1 with
-		Id(v) -> v
-		| _ -> raise(Error("Expression to left of access operator must be an Identifier"))) 
-		and ida = 
-		(match e2 with 
-		Id(v) -> v
-		| _ -> raise(Error("Expression to right of access operator must be an Identifier"))) in
-		match t with 
-		| Node -> let (_,_,l) = try List.find (fun (nid, _, _) -> nid = id) env.locals.nodes with
-			Not_found -> try List.find (fun (nid, _, _) -> nid =id) env.globals.nodes with
+	| Access(idl, idr) -> let t = (try get_type_from_id env.locals idl with
+		Not_found -> try get_type_from_id env.globals idl with 
+		Not_found -> raise(Error("Can't find left identifier")))in
+		(match t with 
+		| Node -> let (_,_,l) = try List.find (fun (nid, _, _) -> nid = idl) env.locals.nodes with
+			Not_found -> try List.find (fun (nid, _, _) -> nid =idl) env.globals.nodes with
 			Not_found -> raise(Error("Node Id not found to left of access")) in 
-			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
+			let (_,t,_) = try List.find (fun (id, _, _) -> id = idr) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in node list")) in t
-		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = id) env.locals.rels with
-			Not_found -> try List.find (fun (rid, _, _) -> rid=id) env.globals.rels with 
+		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = idl) env.locals.rels with
+			Not_found -> try List.find (fun (rid, _, _) -> rid=idl) env.globals.rels with 
 			Not_found -> raise(Error("Rel Id not found to left of access")) in
-			let (_,t,_) = try List.find (fun (id, _, _) -> id = ida) l with
-			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t   
-	| Call(id, el) -> let (_, formals, _, rt) = try List.find (fun (fn, _, _, _) -> fn = id) env.functions with
-		Not_found -> raise(Error("Function definition not found")) in
-		try List.iter2 (fun e (ty, _) -> let t = check_expr env e in
-										if t <> ty then raise(Error("Argument does not match expected argument type"))) el formals with
-		Invalid_argument -> raise(Error("Entered the wrong number of arguments into function")); rt
+			let (_,ty,_) = try List.find (fun (id, _, _) -> id = idr) l with
+			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t
+		| _ -> raise(Error("Trying to access something that is not a node or rel")))   
+	| Call(id, el) -> let func = try List.find (fun func -> func.fname = id) env.functions with
+		Not_found -> raise(Error("Function definition not found")) in 
+		(try List.iter2 (fun e f -> let ty = (match f with
+										Formal(ty,_) -> ty
+										|_ -> raise(Error("There is no spoon"))) in
+									let t = check_expr env e in
+										if t <> ty then raise(Error("Argument does not match expected argument type"))) el func.formals with
+		Invalid_argument s -> raise(Error("Entered the wrong number of arguments into function"))); func.return_type
 	| Func(fname) -> (match fname with
-		Find_Many(id,e1) | Neighbors_Func(id, e1) -> 
-			if List.exists (fun gid -> gid = id) env.locals.graphs then Graph
-			else if List.exists (fun gid -> gid = id) env.globals.graphs then Graph
+		Find_Many(id,e1) -> 
+			if List.exists (fun (gid, _) -> gid = id) env.locals.graphs then Graph
+			else if List.exists (fun (gid,_) -> gid = id) env.globals.graphs then Graph
+			else raise(Error("Could not find List or Graph ID to run this function on"))
+		| Neighbors_Func(id, e1) -> 
+			if List.exists (fun (gid, _) -> gid = id) env.locals.graphs then Graph
+			else if List.exists (fun (gid,_) -> gid = id) env.globals.graphs then Graph
 			else raise(Error("Could not find List or Graph ID to run this function on"))
 		| Map(id,e2) -> 
-			if List.exists (fun gid -> gid=id) env.locals.graphs then Graph
-			else if List.exists (fun lid -> lid=id) env.locals.lists then List
-			else if List.exists (fun gid -> gid=id) env.globals.graphs then Graph
-			else if List.exists (fun lid -> lid=id) env.globals.lists then List
+			if List.exists (fun (gid,_) -> gid=id) env.locals.graphs then Graph
+			else if List.exists (fun (lid,_,_) -> lid=id) env.locals.lists then
+				let (_,ty,_) = List.find (fun (lid,_,_) -> lid=id) env.locals.lists in List(ty)
+			else if List.exists (fun (gid,_) -> gid=id) env.globals.graphs then Graph
+			else if List.exists (fun (lid,_,_) -> lid=id) env.globals.lists then
+				let (_,ty,_) = List.find (fun (lid,_,_) -> lid=id) env.globals.lists in List(ty)
 			else raise(Error("Could not find List or Graph ID to run map on")))
 
-let find_var var_table id =
-	let found_var = try List.find (fun (vid, _, _) -> vid = id) var_table.prims with
-		Not_found -> try List.find (fun (nid, _) -> nid = id) var_table.nodes with
-		Not_found -> try List.find (fun (rid, _) -> rid = id) var_table.rels with 
-		Not_found -> try List.find (fun (gid, _) -> gid = id) var_table.graphs with
-		Not_found -> try List.find (fun (lid, _) -> lid = id) var_table.lists with
-		Not_found -> raise Not_found in found_var
+and is_node env id =
+	let isNode = List.exists (fun (fid, _) -> fid = id) env.node_types in
+	isNode
 
-let get_type_from_id var_table id = 
-	let var = try find_var var_table id with 
-		Not_found -> raise Not_found in
-	(match var with
-	(_, ty, _) -> if List.mem var var_table.prims then ty
-				else List
-	| (_, _) -> if List.mem var var_table.nodes then Node
-				else if List.mem var var_table.rels then Rel
-				else Graph)
+and is_rel env id = 
+	let isRel = List.exists (fun (fid, _) -> fid = id) env.rel_types in 
+	isRel
+
+and check_node_literal env id lit_list =
+	let (_, l) = List.find (fun (fid, _) -> fid = id) env.node_types in
+	(try List.iter2 (fun lit f -> let t2 = (match f with
+		Formal(ty,_) -> ty
+		|_ -> raise(Error("There is no spoon"))) in 
+		let t1 = get_literal_type lit in
+		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
+	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment."))); Node
+
+and check_rel_literal env id lit_list = 
+	let (_, l) = List.find (fun (fid, _) -> fid = id) env.rel_types in 
+	(try List.iter2 (fun lit f -> let t2 = (match f with
+		Formal(ty,_) -> ty
+		|_ -> raise(Error("There is no spoon"))) in 
+		let t1 = get_literal_type lit in 
+		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
+	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment."))); Rel 
+
+and check_node_or_rel_literal env id lit_list = 
+	if is_node env id then check_node_literal env id lit_list
+	else if is_rel env id then check_rel_literal env id lit_list
+	else raise(Error("Could not find constructor for your node or rel"))
+
+and check_graph_ID env id = 
+	if List.exists (fun (gid,_) -> gid=id) env.locals.graphs then Graph
+	else if List.exists (fun (gid, _) -> gid=id) env.globals.graphs then Graph
+	else raise(Error("Graph id doesn't exist"))
+
+and check_graph_type env gt = 
+	let t = (match gt with
+	Graph_Id(gid) -> check_graph_ID env gid
+	|Graph_Type(complex) -> (match complex with
+		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list
+		| _ -> raise(Error("There is no spoon")))) in t
+
+and check_nrn_expr env n1 r n2 = 
+	let t1 = check_graph_type env n1 and t2 = check_graph_type env n2 and tr = check_graph_type env r in
+	match (t1, tr, t2) with
+	(Node, Rel, Node) -> true
+	| _ -> false
+
+and check_nrn_list env nrn_list =
+	List.iter (fun nrn_expr -> 
+		match nrn_expr with
+		Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 != true then
+										raise(Error("Combination is not a Node-Rel-Node combination"))) nrn_list; Graph
 
 let rec get_sexpr env ex = match ex with
 	Literal(l) -> (match l with
@@ -216,16 +223,16 @@ let rec get_sexpr env ex = match ex with
 	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr env ex)
 	| Grop(e, grop, gc) -> SGrop(get_sexpr env e, grop, gc, check_expr env ex)
 	| Geop (e, geop, form) -> SGeop(get_sexpr env e, geop, form, check_expr env ex)
-	| Access(str, str) -> SAccess(str, str, check_expr env ex)
-	| Call(str, el) -> SCall(str, el, check_expr env ex)
-	| Func(f) -> (*Still needs implementation for each funciton*)
+	| Access(str, str2) -> SAccess(str, str2, check_expr env ex)
+	| Call(str, el) -> SCall(str, List.map (fun e -> get_sexpr env e) el, check_expr env ex)
+	| Func(f) -> SLiteral(SInt_Literal(i), Int)(*Still needs implementation for each funciton*)
 	| Complex(comp) -> (match comp with
 		| Graph_Literal(l) -> SComplex(SGraph_Literal(l), check_expr env ex)
 		| Graph_Element(e) -> SComplex(SGraph_Element(e), check_expr env ex))
 
-let rec check_stmt env stmt = match stmt with
+(*let rec check_stmt env stmt = match stmt with
 	| Block(stmt_list) -> 
-		let new_scope = { var_scope.parent = env.scope; var_scope.locals = [] }
+		let new_scope = { var_scope.parent = env.scope, var_scope.locals = [] }
 		and new_exceptions = { excep_parent = Some(env.exception_scope); exceptions = [] } in
 		let new_env = { env with scope = new_scope;
 						exception_scope = new_exceptions } in
@@ -283,11 +290,11 @@ let rec get_checked_statements env stmts checked_statments =
 	| stmt :: tail -> 
 		let (checked_statement, new_env) = check_stmt env stmt in
 		get_checked_statements new_env tail (checked_statement::checked_statments)
-	| [] -> (checked_statments, env)
+	| [] -> (checked_statments, env) 
 
 let check_function env func =
 	let new_env = new_func_env env func in
-	let checked_statements = get_checked_statements new_env 
+	let checked_statements = get_checked_statements new_env *)
 
 let rec check_functions env funcs checked_funcs =
 	let checked_functions = 
@@ -298,7 +305,7 @@ let rec check_functions env funcs checked_funcs =
 		| [] -> checked_funcs) in
 	checked_functions
 
-let check_for_existing_var_and_update_table var_table id ty val =
+let check_for_existing_var_and_update_table var_table id ty v =
 	let does_exist = 
 		(List.exists (fun gid -> gid=id) var_table.graphs
 		|| List.exists(fun rid -> rid=id) var_table.rels
@@ -309,15 +316,16 @@ let check_for_existing_var_and_update_table var_table id ty val =
 	true -> raise(Error("Variable to declare already exists"))
 	| false ->
 		match ty with
-			Node -> let new_nodes = (id, val)::var_table.nodes in
+			Node -> let new_nodes = (id, v)::var_table.nodes in
 				{var_table with nodes = new_nodes}
-			| Rel -> let new_rels = (id, val)::var_table.rels in
+			| Rel -> let new_rels = (id, v)::var_table.rels in
 				{var_table with rels = new_rels}
-	 		| Graph -> let new_graphs = (id, val)::var_table.graphs in
+	 		| Graph -> let new_graphs = (id, v)::var_table.graphs in
 	 			{var_table with graphs = new_graphs}
-	 		| List -> let new_lists = (id, List, val)::var_table.lists (* PROBLEM! *) in
+	 		| List -> let new_lists = (id, List, v)::var_table.lists (* PROBLEM! *) in
 	 			{var_table with lists = new_lists}
-			| _ -> let new_prims = (id, ty, val)::var_table.prims in
+	 		| Void -> raise(Error("Can't declare variables of type void"))
+			| _ -> let new_prims = (id, ty, v)::var_table.prims in
 				{var_table with prims = new_prims}
 
 let check_global env var = 
@@ -340,13 +348,14 @@ let check_global env var =
 				(SVar_Decl_Assign(id, ty, SExpr(get_sexpr e)), new_env)
 			else 
 				raise(Error("Type mismatch in global variable assignment"))	
-		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2
+		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2 in 
 			if (tl = tr) then
-				(SAccess_Assign(SExpr(get_sexpr e1), SExpr(get_sexpr e2), env)
+				(SAccess_Assign(SExpr(get_sexpr e1), SExpr(get_sexpr e2)), env)
 		| Constructor(ty, id, l) -> 
 			let list_to_check = (match ty with
 				Node -> env.node_types
-				| Rel -> env.rel_types) in
+				| Rel -> env.rel_types
+				| _ -> raise(Error("Can't declare constructors of non Node or Rel types"))) in
 			let does_type_exist = List.exists (fun cid -> cid=id) list_to_check in
 			if does_type_exist then
 				raise(Error("Already have a constructor of this name for this type"))
@@ -377,4 +386,4 @@ let run_program program =
 	let env = beginning_environment in
 	let (checked_globals, new_env) = check_globals_and_update_env env vars [] in
 	let checked_functions = check_functions new_env funcs in
-	Prog(checked_globals, checked_functions)
+	SProg(checked_globals, checked_functions)

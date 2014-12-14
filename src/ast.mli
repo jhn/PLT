@@ -35,9 +35,6 @@ type n2n_type =
   | Node
   | Rel
   | List of n2n_type
-
-type return_ty =
-  | N2N_type of n2n_type
   | Void
 
 type formal =
@@ -101,7 +98,7 @@ type func_decl = {
   fname : string;
   formals : formal list;
   body : statement list;
-  return_type : return_ty;
+  return_type : n2n_type;
 }
 
 type program = var_decl list * func_decl list

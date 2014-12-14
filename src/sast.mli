@@ -1,36 +1,25 @@
 open Ast
 
-type svar_type =
-  Int
-| Double
-| String
-| Bool
-| Void
-| Rel
-| Node
-| Graph
-| List of svar_type
-
 type sformal = 
-  Formal of svar_type * string
+  Formal of Ast.n2n_type * string
 
 type svar_decl = 
-    SVar of svar_type * string
-  | SConstructor of svar_type * string * sformal list
-  | SVar_Decl_Assign of string * svar_type * sexpr
+    SVar of Ast.n2n_type * string
+  | SConstructor of Ast.n2n_type * string * sformal list
+  | SVar_Decl_Assign of string * Ast.n2n_type * sexpr
   | SAccess_Assign of sexpr * sexpr
 
 and sexpr =
-    SLiteral of sliteral * svar_type
-  | SId of string * svar_type
-  | SBinop of sexpr * Ast.op * sexpr * svar_type
-  | SGrop of sexpr * Ast.grop * sexpr * svar_type
-  | SGeop of sexpr * Ast.geop * sexpr * svar_type
-  | SUnop of Ast.uop * sexpr * svar_type
-  | SAccess of string * string * svar_type
-  | SCall of string * sexpr list * svar_type
-  | SFunc of sbuilt_in_function_call * svar_type
-  | SComplex of scomplex_literal * svar_type
+    SLiteral of sliteral * Ast.n2n_type
+  | SId of string * Ast.n2n_type
+  | SBinop of sexpr * Ast.op * sexpr * Ast.n2n_type
+  | SGrop of sexpr * Ast.grop * sexpr * Ast.n2n_type
+  | SGeop of sexpr * Ast.geop * sexpr * Ast.n2n_type
+  | SUnop of Ast.uop * sexpr * Ast.n2n_type
+  | SAccess of string * string * Ast.n2n_type
+  | SCall of string * sexpr list * Ast.n2n_type
+  | SFunc of sbuilt_in_function_call * Ast.n2n_type
+  | SComplex of scomplex_literal * Ast.n2n_type
 
 and sliteral =
   SInt_Literal of int
@@ -72,7 +61,7 @@ type sfunc_decl = {
   sfname : string;
   sformals : sformal list;
   sbody : sstatement list;
-  sreturn_type : svar_type;
+  sreturn_type : Ast.n2n_type;
 }
 
 type sprogram =
