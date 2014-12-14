@@ -1,7 +1,7 @@
 open Ast
 
 type sformal = 
-  Formal of Ast.n2n_type * string
+  SFormal of Ast.n2n_type * string
 
 type svar_decl = 
     SVar of Ast.n2n_type * string
@@ -13,8 +13,8 @@ and sexpr =
     SLiteral of sliteral * Ast.n2n_type
   | SId of string * Ast.n2n_type
   | SBinop of sexpr * Ast.op * sexpr * Ast.n2n_type
-  | SGrop of sexpr * Ast.grop * sexpr * Ast.n2n_type
-  | SGeop of sexpr * Ast.geop * sexpr * Ast.n2n_type
+  | SGrop of sexpr * Ast.grop * sgraph_component * Ast.n2n_type
+  | SGeop of sexpr * Ast.geop * sformal * Ast.n2n_type
   | SUnop of Ast.uop * sexpr * Ast.n2n_type
   | SAccess of string * string * Ast.n2n_type
   | SCall of string * sexpr list * Ast.n2n_type
@@ -40,10 +40,10 @@ and smap_function =
   |  SMap_Func of string * sstatement list
 
 and scomplex_literal =
-  | SGraph_Literal of sNode_rel_Node_tuple list
-  | SGraph_Element of string * sexpr list
+  | SGraph_Literal of sgraph_component list
+  | SGraph_Element of string * sliteral list
 
-and sNode_rel_Node_tuple =
+and sgraph_component =
   SNode_Rel_Node_tup of sgraph_type * sgraph_type * sgraph_type
 
 and sgraph_type =
