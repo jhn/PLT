@@ -65,4 +65,4 @@ type sfunc_decl = {
 }
 
 type sprogram =
-  Prog of svar_decl list * sfunc_decl list
+  SProg of svar_decl list * sfunc_decl list
