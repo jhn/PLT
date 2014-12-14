@@ -48,7 +48,7 @@ and sfind_many =
   | SFind_Many_Gen of sgraph_type * sgraph_type
 
 and smap_function =
-  |  SMap_Func of string * sstatement list
+  |  SMap_Func of string * sstatement lists
 
 and scomplex_literal =
   | SGraph_Literal of sNode_rel_Node_tuple list
