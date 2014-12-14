@@ -22,9 +22,9 @@ let decimal = ((digit+ '.' digit*) | ('.' digit+))
 (* Regular Rules *)
 
 rule token = parse
-   | [' ' '\t']         { token lexbuf }
-   | '\n'                    { TERMINATION } (* terminate the code*)
-   | ';'                     { block_comment lexbuf } (* block comment*)
+   | [' ' '\n' '\t']         { token lexbuf }
+   | ';'                   { TERMINATION } (* terminate the code*)
+   | ";;"                     { block_comment lexbuf } (* block comment*)
 
    | '('                     { LPAREN }
    | ')'                     { RPAREN }
@@ -94,7 +94,7 @@ rule token = parse
  | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and block_comment = parse
-  ";" { token lexbuf }
+  ";;" { token lexbuf }
 | eof  { raise (LexError("unterminated block_comment!")) }
 | _    { block_comment lexbuf }
 
