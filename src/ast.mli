@@ -26,37 +26,27 @@ type uop =
   | Not
   | Neg
 
-type primitive_type =
+type n2n_type =
   | Int
   | String
   | Bool
   | Double
-
-type complex_type =
   | Graph
   | Node
   | Rel
-
-type n2n_type =
-  | N2N_primitive of primitive_type
-  | N2N_complex of complex_type
-
-type type_spec =
-  | N2N_type of n2n_type
   | List of n2n_type
 
 type return_ty =
-  | Type_spec of type_spec
+  | N2N_type of n2n_type
   | Void
 
 type formal =
-  | Formal of type_spec * string
+  | Formal of n2n_type * string
 
 type var_decl =
-  | Var of type_spec * string
-  | Constructor of complex_type * string * formal list
-  | Var_Complex_Decl_Assign of string * complex_type * expr
-  | Var_Primitive_Decl_Assign of string * primitive_type * expr
+  | Var of n2n_type * string
+  | Constructor of n2n_type * string * formal list
+  | Var_Decl_Assign of string * n2n_type * expr
   | Access_Assign of expr * expr
 
 and expr =
