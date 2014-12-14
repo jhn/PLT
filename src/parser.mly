@@ -40,29 +40,23 @@ program:
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 var_declaration:
-  | ID COLON type_spec                                         { Var($3, $1) } /* foo: String */
-  | ID COLON complex_type ASSIGN LBRACE formal_list RBRACE     { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
+  | ID COLON n2n_type                                         { Var($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE     { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
   | expr ASSIGN expr                                           { Access_Assign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
-  | ID COLON complex_type ASSIGN expr                          { Var_Complex_Decl_Assign($1, $3, $5)} /* Split the declaration and initializatio for complex */
-  | ID COLON primitive_type ASSIGN expr                        { Var_Primitive_Decl_Assign($1, $3, $5)} /* and primitive type */
+  | ID COLON n2n_type ASSIGN expr                          { Var_Decl_Assign($1, $3, $5)} /* Split the declaration and initializatio for complex */
 
 global_var_declaration:
   var_declaration TERMINATION { $1 }
 
 n2n_type:
-  | primitive_type { N2N_primitive($1) }
-  | complex_type   { N2N_complex($1) }
-
-primitive_type:
-  | INT       { Int }
-  | STRING    { String }
-  | DOUBLE    { Double }
-  | BOOL      { Bool }
-
-complex_type:
-  | GRAPH     { Graph }
-  | NODE      { Node }
-  | REL       { Rel }
+  | INT                 { Int }
+  | STRING              { String }
+  | DOUBLE              { Double }
+  | BOOL                { Bool }
+  | GRAPH               { Graph }
+  | NODE                { Node }
+  | REL                 { Rel }
+  | LIST LT n2n_type GT { List($3)}
 
 function_declaration:
  | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
@@ -83,14 +77,10 @@ formal_list:
   | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec    { Formal($3, $1) } /* foo: Int */
-
-type_spec:
-  | n2n_type              { N2N_type($1) }
-  | LIST LT n2n_type GT   { List($3) } /*Store the list in the AST?*/
+  | ID COLON n2n_type    { Formal($3, $1) } /* foo: Int */
 
 return_type:
-  | type_spec { Type_spec($1) }
+  | n2n_type  { N2N_type($1) }
   | VOID      { Void }
 
 statements:
