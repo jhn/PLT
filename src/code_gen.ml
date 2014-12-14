@@ -9,33 +9,6 @@ let imports =
   "import com.n2n.Node;\n" ^
   "import com.n2n.Relationship;\n"
 
-(* Returns the string name for a data type *)
-let rec get_type_name = function
-  | Int(id)    -> id
-  | Double(id) -> id
-  | String(id) -> id
-  | Bool(id)   -> id
-  | Map(id)    -> id
-  | List(id)   -> id
-  | Rel(id)    -> id
-  | Node(id)   -> id
-  | Graph(id)  -> id
-  | Void(id)   -> id
-
-(* Returns the java declaration for a type. Takes care of formals and actuals. *)
-let rec string_of_data_type with_id = function
-  | Int    -> "int " ^ (if with_id then id else "")
-  | Double(id) -> "double " ^ (if with_id then id else "")
-  | String(id) -> "String " ^ (if with_id then id else "")
-  | Bool(id)   -> "boolean " ^ (if with_id then id else "")
-  | Map(id)    -> "Map<Object, Object> " ^ (if with_id then id else "")
-  | List(id)   -> "List<Object> " ^ (if with_id then id else "")
-  | Rel(id)    -> "Relationship " ^ (if with_id then id else "")
-  | Node(id)   -> "Node " ^ (if with_id then id else "")
-  | Graph(id)  -> "Graph " ^ (if with_id then id else "")
-  | Void(id)   -> "void " ^ (if with_id then id else "")
-
-(*Contained within gen_expr. May not be needed.*)
 in let rec string_of_literal = function
   | SString_Literal(s)  -> "\"" ^ s ^ "\""
   | Boolean_Literal(s) -> string_of_bool s
