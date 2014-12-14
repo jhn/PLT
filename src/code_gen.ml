@@ -10,7 +10,7 @@ let imports =
   "import com.n2n.Relationship;\n"
 
  let gen_var_type = function
- 	Int -> "int"
+    Ast.Int -> "int"
   | Double -> "double"
   | Bool -> "boolean"
   | String -> "String"
@@ -27,7 +27,7 @@ in let rec string_of_literal = function
   | Double_Literal(s)  -> string_of_float s
 
 let gen_formal = function
-  | Formal(type_spec, id) -> string_of_data_type type_spec true
+  | Formal(type_spec, id) -> gen_var_type type_spec ^ " " ^ id
 
 let gen_formal_list fl = match fl with
   | [] -> ""
@@ -62,14 +62,14 @@ let rec gen_expr expr = match expr with
     | SString_Literal(str) -> "\"" ^ str ^ "\"" )
   | SId(v,t) -> v
   | SComplex(c,t) -> (match c with
-  	| SGraph_Literal(nrn_list) -> gen_node_rel_node_tup nrn_list (* Should just be a list of graph elements *)
-	| SGraph_Element(id, lit_list) -> id ^ "(" ^ gen_expr_list lit_list ^ ");" )
+    | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup nrn_list (* Should just be a list of graph elements *)
+  | SGraph_Element(id, lit_list) -> id ^ "(" ^ gen_expr_list lit_list ^ ");" )
   | SUnop(u, e, t) -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
   | SBinop(e1, op, e2, t) -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
   | SAccess(e1,e2, t) -> e1 ^ "." ^ e2
   | SCall(id, e1, t) -> id ^ "(" ^ gen_expr_list e1 ^ ");"
   | SFunc(fname, t) -> (match fname with
-  	(* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
+    (* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
     | SFind_Many(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ");"
     | SMap(id, smf) -> gen_id id ^ ".map(" ^ gen_map smf ^ ");"
     | SNeighbors_Func(id1, id2) -> id1 ^ ".neighbors(" ^ id2 ^ ");" )
@@ -119,17 +119,16 @@ and gen_sstmt_list stmt_list = match stmt_list with
   | head::tail -> gen_stmt head ^ gen_stmt_list tail
 
 and gen_var_dec dec = match dec with
-  	SVar(ty,id) -> gen_var_type ty ^ " " ^ gen_id id ^ ";"
+    SVar(ty,id) -> gen_var_type ty ^ " " ^ gen_id id ^ ";"
  (* | Var_Primitive_Decl_Assign(id, ty, ex) -> string_of_data_type ty ^ " " ^ gen_id id ^ " = " ^ gen_expr ex ^ ";" *)
  (* | Var_Complex_Decl_Assign(id, ty, ex) -> string_of_data_type ty ^ " " ^ gen_id id ^ " = new " ^ string_of_data_type ty ^ "();" *)
 (* What goes in parentheses is based on how java classes are set up. #Jhn *)
 (* May have to split up between graphs, nodes, and rels in a new function *)
   | SConstructor(ty,id,formals) -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_formal_list formals ^ ");"
   | SVar_Decl_Assign(id,ty,e) -> (match ty with 
-  	 Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
+     Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
    | Rel | Node | Graph | List -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");" )
   | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " gen_expr e2 
-
 
 and gen_func_dec func =
 "public static " ^ func.return_type ^ " " ^ gen_id func.fname ^
