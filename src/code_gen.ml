@@ -23,15 +23,6 @@ let gen_formal_list fl = match fl with
   | head::[] -> gen_formal head
   | head::tail -> gen_formal head ^ ", " ^ gen_formal_list tail
 
-(* TODO: These dont currently exist in java backend *)
-let gen_graph_op grop = match grop with 
-  | Graph_Insert -> ".insert("
-  | Graph_Remove -> ".remove("
-
- let gen_graph_elem_op geop = match geop with
-  | Data_Insert -> ".insert("
-  | Data_Remove -> ".remove("
-
 let gen_binop = function
   | Add     -> "+"
   | Sub     -> "-"
@@ -71,13 +62,22 @@ let rec gen_expr expr = match expr with
     | SFind_Many(id, e1, e2) -> gen_id id ^ ".findMany(" ^ get_expr_list e1 ^ ");"
     | SMap(e1, e2, id, s1) -> gen_id id ^ ".map(" ^ get_stmt_list ^ ");"
     | SNeighbors_Func(id, id) -> gen_id id ^ ".neighbors(" ^ get_stmt_list ^ ");" )
-  | SGrop(e1, grop, e2, t) ->
-  | SGeop(e1, geop, e2, t) -> gen_expr e1 ^ 
+  | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_node_rel_node_tup nrn ^ ");"
+  | SGeop(e1, geop, e2, t) -> gen_expr e1 ^ gen_graph_elem_op geop ^ gen_expr e2 ^ ");"
 
 and gen_expr_list expr_list = match expr_list with
   [] -> ""
   | head::[] -> gen_expr head
   | head::tail -> gen_expr head ^ ", " ^ gen_expr_list tail
+
+(* TODO: These dont currently exist in java backend *)
+and gen_graph_op grop = match grop with 
+  | Graph_Insert -> ".insert("
+  | Graph_Remove -> ".remove("
+
+and gen_graph_elem_op geop = match geop with
+  | Data_Insert -> ".insert("
+  | Data_Remove -> ".remove("
 
 and gen_node_rel_node_tup nrn_list = function 
   SNode_Rel_Node_tup(sg1, sg2, sg3) -> gen_sgraph_type sg1 ^ ", " ^ gen_sgraph_type sg2 ^ ", " ^ gen_sgraph_type sg3
