@@ -1,5 +1,7 @@
 open Ast
 
+type program = var_decl list * func_decl list
+
 let string_of_binop = function
   | Add          -> "+"
   | Sub          -> "-"
@@ -37,10 +39,7 @@ let rec string_of_n2n_type = function
   | Node        -> "Node"
   | Rel         -> "Rel"
   | List(t)     -> "List<" ^ string_of_n2n_type t ^ ">"
-
-let string_of_return_ty = function
-  | N2N_type(t) -> string_of_n2n_type t
-  | Void         -> "Void"
+  | Void        -> "Void"
 
 let string_of_formal = function
   | Formal(the_type, id) -> id ^ " : " ^  string_of_n2n_type the_type 
@@ -128,7 +127,7 @@ and string_of_statement = function
 
 let string_of_func_decl fdecl=
   "fn" ^ (fdecl.fname) ^ "(" ^ String.concat ", " (List.map string_of_formal fdecl.formals)
-  ^ ") -> " ^ (string_of_return_ty fdecl.return_type) ^ "{" ^ String.concat "\n" (List.map string_of_statement fdecl.body) ^ "}"
+  ^ ") -> " ^ (string_of_n2n_type fdecl.return_type) ^ "{" ^ String.concat "\n" (List.map string_of_statement fdecl.body) ^ "}"
 
 let string_of_program (vars, funcs) =
   String.concat "\n" (List.map string_of_var_decl vars) ^ (if (List.length vars) > 0 then "\n" else "") ^
