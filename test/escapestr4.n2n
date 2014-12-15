@@ -1,5 +1,6 @@
 fn  main() -> Void {
 	a: String = "a\"";
 	print(a);
+	print("\n");
 
 }

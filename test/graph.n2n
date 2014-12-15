@@ -1,21 +1,22 @@
+actor: Node = { name: String, age: Int };
+actedIn: Rel = { role: String };
+movie: Node = { title: String, year: Int };
+
 fn main() -> Void {
 
-	actor: Node = { name: String, age: Int };
 	Keanu: Node = actor["Keanu", 35];
 	Leo: Node = actor["Leo", 20];
 
-	actedIn: Rel = { role: String };
 	neo: Rel = actedIn["Neo"];
 	jordan: Rel = actedIn["Jordan"];
 
-	movie: Node = { title: String, year: Int };
 	matrix: Node = movie["Matrix", 1999];
 	wolf: Node = movie["Wolf", 1994];
 
 	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf
-	>
+	>;
 
 	print(Cast);
 

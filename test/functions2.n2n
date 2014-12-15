@@ -7,4 +7,5 @@ fn foo () -> Void {
 fn main () -> Void {
 	a: Int = foo();
 	print(a);
+	print("\n");
 }
