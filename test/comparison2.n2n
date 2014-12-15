@@ -1,7 +1,11 @@
 fn main () -> Void {
 	print(2==4);
+	print("\n");
 	print(2!=4);
+	print("\n");
 	print(2>=4);
+	print("\n");
 	print(2<=4);
+	print("\n");
 
 }
