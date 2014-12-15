@@ -23,8 +23,8 @@ let decimal = ((digit+ '.' digit*) | ('.' digit+))
 
 rule token = parse
    | [' ' '\n' '\t']         { token lexbuf }
-   | ';'                   { TERMINATION } (* terminate the code*)
-   | ";;"                     { block_comment lexbuf } (* block comment*)
+   | ';'                     { TERMINATION } (* terminate the code*)
+   | ";;"                    { block_comment lexbuf } (* block comment*)
 
    | '('                     { LPAREN }
    | ')'                     { RPAREN }
