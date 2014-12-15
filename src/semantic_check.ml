@@ -101,16 +101,16 @@ let rec check_expr env expr = match expr with
 				(match gc with
 				Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 then Graph else
 					raise(Error("Invalid input for node_rel_node tuple"))
-				| _ -> raise(Error("Not a node_rel_node")))
+				)
 			| Graph_Remove ->  
 				(match gc with
 				Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 then Graph else
 					raise(Error("Invalid input for node_rel_node tuple"))
-				| _ -> raise(Error("Not a node_rel_node"))))
+				))
 		| _ -> raise(Error("Trying to perform a graph insert on a non-graph")))
 	| Geop(e1, geop, f) -> let t = check_expr env e1 and tf = (match f with
 			Formal(ty, s) -> ty;
-			| _ -> raise(Error("Right hand side not a variable declaration of form id:type"))) in
+			) in
 		(match t with
 		Node | Rel -> (match tf with
 			Int | String | Bool | Double -> t
@@ -128,7 +128,7 @@ let rec check_expr env expr = match expr with
 		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = idl) env.locals.rels with
 			Not_found -> try List.find (fun (rid, _, _) -> rid=idl) env.globals.rels with 
 			Not_found -> raise(Error("Rel Id not found to left of access")) in
-			let (_,ty,_) = try List.find (fun (id, _, _) -> id = idr) l with
+			let (_,t,_) = try List.find (fun (id, _, _) -> id = idr) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t
 		| _ -> raise(Error("Trying to access something that is not a node or rel")))   
 	| Call(id, el) -> let func = (try List.find (fun f -> f.fname = id) env.functions with
@@ -168,7 +168,7 @@ and check_node_literal env id lit_list =
 	let (_, l) = List.find (fun (fid, _) -> fid = id) env.node_types in
 	(try List.iter2 (fun lit f -> let t2 = (match f with
 		Formal(ty,_) -> ty
-		|_ -> raise(Error("There is no spoon"))) in 
+		) in 
 		let t1 = get_literal_type lit in
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
 	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment."))); Node
@@ -177,7 +177,7 @@ and check_rel_literal env id lit_list =
 	let (_, l) = List.find (fun (fid, _) -> fid = id) env.rel_types in 
 	(try List.iter2 (fun lit f -> let t2 = (match f with
 		Formal(ty,_) -> ty
-		|_ -> raise(Error("There is no spoon"))) in 
+		) in 
 		let t1 = get_literal_type lit in 
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
 	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment."))); Rel 
@@ -266,7 +266,7 @@ and get_sformal_list fl sfl =
 	match fl with
 	[] -> List.rev sfl
 	| head :: tail -> let new_sfl = (get_sformal head) :: sfl in
-		get_sformal_list tail sfl 
+		get_sformal_list tail new_sfl 
 
 and get_sfm env fm =
 	match fm with 
@@ -382,7 +382,7 @@ let rec gen_tuple_list fl l tl =
 		(match h1, h2 with
 			Formal(ty, id), lit -> let new_tl = (id, ty, Literal(lit)) :: tl in
 				gen_tuple_list t1 t2 new_tl
-			| _ -> raise(Error("I can't even")))
+			)
 	| _ -> raise(Error("You're such a failure"))
 
 let update_node_or_rel_table env var_table id idt ty ex =
@@ -486,5 +486,5 @@ let run_program program =
 	let (vars, funcs) = program in
 	let env = beginning_environment in
 	let (checked_globals, new_env) = check_globals_and_update_env env vars [] in
-	let checked_functions = check_functions new_env funcs in
+    let checked_functions = check_functions new_env funcs [] in
 	SProg(checked_globals, checked_functions)
