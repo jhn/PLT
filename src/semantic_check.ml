@@ -64,12 +64,14 @@ else if List.exists (fun (gid, _) -> gid=id) var_table.graphs then Graph
 else let (_,ty,_) = try List.find (fun (vid, _, _) -> vid=id) var_table.prims with
 	Not_found -> raise Not_found in ty
 
-let rec check_expr env expr = match expr with
+let rec check_expr env expr = 
+	match expr with
 	| Literal(l) -> get_literal_type l
 	| Complex(c) -> (match c with 
 		Graph_Literal(nrn_list) -> check_nrn_list env nrn_list
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list)
-	| Id(v) -> (try get_type_from_id env.locals v with 
+	| Id(v) -> print_string(v ^ " id called\n");
+		(try get_type_from_id env.locals v with 
 		Not_found -> try get_type_from_id env.globals v with
 		Not_found -> raise(Error("Id does not appear in program")))
 	| Unop(u, e) -> (match u with
@@ -116,7 +118,9 @@ let rec check_expr env expr = match expr with
 			Int | String | Bool | Double -> t
 			| _ -> raise(Error("Can only insert or remove field of primitive type")))
 		| _ -> raise(Error("Can only insert field into a Node or Rel")))
-	| Access(idl, idr) -> let t = (try get_type_from_id env.locals idl with
+	| Access(idl, idr) -> 
+		print_string(idl ^ "." ^ idr ^ " called\n");
+		let t = (try get_type_from_id env.locals idl with
 		Not_found -> try get_type_from_id env.globals idl with 
 		Not_found -> raise(Error("Can't find left identifier")))in
 		(match t with 
@@ -171,7 +175,8 @@ and check_node_literal env id lit_list =
 		) in 
 		let t1 = get_literal_type lit in
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given node object."))) lit_list l with
-	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment."))); Node
+	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.\n" ^ 
+	"Constructor list size: " ^ string_of_int (List.length l) ^ "\n" ^ "Literal List size: " ^ string_of_int(List.length lit_list) ^ "\n"))); Node
 
 and check_rel_literal env id lit_list = 
 	let (_, l) = List.find (fun (fid, _) -> fid = id) env.rel_types in 
@@ -180,7 +185,8 @@ and check_rel_literal env id lit_list =
 		) in 
 		let t1 = get_literal_type lit in 
 		if t1 <> t2 then raise(Error("Type mismatch between arguments and expected type for given rel object."))) lit_list l with
-	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment."))); Rel 
+	Invalid_argument s -> raise(Error("Lists have unequal sizes. Check number of literals in your assignment.\n" ^
+		"Constructor list size: " ^ string_of_int(List.length l) ^ "\n" ^ "Literal List size: " ^ string_of_int(List.length lit_list) ^ "\n"))); Rel 
 
 and check_node_or_rel_literal env id lit_list = 
 	if is_node env id then check_node_literal env id lit_list
@@ -427,7 +433,8 @@ let update_list_table var_table id ty v =
 let check_global env var = 
 	let (checked_global, up_env) = 
 		(match var with
-		Var(ty, id) -> let new_table = (match ty with
+		Var(ty, id) -> print_string("Checking " ^ id ^ "\n");
+			let new_table = (match ty with
 			Node | Rel-> update_node_or_rel_table env env.globals id id ty (set_default_val ty)
 			| Graph -> update_graph_table env.globals id (set_default_val ty)
 			| List(t) -> update_list_table env.globals id t []
@@ -435,14 +442,15 @@ let check_global env var =
 			| _ -> update_prim_table env.globals id ty (set_default_val ty)) in
 			let new_env = {env with globals = new_table} in 
 			(SVar(ty, id), new_env)
-		| Var_Decl_Assign(id, ty, e) -> let t_ex = check_expr env e in
+		| Var_Decl_Assign(id, ty, e) -> print_string("Checking " ^ id ^ "\n");
+			let t_ex = check_expr env e in
 			if (t_ex = ty) then
 				let new_table = (match ty with 
 				Node | Rel-> update_node_or_rel_table env env.globals id id ty e
 				| Graph -> update_graph_table env.globals id e
 				| List(t) -> update_list_table env.globals id t []
 				| Void -> raise(Error("Can't declare void"))
-				| _ -> update_prim_table env.globals id ty e) in 
+				| _ -> update_prim_table env.globals id ty e) in 	
 				let new_env = {env with globals = new_table} in 
 				(SVar_Decl_Assign(id, ty, get_sexpr env e), new_env)
 			else 
@@ -453,6 +461,7 @@ let check_global env var =
 			else
 				raise(Error("Type mismatch in assignment!"))
 		| Constructor(ty, id, l) -> 
+			print_string("Constructor " ^ id ^ " being created\n" );
 			let list_to_check = (match ty with
 				Node -> env.node_types
 				| Rel -> env.rel_types
@@ -485,6 +494,6 @@ let rec check_globals_and_update_env env vars checked_vars =
 let run_program program = 
 	let (vars, funcs) = program in
 	let env = beginning_environment in
-	let (checked_globals, new_env) = check_globals_and_update_env env vars [] in
+	let (checked_globals, new_env) = check_globals_and_update_env env (List.rev vars) [] in
     let checked_functions = check_functions new_env funcs [] in
 	SProg(checked_globals, checked_functions)
