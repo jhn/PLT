@@ -1,16 +1,16 @@
 fn foo (c: Int) -> Int {
-	;Do something;
-	return c+5
+	;;Do something;;
+	return c+5;
 
 }
 
 fn bar (a: Int) -> Int {
-	b: Int = a
-	return foo(b)
+	b: Int = a;
+	return foo(b);
 }
 
 fn main () -> Void {
-	a: Int = bar(61)
-	print(a)
+	a: Int = bar(61);
+	print(a);
 	
 }

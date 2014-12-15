@@ -1,7 +1,7 @@
 fn main() -> Void {
-	a: Int = 66
-	b: Int = 123456
-	print(a)
-	print(b)
+	a: Int = 66;
+	b: Int = 123456;
+	print(a);
+	print(b);
 	
 }

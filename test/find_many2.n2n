@@ -1,18 +1,18 @@
 fn main() -> Void {
 
-	actor: Node = { name: String, age: Int }
-	Keanu: Node = actor["Keanu", 35]
-	Leo: Node = actor["Leo", 20]
+	actor: Node = { name: String, age: Int };
+	Keanu: Node = actor["Keanu", 35];
+	Leo: Node = actor["Leo", 20];
 
-	actedIn: Rel = { role: String }
-	neo: Rel = actedIn["Neo"]
-	jordan: Rel = actedIn["Jordan"]
-	nelson: Rel = acted_in["Nelson"]
+	actedIn: Rel = { role: String };
+	neo: Rel = actedIn["Neo"];
+	jordan: Rel = actedIn["Jordan"];
+	nelson: Rel = acted_in["Nelson"];
 
-	movie: Node = { title: String, year: Int }
-	matrix: Node = movie["Matrix", 1999]
-	wolf: Node = movie["Wolf", 1994]
-	sweet_nov: Node = movie["Sweet November", 2000]
+	movie: Node = { title: String, year: Int };
+	matrix: Node = movie["Matrix", 1999];
+	wolf: Node = movie["Wolf", 1994];
+	sweet_nov: Node = movie["Sweet November", 2000];
 
 	Cast: Graph = <
 		Keanu neo matrix,
@@ -20,9 +20,9 @@ fn main() -> Void {
 		Keanu nelson sweet_nov
 	>
 
-	point_to: List<Node> 
+	point_to: List<Node>;
 	point_to = Cast.find_many(Keanu, neo)
 	
-	print(point_to)
+	print(point_to);
 
 }

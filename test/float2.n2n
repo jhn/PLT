@@ -1,4 +1,4 @@
 fn main () -> Void {
-	print(8.0/6.0)
+	print(8.0/6.0);
 	
 }
