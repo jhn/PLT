@@ -1,4 +1,4 @@
-OBJS = ast.cmo parser.cmo scanner.cmo semantic_check.cmo n2n.cmo 
+OBJS = ast.cmo parser.cmo scanner.cmo semantic_check.cmo code_gen.cmo n2n.cmo 
 
 n2n : $(OBJS)
 	ocamlc -o n2n -g unix.cma $(OBJS)
