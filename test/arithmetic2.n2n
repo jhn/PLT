@@ -1,6 +1,6 @@
 fn main () -> Void {
-	print(3-6)
-	print(6*3)
-	print(6/3)
-	print(15%4)
+	print(3-6);
+	print(6*3);
+	print(6/3);
+	print(15%4);
 }

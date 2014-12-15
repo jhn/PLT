@@ -1,15 +1,15 @@
-;Test the multiple declaration of a variable local scoping;
+;;Test the multiple declaration of a variable local scoping;;
 
-a: Int = 100
+a: Int = 100;
 
 fn main () -> Void {
-	print(a)
-	a = 300
-	print(a)
-	a: Int = 1  ;Not sure what happens when declared again;
-	print(a)
+	print(a);
+	a = 300;
+	print(a);
+	a: Int = 1;  ;;Not sure what happens when declared again;;
+	print(a);
 
-	b: Int = 200
-	print(b)
+	b: Int = 200;
+	print(b);
 
 }

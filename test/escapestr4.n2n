@@ -1,5 +1,5 @@
 fn  main() -> Void {
-	a: String = "a\""
-	print(a)
+	a: String = "a\"";
+	print(a);
 
 }
