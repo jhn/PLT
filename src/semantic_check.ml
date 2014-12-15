@@ -70,7 +70,7 @@ let rec check_expr env expr =
 	| Complex(c) -> (match c with 
 		Graph_Literal(nrn_list) -> check_nrn_list env nrn_list
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list)
-	| Id(v) -> print_string(v ^ " id called\n");
+	| Id(v) -> print_string("check_expr: " ^ v ^ " id called\n");
 		(try get_type_from_id env.locals v with 
 		Not_found -> try get_type_from_id env.globals v with
 		Not_found -> raise(Error("Id does not appear in program")))
@@ -146,11 +146,11 @@ let rec check_expr env expr =
 		Find_Many(id,e1) -> 
 			if List.exists (fun (gid, _) -> gid = id) env.locals.graphs then Graph
 			else if List.exists (fun (gid,_) -> gid = id) env.globals.graphs then Graph
-			else raise(Error("Could not find List or Graph ID to run this function on"))
+			else raise(Error("Could not find List or Graph ID: " ^ id ^ " to run find_many on"))
 		| Neighbors_Func(id, e1) -> 
 			if List.exists (fun (gid, _) -> gid = id) env.locals.graphs then Graph
 			else if List.exists (fun (gid,_) -> gid = id) env.globals.graphs then Graph
-			else raise(Error("Could not find List or Graph ID to run this function on"))
+			else raise(Error("Could not find List or Graph ID: " ^ id ^ " to run neighbors on"))
 		| Map(id,e2) -> 
 			if List.exists (fun (gid,_) -> gid=id) env.locals.graphs then Graph
 			else if List.exists (fun (lid,_,_) -> lid=id) env.locals.lists then
@@ -196,7 +196,7 @@ and check_node_or_rel_literal env id lit_list =
 and check_graph_ID env id = 
 	if List.exists (fun (gid,_) -> gid=id) env.locals.graphs then Graph
 	else if List.exists (fun (gid, _) -> gid=id) env.globals.graphs then Graph
-	else raise(Error("Graph id doesn't exist"))
+	else raise(Error("Graph id (" ^id^") doesn't exist"))
 
 and check_graph_type env gt = 
 	let t = (match gt with
@@ -400,8 +400,10 @@ let update_node_or_rel_table env var_table id idt ty ex =
 			Complex(Graph_Element(s, ll)) -> ll
 			| _ -> raise(Error("Just cry. Stop what you're doing and cry"))) and
 		forml =(match ty with
-			Node -> let (_, fl) = List.find (fun (fid, _) -> fid=idt) env.node_types in fl 
-			| Rel -> let (_, fl) = List.find (fun (fid, _) -> fid=idt) env.rel_types in fl
+			Node -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
+							fid=idt) env.node_types in fl 
+			| Rel -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
+							fid=idt) env.rel_types in fl
 			| _ -> raise(Error("Wow. Do you even go here?"))) in
 		let tl = gen_tuple_list forml l [] in 
 		(match ty with 
@@ -433,7 +435,7 @@ let update_list_table var_table id ty v =
 let check_global env var = 
 	let (checked_global, up_env) = 
 		(match var with
-		Var(ty, id) -> print_string("Checking " ^ id ^ "\n");
+		Var(ty, id) -> print_string("Var: Checking " ^ id ^ "\n");
 			let new_table = (match ty with
 			Node | Rel-> update_node_or_rel_table env env.globals id id ty (set_default_val ty)
 			| Graph -> update_graph_table env.globals id (set_default_val ty)
@@ -442,11 +444,13 @@ let check_global env var =
 			| _ -> update_prim_table env.globals id ty (set_default_val ty)) in
 			let new_env = {env with globals = new_table} in 
 			(SVar(ty, id), new_env)
-		| Var_Decl_Assign(id, ty, e) -> print_string("Checking " ^ id ^ "\n");
+		| Var_Decl_Assign(id, ty, e) -> print_string("Var_Decl_Assign: Checking " ^ id ^ "\n");
 			let t_ex = check_expr env e in
 			if (t_ex = ty) then
 				let new_table = (match ty with 
-				Node | Rel-> update_node_or_rel_table env env.globals id id ty e
+				Node | Rel-> let idt = (match e with
+					Complex(Graph_Element(s, _)) -> s
+					| _ -> raise(Error("Trying to assign non Node or Rel to non Node or Rel"))) in  update_node_or_rel_table env env.globals id idt ty e
 				| Graph -> update_graph_table env.globals id e
 				| List(t) -> update_list_table env.globals id t []
 				| Void -> raise(Error("Can't declare void"))
