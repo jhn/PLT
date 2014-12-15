@@ -135,7 +135,7 @@ literal_opt:
   | literal_list  { List.rev $1 }
 
 literal_list:
-  | literal                      { [] }
+  | literal                      { [$1] }
   | literal_list COMMA literal   { $3 :: $1 }
 
 actuals_opt:
