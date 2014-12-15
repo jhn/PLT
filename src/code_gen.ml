@@ -18,7 +18,7 @@ let imports =
   | Rel -> "Relationship"
   | Node -> "Node"
   | Graph -> "Graph"
-  | List (t) -> "List<" ^ gen_var_type t ^ ">"
+  | List(ty) -> "List<" ^ gen_var_type ty ^ ">"
 
 let gen_binop = function
   | Add     -> "+"
@@ -58,7 +58,8 @@ let rec gen_expr expr = match expr with
   | SUnop(u, e, t) -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
   | SBinop(e1, op, e2, t) -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
   | SAccess(e1,e2, t) -> e1 ^ "." ^ e2
-  | SCall(id, e1, t) -> id ^ "(" ^ gen_expr_list e1 ^ ");"
+  | SCall(id, e1, t) -> if(id="print") then gen_print e1
+                        else id ^ "(" ^ gen_expr_list e1 ^ ");"
   | SFunc(fname, t) -> gen_sfunc fname 
   | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_nrn_tup nrn ^ ");"
   | SGeop(e1, geop, f1, t) -> gen_expr e1 ^ gen_graph_elem_op geop ^ gen_formal f1 ^ ");"
@@ -75,6 +76,12 @@ and gen_formal_list fl = match fl with
   | [] -> ""
   | head::[] -> gen_formal head
   | head::tail -> gen_formal head ^ ", " ^ gen_formal_list tail
+
+and gen_print p = match p with
+  [] -> ""
+  | head::[] -> "System.out.println(" ^ gen_expr head ^ ");\n"
+  | head::tail -> "System.out.print(" ^ gen_expr head ^ ");\n" ^ gen_print tail
+
 
 and gen_sgraph_type gt = match gt with 
   | SGraph_Id(id) -> id
@@ -137,10 +144,14 @@ and gen_var_dec dec = match dec with
   | SConstructor(ty,id,formals) -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_formal_list formals ^ ");"
   | SVar_Decl_Assign(id,ty,e) -> (match ty with 
      Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
-   | Rel | Node -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");" 
+   | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");" 
    | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));")
-    (* or List *)
   | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2 
+
+and gen_var_dec_list var_dec_list = match var_dec_list with
+  | [] -> ""
+  | head::[] -> gen_var_dec head
+  | head::tail -> gen_var_dec head ^ gen_var_dec_list tail 
 
 (* TODO: These dont currently exist in java backend *)
 and gen_graph_op grop = match grop with 
@@ -152,21 +163,20 @@ and gen_graph_elem_op geop = match geop with
   | Data_Remove -> ".remove("
 
 and gen_func_dec func =
-"public static " ^ gen_var_type func.sreturn_type ^ " " ^ func.sfname ^
-"(" ^ gen_formal_list func.sformals ^ ") {\n" ^ gen_sstmt_list func.sbody ^ "}\n"
+  if(func.sfname = "main") then "public static void main(String[] args) {\n\t " ^ gen_sstmt_list func.sbody ^ "}\n"
+  else "public static " ^ gen_var_type func.sreturn_type ^ " " ^ func.sfname ^
+  "(" ^ gen_formal_list func.sformals ^ ") {\n" ^ gen_sstmt_list func.sbody ^ "}\n"
 
 and gen_func_dec_list fl = match fl with 
   | [] -> ""
   | head::[] -> gen_func_dec head
   | head::tail -> gen_func_dec head ^ gen_func_dec_list tail
 
-(*
 let prog_gen = function
   Prog(checked_globals, checked_functions) ->
     imports ^
     "public class Main {" ^
-    gen_checked_globals checked_globals ^
-    gen_funcs checked_functions ^
-    "public static void main(String[] args) {\n\t" ^
-    gen_main_method main^ " \n}\n}"*)
+    gen_var_dec_list checked_globals ^
+    gen_func_dec_list checked_functions ^
+    "}"
 
