@@ -231,5 +231,5 @@ let string_of_func_decl fdecl=
   ^ ") -> " ^ (string_of_n2n_type fdecl.return_type) ^ "{" ^ String.concat "\n" (List.map string_of_statement fdecl.body) ^ "}"
 
 let string_of_program (vars, funcs) =
-  String.concat "\n" (List.map string_of_var_decl vars) ^ (if (List.length vars) > 0 then "\n" else "") ^
-  String.concat "\n" (List.map string_of_func_decl funcs)
+  String.concat "\n" (List.map string_of_var_decl (List.rev vars)) ^ (if (List.length vars) > 0 then "\n" else "") ^
+  String.concat "\n" (List.map string_of_func_decl (List.rev funcs))
