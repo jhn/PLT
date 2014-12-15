@@ -4,7 +4,7 @@ type action = Ast | Symtab | SAnalysis | Compile | Binary | Help
 
 let usage (name:string) =
   "usage:\n" ^ name ^ "\n" ^
-    "        -a source.n2n              (Print AST of source)\n"
+    "        -a source.ml              (Print AST of source)\n"
 
 let _ =
   let action = 
@@ -29,8 +29,8 @@ let _ =
                  in print_string listing
         | Symtab -> let listing = Ast.string_of_program program
                  in print_string listing
-        | SAnalysis -> let listing = Ast.string_of_program program
-                 in print_string listing
+        | SAnalysis -> let env = Semantic_check.run_program program in
+                    ignore env; print_string "Passed Semantic Analysis.\n"
         | Compile -> let listing = Ast.string_of_program program
                  in print_string listing
         | Binary ->  let listing = Ast.string_of_program program
