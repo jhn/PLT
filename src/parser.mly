@@ -112,8 +112,8 @@ literal:
   | BOOL_LITERAL                 { Bool_Literal($1) } /* true, false */
 
 complex_literal:
-  | ID LBRACKET literal_opt RBRACKET    { Graph_Element($1, List.rev $3) } /* actor("Keanu"), "true" */
-  | LT graph_components GT              { Graph_Literal(List.rev $2) } /* < graph_literals > */
+  | ID LBRACKET literal_opt RBRACKET    { Graph_Element($1, $3) } /* actor("Keanu"), "true" */
+  | LT graph_components GT              { Graph_Literal($2) } /* < graph_literals > */
 
 graph_component:
   graph_type graph_type graph_type       { Node_Rel_Node_Tup($1, $2, $3) } /* :: or commas? */
