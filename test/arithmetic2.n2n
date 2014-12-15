@@ -1,6 +1,6 @@
-fn arithmetic2 () -> Void {
-	print(3-6)
-	print(6*3)
-	print(6/3)
-	print(15%4)
+fn main () -> Void {
+	print(3-6);
+	print(6*3);
+	print(6/3);
+	print(15%4);
 }

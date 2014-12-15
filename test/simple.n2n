@@ -1,0 +1,10 @@
+a:Int = 5;
+b:String = "test";
+c:Node = {name:String, age:Int};
+fn t()->Void {}
+;;comment;;
+
+a:Int = 5;
+fn t(d:String)->Void {
+	a:Int = 5;
+}

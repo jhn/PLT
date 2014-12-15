@@ -1,8 +1,8 @@
-fn find_many1() -> Void {
+fn main() -> Void {
 
-	actor: Node = { name: String, age: Int }
-	Keanu: Node = actor["Keanu", 35]
-	Leo: Node = actor["Leo", 20]
+	actor: Node = { name: String, age: Int };
+	Keanu: Node = actor["Keanu", 35];
+	Leo: Node = actor["Leo", 20];
 
 	actedIn: Rel = { role: String }
 	neo: Rel = actedIn["Neo"]
@@ -12,13 +12,14 @@ fn find_many1() -> Void {
 	matrix: Node = movie["Matrix", 1999]
 	wolf: Node = movie["Wolf", 1994]
 
-	Cast: Graph = (
+	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf
-	)
+	>
 
-	missing_rel: List<Rel> = Cast.find_many(Keanu, matrix)
+	missing_rel: List<Rel>;
+	missing_rel = Cast.find_many(Keanu, matrix)
 
-	print(missing_rel)
+	print(missing_rel);
 
 }

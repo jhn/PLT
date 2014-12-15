@@ -1,6 +1,6 @@
-fn relAccess() -> Void {
-	actedIn: Rel = { role: String }
-	neo: Rel = actedIn["Neo"]
-	print(neo.role)
+fn main() -> Void {
+	actedIn: Rel = { role: String };
+	neo: Rel = actedIn["Neo"];
+	print(neo.role);
 	
 }

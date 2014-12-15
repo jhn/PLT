@@ -1,6 +1,6 @@
-fn rel() -> Void {
-	actedIn: Rel = { role: String }
-	neo: Rel = actedIn["Neo"]
-	print(neo)
+fn main() -> Void {
+	actedIn: Rel = { role: String };
+	neo: Rel = actedIn["Neo"];
+	print(neo);
 	
 }
