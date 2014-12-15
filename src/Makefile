@@ -1,11 +1,7 @@
-OBJS = ast.cmo parser.cmo scanner.cmo n2n.cmo 
+OBJS = ast.cmo parser.cmo scanner.cmo semantic_check.cmo n2n.cmo 
 
 n2n : $(OBJS)
 	ocamlc -o n2n -g unix.cma $(OBJS)
-
-.PHONY : test
-test : n2n testall.sh
-	./testall.sh
 
 scanner.ml : scanner.mll
 	ocamllex scanner.mll
@@ -19,7 +15,12 @@ parser.ml parser.mli : parser.mly
 %.cmi : %.mli
 	ocamlc -c -g $<
 
-.PHONY : clean
+test : n2n testall.sh
+	./testall.sh
+
+.PHONY : clean all test
+all: clean n2n
+
 clean :
 	rm -f compiler parser.ml parser.mli scanner.ml *.cmo *.cmi scanner.cmx scanner.o
 
