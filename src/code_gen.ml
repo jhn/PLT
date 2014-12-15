@@ -126,7 +126,7 @@ and gen_map smap = match smap with
 and gen_sstmt stmt = match stmt with
   SBlock(stmt_list) -> "{\n\t" ^ gen_sstmt_list stmt_list ^ "\n}\n"
   | SExpr(expr) -> gen_expr expr ^ ";\n"
-  | SReturn(expr) -> "return " ^ gen_expr expr ^ ";\n\t"
+  | SReturn(expr) -> "return " ^ gen_expr expr ^ ";\n"
   | SIf(expr,s1,s2) -> "if(" ^ gen_expr expr ^ ") {\n\t" ^ gen_sstmt s1 ^
     "\n\telse " ^ gen_sstmt s2
   | SVar_Decl(vdec) -> gen_var_dec vdec ^";\n\t"
