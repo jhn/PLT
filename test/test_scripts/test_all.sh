@@ -1,6 +1,6 @@
 #!/bin/bash
 #script used for reg testing
-COMPILER="../compiler"
+COMPILER="../src/n2n"
 COMPFILE="temp_test"
 
 for TESTFILE in ../test/*.n2n;
@@ -12,7 +12,7 @@ do
 	"$COMPILER" < "$TESTFILE"
 	javac output.java -o "$COMPFILE"
 	./"$COMPFILE" > "$OUTFILENAME"
-	if (diff "$OUTFILENAME" "$TESTFILENAME")
+	if (diff "$OUTFILENAME" "$TESTFILENAME") 
 	then
 		echo "		OK"
 	else
