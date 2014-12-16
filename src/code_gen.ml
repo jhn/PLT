@@ -145,7 +145,8 @@ and gen_var_dec dec = match dec with
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
      Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
    | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");"
-   | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));")
+   | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));"
+   | Void -> "void")(* impossible case *)
   | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2
 
 and gen_var_dec_list var_dec_list = match var_dec_list with
