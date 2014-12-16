@@ -175,7 +175,7 @@ and gen_func_dec_list fl = match fl with
 let prog_gen = function
   SProg(checked_globals, checked_functions) ->
     imports ^
-    "public class Main {" ^
+    "public class Main {\n" ^
     gen_var_dec_list checked_globals ^
     gen_func_dec_list checked_functions ^
     "}"
