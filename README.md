@@ -8,9 +8,9 @@
 * Verification & Validation: Jialun Liu (jl4347)
 
 ## Motivation
-In today’s world there is an escalating interest in relationships. Be it the connection of people on a social networking platform, of family members in a family tree, of variables in a mathematical equation, or the connection of trains in a city subway system—we are constantly trying to find networks of people and things and analyze how they interrelate. Most often, relationships are implemented in a programming setting via graph data structures containing sets of nodes and edges that define connections between the nodes. In standard programming languages, however, graphs can be tedious to create and manipulate, requiring the creation of separate classes for nodes and edges, and burdening the programmer to keep track of their graphs manually. Finding and analyzing relationships between nodes of a network can be challenging. We therefore created n2n, a language that provides high-level abstraction to create, maintain, and manipulate graphs, with a specific focus on the relationship between the nodes.  
+In today’s world there is an escalating interest in relationships. Be it the connection of people on a social networking platform, of family members in a family tree, of variables in a mathematical equation, or the connection of trains in a city subway system—we are constantly trying to find networks of people and things and analyze how they interrelate. Most often, relationships are implemented in a programming setting via graph data structures containing sets of nodes and edges that define connections between the nodes. In standard programming languages, however, graphs can be tedious to create and manipulate, requiring the creation of separate classes for nodes and edges, and burdening the programmer to keep track of their graphs manually. Finding and analyzing relationships between nodes of a network can be challenging. We therefore created n2n, a language that provides high-level abstraction to create, maintain, and manipulate graphs, with a specific focus on the relationship between the nodes.
 
-n2n has nodes, edges and graphs as built-in data types to assist a programmer in the simplistic construction and maintenance of graphs. When one node is connected to another, the relationship between them is named and specific to those nodes. The graphs can be bidirectional in that there can be two different relationships between two nodes depending on the direction of the relationship. For example, node A has the relationship of Parent to node B, while node B has the relationship of Child with node A. The storage and maintenance of the connections and node data occurs under the hood, without the programmer’s need to create a data structure with which to implement the graph. This alleviates the difficulties of developing networks of nodes and eases the creation of algorithms to manipulate them. 
+n2n has nodes, edges and graphs as built-in data types to assist a programmer in the simplistic construction and maintenance of graphs. When one node is connected to another, the relationship between them is named and specific to those nodes. The graphs can be bidirectional in that there can be two different relationships between two nodes depending on the direction of the relationship. For example, node A has the relationship of Parent to node B, while node B has the relationship of Child with node A. The storage and maintenance of the connections and node data occurs under the hood, without the programmer’s need to create a data structure with which to implement the graph. This alleviates the difficulties of developing networks of nodes and eases the creation of algorithms to manipulate them.
 
 
 ## Syntax
@@ -61,7 +61,7 @@ n2n has nodes, edges and graphs as built-in data types to assist a programmer in
 | . | Used to access a field in a “grouping”.
 
 #### Built-in functions
-We have a few built-in functions as part of the standard library of our language. 
+We have a few built-in functions as part of the standard library of our language.
 
 node()
 Takes an argument that is one of the basic data types or a grouping and spits back a node containing that data.
@@ -103,45 +103,45 @@ Where A and B are connected by an edge with weight 4. If A or B are not nodes al
 This creates a graph with 4 empty nodes, A, B, C, and D. Edges will be created from A to B, B to C, C to A, and D to A, with relationships defined by the integers 4, 5, 3, and 4, respectively.
 
 #### Comments
-Our language only supports multi-line comments. Use ; to start and ; to end. 
+Our language only supports multi-line comments. Use ; to start and ; to end.
 
 ### Sample Code
 
     ; declare some data ;
-    data SwimmingPool {            
+    data SwimmingPool {
       let length: Int
       let size: Double
     }
-    
+
     ; declaring a relationship with one attribute ;
-    data Connected [                     
-      let isConnected: Bool                        
-    ]  
-                                   
-    ; another relationship;
-    data sortaConneted [	     
-      let isSortaConnected: Bool	     
+    data Connected [
+      let isConnected: Bool
     ]
-    
+
+    ; another relationship;
+    data sortaConneted [
+      let isSortaConnected: Bool
+    ]
+
     ; declaring a Swimming Pool Graph that contains SwimmingPool nodes related through some relationships;
-    let spg: Graph = { p1 Connected p2                           
+    let spg: Graph = { p1 Connected p2
                                    p1 Connected p4
     		       p1 sortaConnected p3
                                    p2 Connected p3
                                    p3 sortaConnected p4 }
-    
+
     ; filter direct neighbors by relationship, nodes connected to node p1 either directly or indirectly would be returned;
-    let connected-neighbors: List = neighbors(p1 Connected)  
-             
+    let connected-neighbors: List = neighbors(p1 Connected)
+
     ; get direct neighbors ;
-    let p1Neighbors: List = neighbors(p1)        
-    
+    let p1Neighbors: List = neighbors(p1)
+
     ; inserting a node into the ‘spg’ graph ;
     ins(spg {p6 Connected p7})
-    
+
     ; This removes the edge from A to D, and D as well if there are no more relationships associated with it (pointing to/coming from) ;
     rem(spg {p6 Connected p7})
-    
+
     ; This removes the Node D and all edges associated with it (pointing to/coming from) ;
     rem(spg D)
 
@@ -150,17 +150,17 @@ Our language only supports multi-line comments. Use ; to start and ; to end.
 
 #### n2n
 
-    addField(Node, visited: Boolean) ; Node now has a boolean field called visited; 
-    
+    addField(Node, visited: Boolean) ; Node now has a boolean field called visited;
+
     fn visited(n: Node) -> void { n.visited = true }
-    
+
     fn visitAllNodes(g: Graph, n: Node) -> void {
-    	if (! n.visited) { 
+    	if (! n.visited) {
             visited(n)
             each(neighbors(n), { node in visitAllNodes(g, node) })
         }
     }
-    
+
     ; Dollar sign indicates start of main method ;
     $
     	let node1: Node = node(Visited)

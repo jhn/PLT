@@ -1,9 +1,9 @@
 actedIn: Rel = { role: String };
 
 fn main() -> Void {
-	
+
 	neo: Rel = actedIn["Neo"];
 	print(neo);
 	print("\n");
-	
+
 }

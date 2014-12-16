@@ -23,7 +23,7 @@ fn main() -> Void {
 
 	point_to: List<Node>;
 	point_to = Cast.find_many(Keanu, neo);
-	
+
 	print(point_to);
 
 }

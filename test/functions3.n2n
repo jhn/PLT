@@ -12,5 +12,5 @@ fn bar (a: Int) -> Int {
 fn main () -> Void {
 	a: Int = bar(61);
 	print(a);
-	
+
 }

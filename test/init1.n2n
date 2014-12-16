@@ -5,5 +5,5 @@ fn main() -> Void {
 	print("\n");
 	print(b);
 	print("\n");
-	
+
 }

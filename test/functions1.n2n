@@ -6,5 +6,5 @@ fn foo () -> Void {
 fn main () -> Void {
 	foo();
 	print("\n");
-	
+
 }

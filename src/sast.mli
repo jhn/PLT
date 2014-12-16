@@ -1,9 +1,9 @@
 open Ast
 
-type sformal = 
+type sformal =
   SFormal of Ast.n2n_type * string
 
-type svar_decl = 
+type svar_decl =
     SVar of Ast.n2n_type * string
   | SConstructor of Ast.n2n_type * string * sformal list
   | SVar_Decl_Assign of string * Ast.n2n_type * sexpr

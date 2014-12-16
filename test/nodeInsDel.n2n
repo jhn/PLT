@@ -13,5 +13,5 @@ fn main() -> Void {
 	Keanu [-] visited: Bool;
 	print(Keanu);
 	print("\n");
-	
+
 }

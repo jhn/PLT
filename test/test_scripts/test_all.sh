@@ -12,7 +12,7 @@ do
 	"$COMPILER" < "$TESTFILE"
 	javac output.java -o "$COMPFILE"
 	./"$COMPFILE" > "$OUTFILENAME"
-	if (diff "$OUTFILENAME" "$TESTFILENAME") 
+	if (diff "$OUTFILENAME" "$TESTFILENAME")
 	then
 		echo "		OK"
 	else

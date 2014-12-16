@@ -23,7 +23,7 @@ fn main() -> Void {
 
 	point_from: List<Node>;
 	point_from = Cast.find_many(neo, matrix);
-	
+
 	print(point_from);
 	print("\n");
 
