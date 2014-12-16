@@ -96,8 +96,8 @@ let check_for_var_existence var_table id =
 		|| List.exists(fun (lid,_,_) -> lid=id) var_table.lists)
 
 let check_if_id_is_node env id =
-	if List.exists (fun (nid, _, _ ) -> print_string("Looking for: "^id^ " but finding " ^nid^ ".\n"); nid = id) env.locals.nodes then true
-	else if List.exists (fun (nid, _, _) -> print_string("Looking for: "^id^ " but finding " ^nid^ ".\n"); nid = id) env.globals.nodes then true
+	if List.exists (fun (nid, _, _ ) -> prerr_string("Looking for: "^id^ " but finding " ^nid^ ".\n"); nid = id) env.locals.nodes then true
+	else if List.exists (fun (nid, _, _) -> prerr_string("Looking for: "^id^ " but finding " ^nid^ ".\n"); nid = id) env.globals.nodes then true
 	else false
 
 let set_default_val ty =
@@ -152,9 +152,9 @@ let update_node_or_rel_table env var_table id idt ty ex =
 			Complex(Graph_Element(s, ll)) -> ll
 			| _ -> raise(Error("Just cry. Stop what you're doing and cry"))) and
 		forml =(match ty with
-			Node -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
+			Node -> let (_, fl) = List.find (fun (fid, _) -> prerr_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
 							fid=idt) env.node_types in fl
-			| Rel -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
+			| Rel -> let (_, fl) = List.find (fun (fid, _) -> prerr_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
 							fid=idt) env.rel_types in fl
 			| _ -> raise(Error("Wow. Do you even go here?"))) in
 		let tl = gen_tuple_list forml l [] in
@@ -191,7 +191,7 @@ let rec check_expr env expr =
 	| Complex(c) -> (match c with
 		Graph_Literal(nrn_list) -> check_nrn_list env nrn_list
 		| Graph_Element(id, lit_list) -> check_node_or_rel_literal env id lit_list)
-	| Id(v) -> print_string("check_expr: " ^ v ^ " id called\n");
+	| Id(v) -> prerr_string("check_expr: " ^ v ^ " id called\n");
 		(try get_type_from_id env.locals v with
 		Not_found -> try get_type_from_id env.globals v with
 		Not_found -> raise(Error("Id does not appear in program")))
@@ -240,7 +240,7 @@ let rec check_expr env expr =
 			| _ -> raise(Error("Can only insert or remove field of primitive type")))
 		| _ -> raise(Error("Can only insert field into a Node or Rel")))
 	| Access(idl, idr) ->
-		print_string(idl ^ "." ^ idr ^ " called\n");
+		prerr_string(idl ^ "." ^ idr ^ " called\n");
 		let t = (try get_type_from_id env.locals idl with
 		Not_found -> try get_type_from_id env.globals idl with
 		Not_found -> raise(Error("Can't find left identifier")))in
@@ -256,8 +256,8 @@ let rec check_expr env expr =
 			let (_,t,_) = try List.find (fun (id, _, _) -> id = idr) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t
 		| _ -> raise(Error("Trying to access something that is not a node or rel")))
-	| Call("print", el) -> print_string("Print function is being called\n"); List.iter(fun e -> ignore(check_expr env e) ) el; Void
-	| Call(id, el) -> let func = (try List.find (fun f -> print_string("Looking for function: " ^ id ^ " but finding function: " ^f.fname^".\n");
+	| Call("print", el) -> prerr_string("Print function is being called\n"); List.iter(fun e -> ignore(check_expr env e) ) el; Void
+	| Call(id, el) -> let func = (try List.find (fun f -> prerr_string("Looking for function: " ^ id ^ " but finding function: " ^f.fname^".\n");
 														 f.fname = id) env.functions with
 		Not_found -> raise(Error("Function definition not found"))) in
 		(try List.iter2 (fun e f -> let ty = (match f with
@@ -266,7 +266,7 @@ let rec check_expr env expr =
 										if t <> ty then raise(Error("Argument does not match expected argument type"))) el func.formals with
 		Invalid_argument s -> raise(Error("Entered the wrong number of arguments into function"))); func.return_type
 	| Func(fname) -> (match fname with
-		Find_Many(id,e1) -> print_string("Checking find_many on "^id^ ".\n");
+		Find_Many(id,e1) -> prerr_string("Checking find_many on "^id^ ".\n");
 			if List.exists (fun (gid, _) -> gid = id) env.locals.graphs then
 				let lt = check_find_many_arguments env e1 in List(lt)
 			else if List.exists (fun (gid,_) -> gid = id) env.globals.graphs then
@@ -279,11 +279,11 @@ let rec check_expr env expr =
 				if check_if_id_is_node env nid then List(Node) else raise(Error("Globals: Argument to neighbors must be a node id"))
 			else raise(Error("Could not find List or Graph ID: " ^ id ^ " to run neighbors on"))
 		| Map(id,e2) ->
-			print_string("Checking collection id: " ^ id ^ " for map\n");
+			prerr_string("Checking collection id: " ^ id ^ " for map\n");
 			let ty = try get_type_from_id env.locals id with 
 				Not_found -> try get_type_from_id env.globals id with
 				Not_found -> raise(Error("Could not find List ID: " ^ id ^ " to run map on")) in 
-				print_string(id ^ " is a " ^ print_type ty ^ ".\n");
+				prerr_string(id ^ " is a " ^ print_type ty ^ ".\n");
 				match ty with
 				List(t) -> List(t)
 				| Graph -> Graph
@@ -313,15 +313,15 @@ and check_map_func env ty map_func =
 
 and check_find_many_arguments env e =
 	match e with
-	Find_Many_Node(complex) -> print_string("Find_many is the general type\n"); (match complex with
+	Find_Many_Node(complex) -> prerr_string("Find_many is the general type\n"); (match complex with
 		Graph_Element(s, ll) -> let t = check_node_or_rel_literal_matching env s ll in
 			if t = Node then t else raise(Error("Find_many_node does not have node as argument"))
 		| Graph_Literal(gcl) -> raise(Error("Find_many_node does not have node as argument!")))
 	| Find_Many_Gen(gt1, gt2) -> let t1 = check_graph_type env gt1 and t2 = check_graph_type env gt2 in
 		(match (t1, t2) with
-		(Node, Rel) -> print_string("Find_many is returning a node list\n"); Node
-		| (Rel, Node) -> print_string("Find_many is returning a node list\n"); Node
-		| (Node, Node) -> print_string("Find_many is returning a rel list\n"); Rel
+		(Node, Rel) -> prerr_string("Find_many is returning a node list\n"); Node
+		| (Rel, Node) -> prerr_string("Find_many is returning a node list\n"); Node
+		| (Node, Node) -> prerr_string("Find_many is returning a rel list\n"); Rel
 		| (Rel, Rel) -> raise(Error("Cannot have two rel arguments in Find_Many"))
 		| (_,_) -> raise(Error("Must have (Node, Node), (Rel, Node), or (Node, Rel) as arguments to find_many")))
 
@@ -499,7 +499,7 @@ and resolve_envs old_env new_env =
 	{new_env with locals = {prims = new_prims; nodes = new_nodes; rels = new_rels; graphs = new_graphs; lists = new_lists}}
 
 and check_stmt env stmt =
-	print_string("Calling check_stmt\n"); match stmt with
+	prerr_string("Calling check_stmt\n"); match stmt with
 	| Block(stmt_list) ->
 		let new_env = env in
 		let (checked_stmts, up_env) = List.fold_left (fun (l, e) s -> let (checked_statment, up_e) = check_stmt e s in
@@ -508,11 +508,6 @@ and check_stmt env stmt =
 		(SBlock(checked_stmts), resolved_env)
 
 	| Expr(e) -> 
-		let new_env = (match e with
-			Geop(e geop formal) -> 
-				(match geop with
-					Data_Insert -> let id = get_id_from_expr e in
-					() )
 		(SExpr(get_sexpr env e),env)
 
 	| Return(e) ->
@@ -531,11 +526,11 @@ and check_stmt env stmt =
 
 	| Var_Decl(decl) -> let (checked_stmt, up_env) =
 		(match decl with
-		Var(ty, id) -> print_string("Local_Var: Checking " ^ id ^ "\n");
+		Var(ty, id) -> prerr_string("Local_Var: Checking " ^ id ^ "\n");
 			let new_table = (match ty with
 			Node | Rel-> update_node_or_rel_table env env.locals id id ty (set_default_val ty)
 			| Graph -> update_graph_table env.locals id (set_default_val ty)
-			| List(t) -> print_string("Var: Id: " ^ id ^ " is a List\n");
+			| List(t) -> prerr_string("Var: Id: " ^ id ^ " is a List\n");
 				(match t with
 			 	List(ty) -> raise(Error("Can't have List of Lists! THAT'S INSANE"))
 			 	| _ -> update_list_table env.locals id t [])
@@ -543,7 +538,7 @@ and check_stmt env stmt =
 			| _ -> update_prim_table env.locals id ty (set_default_val ty)) in
 			let new_env = {env with locals = new_table} in
 			(SVar(ty, id), new_env)
-		| Var_Decl_Assign(id, ty, e) -> print_string("Var_Decl_Assign: Checking " ^ id ^ "\n");
+		| Var_Decl_Assign(id, ty, e) -> prerr_string("Var_Decl_Assign: Checking " ^ id ^ "\n");
 			let t_ex = check_expr env e in
 			if (t_ex = ty) then
 				let new_table = (match ty with
@@ -559,7 +554,7 @@ and check_stmt env stmt =
 			else
 				raise(Error("Type mismatch in local variable assignment"))
 		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2 in
-			print_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
+			prerr_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
 			if (tl = tr) then
 				(SAccess_Assign(get_sexpr env e1, get_sexpr env e2), env)
 			else
@@ -574,7 +569,7 @@ and get_checked_statements env stmts checked_statments =
 	| [] -> (List.rev checked_statments, env)
 
 let check_function env func =
-	print_string("Starting to check function: " ^ func.fname ^ ".\n");
+	prerr_string("Starting to check function: " ^ func.fname ^ ".\n");
 	let (sfstatements, up_env) = get_checked_statements (get_new_env env func) func.body [] in
 	({sfname = func.fname; sformals = get_sformal_list func.formals []; sbody = sfstatements; sreturn_type = func.return_type}, {up_env with locals = env.locals})
 
@@ -590,7 +585,7 @@ let rec check_functions env funcs checked_funcs =
 let check_global env var =
 	let (checked_global, up_env) =
 		(match var with
-		Var(ty, id) -> print_string("Global_Var: Checking " ^ id ^ "\n");
+		Var(ty, id) -> prerr_string("Global_Var: Checking " ^ id ^ "\n");
 			let new_table = (match ty with
 			Node | Rel-> update_node_or_rel_table env env.globals id id ty (set_default_val ty)
 			| Graph -> update_graph_table env.globals id (set_default_val ty)
@@ -599,7 +594,7 @@ let check_global env var =
 			| _ -> update_prim_table env.globals id ty (set_default_val ty)) in
 			let new_env = {env with globals = new_table} in
 			(SVar(ty, id), new_env)
-		| Var_Decl_Assign(id, ty, e) -> print_string("Var_Decl_Assign: Checking " ^ id ^ "\n");
+		| Var_Decl_Assign(id, ty, e) -> prerr_string("Var_Decl_Assign: Checking " ^ id ^ "\n");
 			let t_ex = check_expr env e in
 			if (t_ex = ty) then
 				let new_table = (match ty with
@@ -620,7 +615,7 @@ let check_global env var =
 			else
 				raise(Error("Type mismatch in assignment!"))
 		| Constructor(ty, id, l) ->
-			print_string("Constructor " ^ id ^ " being created\n" );
+			prerr_string("Constructor " ^ id ^ " being created\n" );
 			let list_to_check = (match ty with
 				Node -> env.node_types
 				| Rel -> env.rel_types
