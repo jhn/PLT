@@ -27,16 +27,16 @@ let _ =
       let input = open_in Sys.argv.(2) in
       let lexbuf = Lexing.from_channel input in
 
-      let program = try
+      let program = 
           Parser.program Scanner.token lexbuf
-    with exn ->
+    (*with exn ->
       begin
         let curr = lexbuf.Lexing.lex_curr_p in
         let line = curr.Lexing.pos_lnum in
         let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
         let tok = Lexing.lexeme lexbuf in
         raise (SyntaxError (line, cnum, tok))
-      end
+      end*)
       in
       (match action with
           Ast -> let listing = Ast.string_of_program program

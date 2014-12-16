@@ -21,11 +21,11 @@ fn main() -> Void {
 	print(Cast);
 	print("\n");
 
-	Cast ^+ (Keanu acted_in["Nelson"] movie["Sweet November", 2000]);
+	Cast ^+ (Keanu actedIn["Nelson"] movie["Sweet November", 2000]);
 	print(Cast);
 	print("\n");
 
-	Cast ^- (Keanu acted_in["Nelson"] movie["Sweet November", 2000]);
+	Cast ^- (Keanu actedIn["Nelson"] movie["Sweet November", 2000]);
 	print(Cast);
 	print("\n");
 

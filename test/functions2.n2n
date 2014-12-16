@@ -1,4 +1,4 @@
-fn foo () -> Void {
+fn foo () -> Int {
 	;;Do something;;
 	return 5;
 

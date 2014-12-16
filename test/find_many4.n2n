@@ -9,7 +9,7 @@ fn main() -> Void {
 
 	neo: Rel = actedIn["Neo"];
 	jordan: Rel = actedIn["Jordan"];
-	nelson: Rel = acted_in["Nelson"];
+	nelson: Rel = actedIn["Nelson"];
 
 	matrix: Node = movie["Matrix", 1999];
 	wolf: Node = movie["Wolf", 1994];
@@ -22,7 +22,7 @@ fn main() -> Void {
 	>;
 
 	node_lit: List<Node>;
-	node_lit = Cast.find_many(actor["Keanu"]);
+	node_lit = Cast.find_many(actor["Keanu", _]);
 
 	print(node_lit);
 	print("\n");

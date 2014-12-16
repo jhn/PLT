@@ -26,6 +26,7 @@ and sliteral =
   | SDouble_Literal of float
   | SString_Literal of string
   | SBool_Literal of bool
+  | SAny
 
 and sbuilt_in_function_call =
   SFindMany of string * sfind_many
