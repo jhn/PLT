@@ -35,8 +35,8 @@ fn dijkstra_does_work(node:Node, graph:Graph)->Graph{
 		return graph
 	}
 	let base_distance:Int = node.distance
-	each(graph.find_many(node, distance), {neighbor_node in 
-		{ 
+	each(graph.find_many(node, distance), {neighbor_node in
+		{
 		   let possible_new_distance:Int = base_distance + dijkstra_get_min_distance(node, neighbor_node)
 		   if(possible_new_distance < node.distance){
 			node.distance = possible_new_distance
@@ -46,11 +46,11 @@ fn dijkstra_does_work(node:Node, graph:Graph)->Graph{
 	let next_node:Node = dijkstra_get_min_distance_node(graph)
 	return dijkstra_does_work(next_node, graph)
 }
-	
+
 fn dijkstra_main(node_distance_from:Node, graph:Graph)->Graph{
 	graph.each(node in dijkstra_insert_help_fields(node))
 	node.distance_to = 0;
 	return dijkstra_does_work(node_distance_from, graph)
 }
-	
-	
+
+

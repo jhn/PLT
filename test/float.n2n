@@ -1,4 +1,4 @@
 fn main () -> Void {
 	print(8/6);
-	
+
 }

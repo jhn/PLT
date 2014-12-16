@@ -1,10 +1,10 @@
-1. Arithmetic: 
+1. Arithmetic:
 	integer addition
 
-2. Arithmetic2: 
+2. Arithmetic2:
 	integer subtraction
 	integer multiplication
-	integer divsion	
+	integer divsion
 	Mod
 
 3. Comparison1:
@@ -40,7 +40,7 @@
 	Testing function calls, have a nested feature
 
 13. If:
-	Testing the functionality of "if" -- dangling "else" problem and see if the 
+	Testing the functionality of "if" -- dangling "else" problem and see if the
 	predicate can take an expression.
 
 14. Escapestr1:

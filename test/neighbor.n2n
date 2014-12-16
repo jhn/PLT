@@ -18,9 +18,9 @@ fn main() -> Void {
 		Leo jordan wolf
 	>;
 
-	Keanu_movies: List<Node>; 
+	Keanu_movies: List<Node>;
 	Keanu_movies = Cast.neighbors(Keanu);
-	
+
 	print(Keanu_movies);
 	print("\n");
 

@@ -44,7 +44,7 @@ let gen_literal lit = match lit with
   | SInt_Literal(i) -> string_of_int i
   | SDouble_Literal(d) -> string_of_float d
   | SBool_Literal(b) -> string_of_bool b
-  | SString_Literal(str) -> "\"" ^ str ^ "\"" 
+  | SString_Literal(str) -> "\"" ^ str ^ "\""
 
 let rec gen_literal_list ll = match ll with
   | [] -> ""
@@ -54,13 +54,13 @@ let rec gen_literal_list ll = match ll with
 let rec gen_expr expr = match expr with
   | SLiteral(l,t) -> gen_literal l
   | SId(v,t) -> v
-  | SComplex(c,t) -> gen_scomplex c 
+  | SComplex(c,t) -> gen_scomplex c
   | SUnop(u, e, t) -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
   | SBinop(e1, op, e2, t) -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
   | SAccess(e1,e2, t) -> e1 ^ "." ^ e2
   | SCall(id, e1, t) -> if(id="print") then gen_print e1
                         else id ^ "(" ^ gen_expr_list e1 ^ ");"
-  | SFunc(fname, t) -> gen_sfunc fname 
+  | SFunc(fname, t) -> gen_sfunc fname
   | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_nrn_tup nrn ^ ");"
   | SGeop(e1, geop, f1, t) -> gen_expr e1 ^ gen_graph_elem_op geop ^ gen_formal f1 ^ ");"
 
@@ -83,7 +83,7 @@ and gen_print p = match p with
   | head::tail -> "System.out.print(" ^ gen_expr head ^ ");\n" ^ gen_print tail
 
 
-and gen_sgraph_type gt = match gt with 
+and gen_sgraph_type gt = match gt with
   | SGraph_Id(id) -> id
   | SGraph_type(s1) -> gen_scomplex s1
 
@@ -91,13 +91,13 @@ and gen_scomplex c = match c with
     | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list (* Should just be a list of graph elements *)
     | SGraph_Element(id, lit_list) -> id ^ gen_graph_elem lit_list
 
-and gen_graph_elem ll = "(" ^ gen_literal_list ll ^ ");" 
+and gen_graph_elem ll = "(" ^ gen_literal_list ll ^ ");"
 
-and gen_node_rel_node_tup_list nrn_tup = match nrn_tup with  
+and gen_node_rel_node_tup_list nrn_tup = match nrn_tup with
   | [] -> ""
-  | head::[] -> gen_nrn_tup head 
+  | head::[] -> gen_nrn_tup head
   | head::tail -> gen_nrn_tup head ^ ", " ^ gen_node_rel_node_tup_list tail
-(*and gen_node_rel_node_tup nrn_tup = 
+(*and gen_node_rel_node_tup nrn_tup =
   List.iter (fun nrn_expr -> match nrn_expr with SNode_Rel_Node_tup(sg1, sg2, sg3) -> gen_sgraph_type sg1 ^ ", " ^ gen_sgraph_type sg2 ^ ", " ^ gen_sgraph_type sg3) nrn_tup; *)
 and gen_nrn_tup nrn_tup = match nrn_tup with
   SNode_Rel_Node_tup(sg1, sg2, sg3) -> "new Graph.Member<>(" ^ gen_sgraph_type sg1 ^ ", " ^ gen_sgraph_type sg2 ^ ", " ^ gen_sgraph_type sg3 ^ ")"
@@ -120,7 +120,7 @@ and gen_find_many sfind = match sfind with
 
 (* TODO: Figure out what to pass into the Map function when created in Javac Backedn *)
 (* Cuz this is not right! *)
-and gen_map smap = match smap with 
+and gen_map smap = match smap with
   SMap_Func(id,sl) -> ".map(" ^ id ^ ", " ^ gen_sstmt_list sl ^ ");"
 
 and gen_sstmt stmt = match stmt with
@@ -142,19 +142,19 @@ and gen_var_dec dec = match dec with
 (* Have to split up between Graphs, nodes, and rels in a new function *)
 (* List needs an argument *)
   | SConstructor(ty,id,formals) -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_formal_list formals ^ ");"
-  | SVar_Decl_Assign(id,ty,e) -> (match ty with 
+  | SVar_Decl_Assign(id,ty,e) -> (match ty with
      Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
-   | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");" 
+   | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");"
    | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));")
-  | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2 
+  | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2
 
 and gen_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
   | head::[] -> gen_var_dec head
-  | head::tail -> gen_var_dec head ^ gen_var_dec_list tail 
+  | head::tail -> gen_var_dec head ^ gen_var_dec_list tail
 
 (* TODO: These dont currently exist in java backend *)
-and gen_graph_op grop = match grop with 
+and gen_graph_op grop = match grop with
   | Graph_Insert -> ".insert("
   | Graph_Remove -> ".remove("
 
@@ -167,7 +167,7 @@ and gen_func_dec func =
   else "public static " ^ gen_var_type func.sreturn_type ^ " " ^ func.sfname ^
   "(" ^ gen_formal_list func.sformals ^ ") {\n" ^ gen_sstmt_list func.sbody ^ "}\n"
 
-and gen_func_dec_list fl = match fl with 
+and gen_func_dec_list fl = match fl with
   | [] -> ""
   | head::[] -> gen_func_dec head
   | head::tail -> gen_func_dec head ^ gen_func_dec_list tail
