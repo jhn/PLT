@@ -7,7 +7,7 @@ let imports =
   "import java.util.Map;\n" ^
   "import com.n2n.Graph;\n" ^
   "import com.n2n.Node;\n" ^
-  "import com.n2n.Relationship;\n"
+  "import com.n2n.Relationship;\n\n"
 
  let rec gen_var_type = function
     Int -> "int"
