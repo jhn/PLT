@@ -148,10 +148,7 @@ let rec check_expr env expr =
 			let (_,t,_) = try List.find (fun (id, _, _) -> id = idr) l with
 			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t
 		| _ -> raise(Error("Trying to access something that is not a node or rel")))
-	| Call("print", el) -> print_string("Print function is being called\n"); List.iter(fun e -> let t = check_expr env e in
-											match t with 
-											Int | Bool | String | Double -> ignore(Int);
-											| _ -> raise (Error("Can't print non-primitive type"))) el; Void   
+	| Call("print", el) -> print_string("Print function is being called\n"); List.iter(fun e -> ignore(check_expr env e) ) el; Void   
 	| Call(id, el) -> let func = (try List.find (fun f -> print_string("Looking for function: " ^ id ^ " but finding function: " ^f.fname^".\n");
 														 f.fname = id) env.functions with
 		Not_found -> raise(Error("Function definition not found"))) in 
