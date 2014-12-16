@@ -42,8 +42,7 @@ let _ =
         | SAnalysis -> let env = Semantic_check.run_program program in
                       ignore env; print_string "Passed Semantic Analysis.\n"
         | Compile -> let sast = Semantic_check.run_program program in
-                      ignore sast; print_string "Passed Semantic Analysis.\n"
-                     (* let compiled_program = Code_gen.pro_gen sast in
+                     let compiled_program = Code_gen.prog_gen sast in
                      if Array.length Sys.argv == 3 then print_endline compiled_program
-                     else let out = open_out Sys.argv.(3) in output_string out compiled_program; close_out out *)
+                     else let out = open_out Sys.argv.(3) in output_string out compiled_program; close_out out
         | Help -> print_endline (usage Sys.argv.(0))) (* impossible case *)
