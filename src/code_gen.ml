@@ -3,11 +3,8 @@ open Sast
 open Printf
 
 let imports =
-  "import java.util.List;\n" ^
-  "import java.util.Map;\n" ^
-  "import com.n2n.Graph;\n" ^
-  "import com.n2n.Node;\n" ^
-  "import com.n2n.Relationship;\n\n"
+  "package com.n2n;\n\n" ^
+  "import java.util.*;\n\n"
 
  let rec gen_var_type = function
     Int -> "int"
@@ -175,8 +172,8 @@ and gen_func_dec_list fl = match fl with
 let prog_gen = function
   SProg(checked_globals, checked_functions) ->
     imports ^
-    "public class Main {\n" ^
+    "class Main {\n" ^
     gen_var_dec_list checked_globals ^
     gen_func_dec_list checked_functions ^
-    "}"
+    "}\n"
 
