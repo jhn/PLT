@@ -19,7 +19,7 @@ fn main() -> Void {
 	>;
 
 	visited_node: List<Node>;
-	visited_node = Cast.map(node in {node [+] visited:Bool;});
+	mutated_graph: Graph = Cast.map(node in {node [+] visited:Bool;});
 
 	;;Need to be considered;;
 

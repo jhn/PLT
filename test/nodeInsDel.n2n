@@ -8,7 +8,7 @@ fn main() -> Void {
 	Keanu [+] visited: Bool;
 	Keanu.visited = true;
 	print(Keanu);
-	print("\n")
+	print("\n");
 
 	Keanu [-] visited: Bool;
 	print(Keanu);

@@ -27,6 +27,27 @@ let beginning_scope = { prims = []; nodes = []; rels = []; graphs = []; lists = 
 
 let beginning_environment = { functions = []; globals = beginning_scope; locals = beginning_scope; scope = "global"; node_types = []; rel_types = []; has_return = false; return_val = Id("None"); return_type = Void}
 
+(*For debugging *)
+
+let rec print_type ty =
+	match ty with
+		Node -> "Node"
+		| Rel -> "Rel"
+		| Graph -> "Graph"
+		| String -> "String"
+		| Int -> "Int"
+		| Double -> "Double"
+		| Bool -> "Bool"
+		| Void -> "Void"
+		| List(t) -> "List<" ^ print_type t ^ ">"
+
+(* End debugging *)
+
+let get_id_from_expr ex = 
+	match ex with
+		Id(v) -> v
+		| _ -> raise(Error("Trying to get id from a non-id expression\n"))
+
 let check_arithmetic_binary_op t1 t2 =
 	match (t1, t2) with
 	| (Int, Int) -> Int
@@ -75,9 +96,94 @@ let check_for_var_existence var_table id =
 		|| List.exists(fun (lid,_,_) -> lid=id) var_table.lists)
 
 let check_if_id_is_node env id =
-	if List.exists (fun (nid, _, _ ) -> nid = id) env.locals.nodes then true
-	else if List.exists (fun (nid, _, _) -> nid = id) env.globals.nodes then true
+	if List.exists (fun (nid, _, _ ) -> print_string("Looking for: "^id^ " but finding " ^nid^ ".\n"); nid = id) env.locals.nodes then true
+	else if List.exists (fun (nid, _, _) -> print_string("Looking for: "^id^ " but finding " ^nid^ ".\n"); nid = id) env.globals.nodes then true
 	else false
+
+let set_default_val ty =
+	match ty with
+	Int -> Literal(Int_Literal(0))
+	| Double -> Literal(Double_Literal(0.0))
+	| Bool -> Literal(Bool_Literal(false))
+	| String -> Literal(String_Literal(""))
+	| Graph -> Complex(Graph_Literal([]))
+	| Node | Rel -> Complex(Graph_Element("", []))
+	| _ -> raise(Error("Not a primitive type, YOU FOOL!"))
+
+
+let get_new_env env func =
+	let new_locals = List.fold_left (fun l f -> let (t, id) = (match f with
+												Formal(ty, vid) -> (ty, vid)) in
+												if check_for_var_existence env.locals id then raise(Error("Variable: " ^ id ^ " already exists in local scope"))
+												else (match t with
+												Node -> let new_nodes = (id, id, []) :: l.nodes in {l with nodes = new_nodes}
+												| Rel -> let new_rels = (id, id, []) :: l.rels in {l with rels = new_rels}
+												| Graph -> let new_graphs = (id, []) :: l.graphs in {l with graphs = new_graphs}
+												| List(ty) -> let new_lists = (id, ty, []) :: l.lists in {l with lists = new_lists}
+												| Void -> raise(Error("Can't have a variable of type Void"))
+												| _ -> let new_prims = (id, t, set_default_val t) :: l.prims in {l with prims = new_prims}) ) env.locals func.formals and
+	new_functions = func :: env.functions in
+	{env with functions = new_functions; locals = new_locals; scope = func.fname; return_type = func.return_type}
+
+let update_prim_table var_table id ty v =
+	let does_exist = check_for_var_existence var_table id in
+	match does_exist with
+	true -> raise(Error("Variable to declare: " ^id^ " already exists"))
+	| false ->
+		let new_prims = (id, ty, v)::var_table.prims in
+			{var_table with prims = new_prims}
+
+let rec gen_tuple_list fl l tl =
+	match fl, l with
+	[], [] -> List.rev tl
+	| h1::t1, h2::t2 ->
+		(match h1, h2 with
+			Formal(ty, id), lit -> let new_tl = (id, ty, Literal(lit)) :: tl in
+				gen_tuple_list t1 t2 new_tl
+			)
+	| _ -> raise(Error("You're such a failure"))
+
+let update_node_or_rel_table env var_table id idt ty ex =
+	let does_exist = check_for_var_existence var_table id in
+	match does_exist with
+	true -> raise(Error("Variable to declare already exists"))
+	| false ->
+		let l = (match ex with
+			Complex(Graph_Element(s, ll)) -> ll
+			| _ -> raise(Error("Just cry. Stop what you're doing and cry"))) and
+		forml =(match ty with
+			Node -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
+							fid=idt) env.node_types in fl
+			| Rel -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
+							fid=idt) env.rel_types in fl
+			| _ -> raise(Error("Wow. Do you even go here?"))) in
+		let tl = gen_tuple_list forml l [] in
+		(match ty with
+			Node -> let new_nodes = (id, idt, tl)::var_table.nodes in
+				{var_table with nodes = new_nodes}
+			| Rel -> let new_rels = (id, idt, tl)::var_table.rels in
+				{var_table with rels = new_rels}
+			| _ -> raise(Error("You called the wrong var assign method you fool!")))
+
+let update_graph_table var_table id v =
+	let does_exist = check_for_var_existence var_table id in
+	match does_exist with
+	true -> raise(Error("Variable to declare already exists"))
+	| false ->
+		let va = (match v with
+			|Complex(Graph_Literal(l)) -> l
+			|Func(Map(s, e1)) -> let (_, l) = List.find (fun (gid, _) -> gid=s) var_table.graphs in l
+			| _ -> raise(Error("Calling the wrong function, you fool!"))) in
+		let new_graphs = (id, va)::var_table.graphs in
+	 			{var_table with graphs = new_graphs}
+
+let update_list_table var_table id ty v =
+	let does_exist = check_for_var_existence var_table id in
+	match does_exist with
+	true -> raise(Error("Variable to declare already exists"))
+	| false ->
+		let new_lists = (id, ty, v)::var_table.lists in
+	 		{var_table with lists = new_lists}
 
 let rec check_expr env expr =
 	match expr with
@@ -168,13 +274,42 @@ let rec check_expr env expr =
 			else raise(Error("Could not find List or Graph ID: " ^ id ^ " to run find_many on"))
 		| Neighbors_Func(id, nid) ->
 			if List.exists (fun (gid, _) -> gid = id) env.locals.graphs then
-				if check_if_id_is_node env id then List(Node) else raise(Error("Argument to neighbors must be a node id"))
+				if check_if_id_is_node env nid then List(Node) else raise(Error("Locals: Argument to neighbors must be a node id"))
 			else if List.exists (fun (gid,_) -> gid = id) env.globals.graphs then
-				if check_if_id_is_node env id then List(Node) else raise(Error("Argument to neighbors must be a node id"))
+				if check_if_id_is_node env nid then List(Node) else raise(Error("Globals: Argument to neighbors must be a node id"))
 			else raise(Error("Could not find List or Graph ID: " ^ id ^ " to run neighbors on"))
 		| Map(id,e2) ->
-			if (id = "Done") then List(Node)
-			else raise(Error("Could not find List ID: " ^ id ^ " to run map on")))
+			print_string("Checking collection id: " ^ id ^ " for map\n");
+			let ty = try get_type_from_id env.locals id with 
+				Not_found -> try get_type_from_id env.globals id with
+				Not_found -> raise(Error("Could not find List ID: " ^ id ^ " to run map on")) in 
+				print_string(id ^ " is a " ^ print_type ty ^ ".\n");
+				match ty with
+				List(t) -> List(t)
+				| Graph -> Graph
+				| _ -> raise(Error("Trying to run map on non-list or graph. Id: "^id^".\n")))
+
+and check_map_func env ty map_func = 
+	match map_func with
+		Map_Func(id, stmt_list) -> 
+			let new_locals = (match ty with
+				Graph -> let new_nodes = (id, id, []) :: env.locals.nodes in
+					{env.locals with nodes = new_nodes}
+				| List(t) -> (match t with
+					Node -> let new_nodes = (id, id, []) :: env.locals.nodes in
+					{env.locals with nodes = new_nodes}
+					| Rel -> let new_rels = (id, id, []) :: env.locals.rels in
+					{env.locals with rels = new_rels}
+					| Graph -> let new_graphs = (id, []) :: env.locals.graphs in
+					{env.locals with graphs = new_graphs}
+					| List(t2) -> raise(Error("Cannot have List of Lists"))
+					| Void -> raise(Error("Cannot have List of Voids"))
+					| _ -> let new_prims = (id, t, set_default_val t) :: env.locals.prims in
+					{env.locals with prims = new_prims}) 
+				| _ -> raise(Error("Cannot have a map function operate on a non-collection"))) in
+			let new_env = {env with locals = new_locals} in
+			let (checked_stmts, up_env) = get_checked_statements new_env stmt_list [] in
+			checked_stmts
 
 and check_find_many_arguments env e =
 	match e with
@@ -276,23 +411,6 @@ and check_nrn_list env nrn_list =
 		Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 != true then
 										raise(Error("Combination is not a Node-Rel-Node combination"))) nrn_list; Graph
 
-let rec get_sexpr env ex = match ex with
-	Literal(l) -> (match l with
-		Int_Literal(i) -> SLiteral(SInt_Literal(i), Int)
-		| Double_Literal(d)-> SLiteral(SDouble_Literal(d), Double)
-		| String_Literal(s) -> SLiteral(SString_Literal(s), String)
-		| Bool_Literal(b) -> SLiteral(SBool_Literal(b), Bool)
-		| Any -> SLiteral(SAny, String))
-	| Id(v) -> SId(v, check_expr env ex)
-	| Unop(u, e) -> SUnop(u, get_sexpr env e, check_expr env ex)
-	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr env ex)
-	| Grop(e, grop, gc) -> SGrop(get_sexpr env e, grop, get_sgc env gc, check_expr env ex)
-	| Geop (e, geop, form) -> SGeop(get_sexpr env e, geop, get_sformal form, check_expr env ex)
-	| Access(str, str2) -> SAccess(str, str2, check_expr env ex)
-	| Call(str, el) -> SCall(str, List.map (fun e -> get_sexpr env e) el, check_expr env ex)
-	| Func(f) -> SFunc(get_sbuilt_in_function_call env f, check_expr env ex)(*Still needs implementation for each funciton*)
-	| Complex(comp) -> SComplex(get_scomplex env comp, check_expr env ex)
-
 and get_sliteral_list env ll rl =
 	match ll with
 	[] -> List.rev rl
@@ -340,27 +458,34 @@ and get_sfm env fm =
 	Find_Many_Node(complex) -> SFind_Many_Node(get_scomplex env complex)
 	| Find_Many_Gen(gt1, gt2) -> SFind_Many_Gen(get_sgraph_type env gt1, get_sgraph_type env gt2)
 
-and get_smap env mf =
+and get_smap env ty mf =
 	match mf with
-	Map_Func(s,sl) -> SMap_Func(s, [SExpr(SLiteral(SInt_Literal(1), Int))]) (*CHANGE THIS AFTER CHECK STATEMENTS!!!!!!!*)
+	Map_Func(s,sl) -> SMap_Func(s, check_map_func env ty mf) (*CHANGE THIS AFTER CHECK STATEMENTS!!!!!!!*)
 
 and get_sbuilt_in_function_call env f =
 	match f with
 	Find_Many(s, fm) -> SFindMany(s, get_sfm env fm)
-	| Map (s, mf) -> SMap(s, get_smap env mf)
+	| Map (s, mf) -> SMap(s, get_smap env (check_expr env (Id(s))) mf)
 	| Neighbors_Func(s1,s2) -> SNeighbors_Func(s1,s2)
 
-let set_default_val ty =
-	match ty with
-	Int -> Literal(Int_Literal(0))
-	| Double -> Literal(Double_Literal(0.0))
-	| Bool -> Literal(Bool_Literal(false))
-	| String -> Literal(String_Literal(""))
-	| Graph -> Complex(Graph_Literal([]))
-	| Node | Rel -> Complex(Graph_Element("", []))
-	| _ -> raise(Error("Not a primitive type, YOU FOOL!"))
+and get_sexpr env ex = match ex with
+	Literal(l) -> (match l with
+		Int_Literal(i) -> SLiteral(SInt_Literal(i), Int)
+		| Double_Literal(d)-> SLiteral(SDouble_Literal(d), Double)
+		| String_Literal(s) -> SLiteral(SString_Literal(s), String)
+		| Bool_Literal(b) -> SLiteral(SBool_Literal(b), Bool)
+		| Any -> SLiteral(SAny, String))
+	| Id(v) -> SId(v, check_expr env ex)
+	| Unop(u, e) -> SUnop(u, get_sexpr env e, check_expr env ex)
+	| Binop(e1, op, e2) -> SBinop(get_sexpr env e1, op, get_sexpr env e2, check_expr env ex)
+	| Grop(e, grop, gc) -> SGrop(get_sexpr env e, grop, get_sgc env gc, check_expr env ex)
+	| Geop (e, geop, form) -> SGeop(get_sexpr env e, geop, get_sformal form, check_expr env ex)
+	| Access(str, str2) -> SAccess(str, str2, check_expr env ex)
+	| Call(str, el) -> SCall(str, List.map (fun e -> get_sexpr env e) el, check_expr env ex)
+	| Func(f) -> SFunc(get_sbuilt_in_function_call env f, check_expr env ex)(*Still needs implementation for each funciton*)
+	| Complex(comp) -> SComplex(get_scomplex env comp, check_expr env ex)
 
-let resolve_envs old_env new_env =
+and resolve_envs old_env new_env =
 	let new_prims = List.map (fun (id, ty, e) -> let v = (try List.find (fun (vid, _, _) -> vid=id) new_env.locals.prims with
 		Not_found -> (id, ty, e)) in v) old_env.locals.prims
 	and new_nodes = List.map (fun (id, idt, l) -> let v = (try List.find (fun (vid, _, _) -> vid=id) new_env.locals.nodes with
@@ -373,80 +498,7 @@ let resolve_envs old_env new_env =
 		Not_found -> (id, ty, el)) in v) old_env.locals.lists in
 	{new_env with locals = {prims = new_prims; nodes = new_nodes; rels = new_rels; graphs = new_graphs; lists = new_lists}}
 
-let get_new_env env func =
-	let new_locals = List.fold_left (fun l f -> let (t, id) = (match f with
-												Formal(ty, vid) -> (ty, vid)) in
-												if check_for_var_existence env.locals id then raise(Error("Variable: " ^ id ^ " already exists in local scope"))
-												else (match t with
-												Node -> let new_nodes = (id, id, []) :: l.nodes in {l with nodes = new_nodes}
-												| Rel -> let new_rels = (id, id, []) :: l.rels in {l with rels = new_rels}
-												| Graph -> let new_graphs = (id, []) :: l.graphs in {l with graphs = new_graphs}
-												| List(ty) -> let new_lists = (id, ty, []) :: l.lists in {l with lists = new_lists}
-												| Void -> raise(Error("Can't have a variable of type Void"))
-												| _ -> let new_prims = (id, t, set_default_val t) :: l.prims in {l with prims = new_prims}) ) env.locals func.formals and
-	new_functions = func :: env.functions in
-	{env with functions = new_functions; locals = new_locals; scope = func.fname; return_type = func.return_type}
-
-let update_prim_table var_table id ty v =
-	let does_exist = check_for_var_existence var_table id in
-	match does_exist with
-	true -> raise(Error("Variable to declare: " ^id^ " already exists"))
-	| false ->
-		let new_prims = (id, ty, v)::var_table.prims in
-			{var_table with prims = new_prims}
-
-let rec gen_tuple_list fl l tl =
-	match fl, l with
-	[], [] -> List.rev tl
-	| h1::t1, h2::t2 ->
-		(match h1, h2 with
-			Formal(ty, id), lit -> let new_tl = (id, ty, Literal(lit)) :: tl in
-				gen_tuple_list t1 t2 new_tl
-			)
-	| _ -> raise(Error("You're such a failure"))
-
-let update_node_or_rel_table env var_table id idt ty ex =
-	let does_exist = check_for_var_existence var_table id in
-	match does_exist with
-	true -> raise(Error("Variable to declare already exists"))
-	| false ->
-		let l = (match ex with
-			Complex(Graph_Element(s, ll)) -> ll
-			| _ -> raise(Error("Just cry. Stop what you're doing and cry"))) and
-		forml =(match ty with
-			Node -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
-							fid=idt) env.node_types in fl
-			| Rel -> let (_, fl) = List.find (fun (fid, _) -> print_string("Looking for " ^ idt ^ " constructor, finding: " ^ fid ^ "\n");
-							fid=idt) env.rel_types in fl
-			| _ -> raise(Error("Wow. Do you even go here?"))) in
-		let tl = gen_tuple_list forml l [] in
-		(match ty with
-			Node -> let new_nodes = (id, idt, tl)::var_table.nodes in
-				{var_table with nodes = new_nodes}
-			| Rel -> let new_rels = (id, idt, tl)::var_table.rels in
-				{var_table with rels = new_rels}
-			| _ -> raise(Error("You called the wrong var assign method you fool!")))
-
-let update_graph_table var_table id v =
-	let does_exist = check_for_var_existence var_table id in
-	match does_exist with
-	true -> raise(Error("Variable to declare already exists"))
-	| false ->
-		let va = (match v with
-			|Complex(Graph_Literal(l)) -> l
-			| _ -> raise(Error("Calling the wrong function, you fool!"))) in
-		let new_graphs = (id, va)::var_table.graphs in
-	 			{var_table with graphs = new_graphs}
-
-let update_list_table var_table id ty v =
-	let does_exist = check_for_var_existence var_table id in
-	match does_exist with
-	true -> raise(Error("Variable to declare already exists"))
-	| false ->
-		let new_lists = (id, ty, v)::var_table.lists in
-	 		{var_table with lists = new_lists}
-
-let rec check_stmt env stmt =
+and check_stmt env stmt =
 	print_string("Calling check_stmt\n"); match stmt with
 	| Block(stmt_list) ->
 		let new_env = env in
@@ -455,7 +507,13 @@ let rec check_stmt env stmt =
 		let resolved_env = resolve_envs new_env up_env in
 		(SBlock(checked_stmts), resolved_env)
 
-	| Expr(e) -> (SExpr(get_sexpr env e),env)
+	| Expr(e) -> 
+		let new_env = (match e with
+			Geop(e geop formal) -> 
+				(match geop with
+					Data_Insert -> let id = get_id_from_expr e in
+					() )
+		(SExpr(get_sexpr env e),env)
 
 	| Return(e) ->
 		let t1 = check_expr env e in
@@ -501,13 +559,14 @@ let rec check_stmt env stmt =
 			else
 				raise(Error("Type mismatch in local variable assignment"))
 		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2 in
+			print_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
 			if (tl = tr) then
 				(SAccess_Assign(get_sexpr env e1, get_sexpr env e2), env)
 			else
 				raise(Error("Type mismatch in assignment!"))
 		| Constructor(_,_,_) -> raise(Error("Can't declare constructor locally"))) in (SVar_Decl(checked_stmt), up_env)
 
-let rec get_checked_statements env stmts checked_statments =
+and get_checked_statements env stmts checked_statments =
 	match stmts with
 	| stmt :: tail ->
 		let (checked_statement, new_env) = check_stmt env stmt in
