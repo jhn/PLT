@@ -3,6 +3,8 @@
 COMPILER="../src/n2n -c"
 TESTFILES=$@
 
+rm errors.out
+
 for f in $TESTFILES
 do
 	LEN=$((${#f}-4))
