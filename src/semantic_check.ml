@@ -48,6 +48,27 @@ let get_id_from_expr ex =
 		Id(v) -> v
 		| _ -> raise(Error("Trying to get id from a non-id expression\n"))
 
+let add_tuple_to_list env t =
+	match t with
+	(id,ty,fl) -> 
+		let (list_to_update, location) = if List.exists (fun (fid,_,_) -> fid=id) env.locals.nodes then (env.locals.nodes, "nl")
+		else if List.exists (fun (fid,_,_) -> fid=id) env.locals.rels then (env.locals.rels, "rl")
+		else if List.exists (fun (fid,_,_) -> fid=id) env.globals.nodes then (env.globals.nodes, "ng")
+		else (env.globals.rels, "rg") in 
+		let (new_list, location) = 
+			let updated_list = List.fold_left (fun l (vid,vty,vfl) -> if vid=id then (id,ty,fl)::l else (vid,vty,vfl)::l ) [] list_to_update in
+			(List.rev updated_list, location) in
+		match location with
+			"nl" -> let new_vt = {env.locals with nodes = new_list} in
+				{env with locals = new_vt}
+			| "rl" -> let new_vt = {env.locals with rels = new_list} in
+				{env with locals = new_vt}
+			| "ng" -> let new_vt = {env.globals with nodes = new_list} in
+				{env with globals = new_vt}
+			| "rg" -> let new_vt = {env.globals with rels = new_list} in
+				{env with globals = new_vt}
+			| _ -> raise(Error("??"))
+
 let check_arithmetic_binary_op t1 t2 =
 	match (t1, t2) with
 	| (Int, Int) -> Int
@@ -509,11 +530,25 @@ and check_stmt env stmt =
 
 	| Expr(e) -> 
 		let new_env = (match e with
-			Geop(e geop formal) -> 
-				(match geop with
-					Data_Insert -> let id = get_id_from_expr e in
-					() )
-		(SExpr(get_sexpr env e),env)
+			Geop(e1, geop, formal) -> 
+				let norid = get_id_from_expr e1 in
+				let (id,t,fl) = try List.find(fun (lid, _, _) -> lid=norid) env.locals.nodes with
+					Not_found -> try List.find(fun (lid,_,_) -> lid=norid) env.locals.rels with
+					Not_found -> try List.find(fun (lid,_,_) -> lid=norid) env.globals.nodes with
+					Not_found -> try List.find (fun (lid,_,_) -> lid=norid) env.globals.rels with
+					Not_found -> raise(Error("Id: " ^norid^ " not found as a node or rel.\n")) in 
+				let (id, t, new_field_list) = (match formal with
+					Formal(ty,vid) -> 
+						(match geop with
+							Data_Insert -> if List.exists (fun (vcid,_,_) -> vcid=vid) fl then raise(Error("Your field: " ^vid^ " already exists in node: " ^id^ ".\n"))
+							else (id, t, (vid, ty, set_default_val ty) :: fl)
+							| Data_Remove -> if List.exists (fun (vcid,t,_) -> (vcid=vid && t=ty)) fl then
+								let new_fl = List.fold_left (fun l (vcid,vcty,vcfl) -> if (vcid=vid) then
+																	l else (vcid,vcty,vcfl) :: l) [] fl in
+								(id, t, new_fl) else raise(Error("Field to remove does not exist"))
+						)
+					) in add_tuple_to_list env (id, id, new_field_list) 
+			| _ -> env) in (SExpr(get_sexpr env e), new_env)
 
 	| Return(e) ->
 		let t1 = check_expr env e in
