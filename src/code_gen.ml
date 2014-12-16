@@ -79,9 +79,8 @@ and gen_formal_list fl = match fl with
 
 and gen_print p = match p with
   [] -> ""
-  | head::[] -> "System.out.println(" ^ gen_expr head ^ ");\n"
-  | head::tail -> "System.out.print(" ^ gen_expr head ^ ");\n" ^ gen_print tail
-
+  | head::[] -> "System.out.print(" ^ gen_expr head ^ ")"
+  | head::tail -> "System.out.print(" ^ gen_expr head ^ ")" ^ gen_print tail
 
 and gen_sgraph_type gt = match gt with
   | SGraph_Id(id) -> id
