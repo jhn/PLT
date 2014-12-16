@@ -173,7 +173,7 @@ and gen_func_dec_list fl = match fl with
   | head::tail -> gen_func_dec head ^ gen_func_dec_list tail
 
 let prog_gen = function
-  Prog(checked_globals, checked_functions) ->
+  SProg(checked_globals, checked_functions) ->
     imports ^
     "public class Main {" ^
     gen_var_dec_list checked_globals ^
