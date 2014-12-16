@@ -63,6 +63,7 @@ and literal =
   | Double_Literal of float
   | String_Literal of string
   | Bool_Literal of bool
+  | Any
 
 and built_in_function_call =
   | Find_Many of string * find_many
@@ -150,6 +151,7 @@ let string_of_literal = function
   | Double_Literal(l) -> string_of_float l
   | String_Literal(l) -> "\"" ^ l ^ "\""
   | Bool_Literal(l)   -> string_of_bool l
+  | Any               -> "_"
 
 let rec string_of_expr = function
   | Literal(l) -> string_of_literal l
