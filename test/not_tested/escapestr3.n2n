@@ -1,5 +1,0 @@
-fn  escapestr3() -> Void {
-	a: String = "a\\"
-	print(a)
-
-}
