@@ -1,7 +1,6 @@
 fn foo (c: Int) -> Int {
 	;;Do something;;
 	return c+5;
-
 }
 
 fn bar (a: Int) -> Int {
@@ -12,5 +11,4 @@ fn bar (a: Int) -> Int {
 fn main () -> Void {
 	a: Int = bar(61);
 	print(a);
-
 }
