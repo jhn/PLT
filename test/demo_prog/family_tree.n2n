@@ -1,12 +1,12 @@
-member: Node = {Name: String, Age: Int, Visited: Bool};
+member: Node = {Name: String, Age: Int, visited: Bool};
 relation: Rel = {Relation: String};
 
 fn DFS(N: Node, M: Graph)->Int {
 	if(N.visited == false){
 		print(N);
 		print("\n");
-		N.visited = true;
 		Neighbor: List<Node> = M.neighbors(N);
+		N.visited = true;
 		Neighbor.map(node in { DFS(node, M); });
 	}
 	return 0;
