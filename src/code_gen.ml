@@ -198,7 +198,7 @@ and gen_var_dec_list var_dec_list = match var_dec_list with
 and gen_global_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
   | head::[] -> "static " ^ gen_var_dec head ^ ";"
-  | head::tail -> gen_var_dec head ^ ";" ^ gen_var_dec_list tail
+  | head::tail -> ";" ^ gen_var_dec head ^ gen_var_dec_list tail
 
 (* TODO: These dont currently exist in java backend *)
 and gen_graph_op grop = match grop with
