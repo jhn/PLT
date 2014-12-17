@@ -223,7 +223,9 @@ let rec check_expr env expr =
 			else if check_expr env e = Int then Int
 			else raise (Error("Using a neg on a non int or float expr")))
 	| Binop(e1, op, e2) ->
-		let t1 = check_expr env e1 and t2 = check_expr env e2 in
+		let t1 = (match e1 with
+			Access(_,_) -> check_expr env e2
+			| _-> check_expr env e1) and t2 = check_expr env e2 in
 		let binop_t = (match op with
 			  Add -> check_arithmetic_binary_op t1 t2
 			| Sub -> check_arithmetic_binary_op t1 t2
