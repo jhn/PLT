@@ -140,6 +140,17 @@ public class Graph {
         return result;
     }
 
+    public Set<Node> findMany(Node target) {
+        Set<Node> nodes = new HashSet<>();
+        for (Relationship relationship : relationships) {
+            nodes.addAll(relationship
+                    .getAll()
+                    .stream()
+                    .filter(node -> node.looselyEquals(target)).collect(Collectors.toList()));
+        }
+        return nodes;
+    }
+
     private Set<Relationship> relationshipFinder(Node left, Node right) {
         Set<Relationship> result = new HashSet<>();
         for (Relationship relationship : relationships) {
@@ -160,17 +171,6 @@ public class Graph {
                 .filter(predicate)
                 .flatMap(mapper)
                 .collect(Collectors.toSet());
-    }
-
-    private Set<Node> findMany(Node target) {
-        Set<Node> nodes = new HashSet<>();
-        for (Relationship relationship : relationships) {
-            nodes.addAll(relationship
-                    .getAll()
-                    .stream()
-                    .filter(node -> node.looselyEquals(target)).collect(Collectors.toList()));
-        }
-        return nodes;
     }
 
     public void insert(List<Member<Node, Relationship>> relatedMemberList) {
