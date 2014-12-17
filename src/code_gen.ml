@@ -81,14 +81,20 @@ and gen_print p = match p with
 
 and gen_sgraph_type gt = match gt with
   | SGraph_Id(id)   -> id
-  | SGraph_type(s1) -> gen_scomplex s1
+  | SGraph_type(s1) -> (match s1 with
+    SGraph_Element(element_type, field_info) -> gen_gt_instantiation element_type field_info
+    | _ -> "")
+
+and gen_gt_instantiation element_type field_info = match element_type with
+  | (graph_element_type, id) -> "new " ^ gen_var_type graph_element_type ^ "(\"" ^ id ^ "\"" ^
+  ", new HashMap<String, Object>() {{\n\t" ^ (gen_graph_elem element_type field_info "") ^ "\n}})\n"
 
 and gen_scomplex c = match c with
   | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list (* Should just be a list of graph elements *)
   | SGraph_Element(element_type, field_info) -> gen_element_instantiation element_type field_info
 
 and gen_element_instantiation element_type field_info = match element_type with
-  | (graph_element_type, id) -> "\"" ^ id ^ "\"" ^
+  | (graph_element_type, id) ->  "\"" ^ id ^ "\"" ^
   ", new HashMap<String, Object>() {{\n\t" ^ (gen_graph_elem element_type field_info "") ^ "\n}}\n"
 
 and gen_graph_elem element_type field_info out_str = match element_type with
