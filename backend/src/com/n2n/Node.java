@@ -12,6 +12,10 @@ public class Node {
         this.data = data;
     }
 
+    public Object getValueFor(String field) {
+        return this.data.get(field);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

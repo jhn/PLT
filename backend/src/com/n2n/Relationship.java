@@ -18,6 +18,10 @@ public class Relationship {
         this(type, Collections.emptyMap());
     }
 
+    public Object getValueFor(String field) {
+        return this.data.get(field);
+    }
+
     public void addNodes(Node from, Node to) {
         if (fromTo.containsKey(from)) {
             fromTo.get(from).add(to);
