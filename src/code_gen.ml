@@ -50,20 +50,19 @@ let rec gen_literal_list ll = match ll with
   | head::tail -> gen_literal head ^ ", " ^ gen_literal_list tail
 
 let rec gen_expr expr = match expr with
-  | SLiteral(l,t) -> gen_literal l
-  | SId(v,t) -> v
-  | SComplex(c,t) -> gen_scomplex c
-  | SUnop(u, e, t) -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
-  | SBinop(e1, op, e2, t) -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
-  | SAccess(e1,e2, t) -> e1 ^ "." ^ e2
-  | SCall(id, e1, t) -> if(id="print") then gen_print e1
-                        else id ^ "(" ^ gen_expr_list e1 ^ ");"
-  | SFunc(fname, t) -> gen_sfunc fname
-  | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_nrn_tup nrn ^ ");"
-  | SGeop(e1, geop, f1, t) -> gen_expr e1 ^ gen_graph_elem_op geop ^ gen_formal f1 ^ ");"
+  | SLiteral(l,t)           -> gen_literal l
+  | SId(v,t)                -> v
+  | SComplex(c,t)           -> gen_scomplex c
+  | SUnop(u, e, t)          -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
+  | SBinop(e1, op, e2, t)   -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
+  | SAccess(e1,e2, t)       -> e1 ^ "." ^ e2
+  | SCall(id, e1, t)        -> if(id="print") then gen_print e1 else id ^ "(" ^ gen_expr_list e1 ^ ")"
+  | SFunc(fname, t)         -> gen_sfunc fname
+  | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_nrn_tup nrn ^ ")"
+  | SGeop(e1, geop, f1, t)  -> gen_expr e1 ^ gen_graph_elem_op geop ^ gen_formal f1 ^ ")"
 
 and gen_expr_list expr_list = match expr_list with
-  [] -> ""
+  | [] -> ""
   | head::[] -> gen_expr head
   | head::tail -> gen_expr head ^ ", " ^ gen_expr_list tail
 
@@ -85,10 +84,10 @@ and gen_sgraph_type gt = match gt with
   | SGraph_type(s1) -> gen_scomplex s1
 
 and gen_scomplex c = match c with
-    | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list (* Should just be a list of graph elements *)
-    | SGraph_Element(id, lit_list) -> id ^ gen_graph_elem lit_list
+  | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list (* Should just be a list of graph elements *)
+  | SGraph_Element(id, lit_list) -> id ^ gen_graph_elem lit_list
 
-and gen_graph_elem ll = "(" ^ gen_literal_list ll ^ ");"
+and gen_graph_elem ll = "(" ^ gen_literal_list ll ^ ")"
 
 and gen_node_rel_node_tup_list nrn_tup = match nrn_tup with
   | [] -> ""
@@ -107,9 +106,9 @@ and gen_node_rel_node_tup_list nrn_list = match nrn_list with
 *)
 and gen_sfunc fname = match fname with
     (* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
-    | SFindMany(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ");"
+    | SFindMany(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ")"
     | SMap(id, smf) -> id ^ gen_map smf
-    | SNeighbors_Func(id1, id2) -> id1 ^ ".neighbors(" ^ id2 ^ ");"
+    | SNeighbors_Func(id1, id2) -> id1 ^ ".neighbors(" ^ id2 ^ ")"
 
 and gen_find_many sfind = match sfind with
   | SFind_Many_Node(scomp) -> gen_scomplex scomp
@@ -118,14 +117,13 @@ and gen_find_many sfind = match sfind with
 (* TODO: Figure out what to pass into the Map function when created in Javac Backedn *)
 (* Cuz this is not right! *)
 and gen_map smap = match smap with
-  SMap_Func(id,sl) -> ".map(" ^ id ^ ", " ^ gen_sstmt_list sl ^ ");"
+  | SMap_Func(id,sl) -> ".map(" ^ id ^ ", " ^ gen_sstmt_list sl ^ ")"
 
 and gen_sstmt stmt = match stmt with
-  SBlock(stmt_list) -> "{\n\t" ^ gen_sstmt_list stmt_list ^ "\n}\n"
-  | SExpr(expr) -> gen_expr expr ^ ";\n"
+  | SBlock(stmt_list) -> gen_sstmt_list stmt_list
+  | SExpr(expr) -> gen_expr expr ^ ";\n\t"
   | SReturn(expr) -> "return " ^ gen_expr expr ^ ";\n\t"
-  | SIf(expr,s1,s2) -> "if(" ^ gen_expr expr ^ ") {\n\t" ^ gen_sstmt s1 ^
-    "\n\telse " ^ gen_sstmt s2
+  | SIf(expr,s1,s2) -> "if(" ^ gen_expr expr ^ ") {\n\t\t" ^ gen_sstmt s1 ^ "}\n\telse {\n\t" ^ gen_sstmt s2 ^ "}\n\n"
   | SVar_Decl(vdec) -> gen_var_dec vdec ^";\n\t"
 
 and gen_sstmt_list stmt_list = match stmt_list with
@@ -134,17 +132,14 @@ and gen_sstmt_list stmt_list = match stmt_list with
   | head::tail -> gen_sstmt head ^ gen_sstmt_list tail
 
 and gen_var_dec dec = match dec with
-    SVar(ty,id) -> gen_var_type ty ^ " " ^ id ^ ";"
-(* What goes in parentheses is based on how java classes are set up. #Jhn *)
-(* Have to split up between Graphs, nodes, and rels in a new function *)
-(* List needs an argument *)
-  | SConstructor(ty,id,formals) -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_formal_list formals ^ ");"
-  | SVar_Decl_Assign(id,ty,e) -> (match ty with
-     Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
-   | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");"
-   | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));"
-   | Void -> "void")(* impossible case *)
+  | SVar(ty,id) -> gen_var_type ty ^ " " ^ id
+  | SConstructor(ty,id,formals) -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_formal_list formals ^ ")"
   | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2
+  | SVar_Decl_Assign(id,ty,e) -> (match ty with
+    | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
+    | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
+    | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "))"
+    | Void -> "void")(* impossible case *)
 
 and gen_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
@@ -153,7 +148,7 @@ and gen_var_dec_list var_dec_list = match var_dec_list with
 
 and gen_global_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
-  | head::[] -> "static " ^ gen_var_dec head
+  | head::[] -> "static " ^ gen_var_dec head ^ ";"
   | head::tail -> gen_var_dec head ^ gen_var_dec_list tail
 
 (* TODO: These dont currently exist in java backend *)
@@ -166,7 +161,7 @@ and gen_graph_elem_op geop = match geop with
   | Data_Remove -> ".remove("
 
 and gen_func_dec func =
-  if(func.sfname = "main") then "public static void main(String[] args) {\n\t " ^ gen_sstmt_list func.sbody ^ "}\n"
+  if(func.sfname = "main") then "public static void main(String[] args) {\n\n\t\t" ^ gen_sstmt_list func.sbody ^ "}\n"
   else "public static " ^ gen_var_type func.sreturn_type ^ " " ^ func.sfname ^
   "(" ^ gen_formal_list func.sformals ^ ") {\n" ^ gen_sstmt_list func.sbody ^ "}\n"
 
@@ -178,8 +173,8 @@ and gen_func_dec_list fl = match fl with
 let prog_gen = function
   SProg(checked_globals, checked_functions) ->
     imports ^
-    "class Main {\n" ^
+    "class Main {\n\n\t" ^
     gen_global_var_dec_list checked_globals ^
     gen_func_dec_list checked_functions ^
-    "}\n"
+    "\n}\n"
 
