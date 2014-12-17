@@ -166,4 +166,10 @@ public class Graph {
         addToGraph(relatedMemberList);
     }
 
+    @Override
+    public String toString() {
+        return "Graph{" +
+                "relationships=" + relationships +
+                '}';
+    }
 }
