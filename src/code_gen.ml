@@ -88,13 +88,13 @@ and gen_scomplex c = match c with
   | SGraph_Element(element_type, field_info) -> gen_element_instantiation element_type field_info
 
 and gen_element_instantiation element_type field_info = match element_type with
-  |(graph_element_type, id) -> " new " ^ gen_var_type graph_element_type ^ "(" ^ id ^
-  "new HashMap<String, Object>() {{\n\t" ^ (gen_graph_elem element_type field_info "") ^ "\n}})\n"
+  | (graph_element_type, id) -> "\"" ^ id ^ "\"" ^
+  ", new HashMap<String, Object>() {{\n\t" ^ (gen_graph_elem element_type field_info "") ^ "\n}}\n"
 
 and gen_graph_elem element_type field_info out_str = match element_type with
   | (n2n_type, id) -> (match field_info with
     | (field_name, field_type, field_value)::tail -> let put_string = (if field_type = String then
-      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") ("\"" ^ gen_literal field_value ^ "\"")
+      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (gen_literal field_value)
     else
       sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (gen_literal field_value)) in
       let new_str = out_str ^ put_string in (gen_graph_elem element_type tail new_str)
@@ -137,7 +137,7 @@ and gen_sstmt_list stmt_list = match stmt_list with
 
 and gen_var_dec dec = match dec with
   | SVar(ty,id) -> gen_var_type ty ^ " " ^ id
-  | SConstructor(ty,id,formals) -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_formal_list formals ^ ")"
+  | SConstructor(ty,id,formals) -> "int i = 0\n"
   | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
     | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
