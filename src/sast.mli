@@ -43,7 +43,7 @@ and smap_function =
 and scomplex_literal =
   | SGraph_Literal of sgraph_component list
   | SGraph_Element of (Ast.n2n_type * string) * (string * Ast.n2n_type * sliteral) list
-                  (*  Relationship    actedIn     role      String       "neo" *)
+
 and sgraph_component =
   SNode_Rel_Node_tup of sgraph_type * sgraph_type * sgraph_type
 

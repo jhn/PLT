@@ -78,6 +78,7 @@ let check_arithmetic_binary_op t1 t2 =
 	| (_,_) -> raise(Error("Binary operation fails, wrong element type"))
 
 let check_equality t1 t2 =
+	print_string(print_type t1 ^ " " ^print_type t2 ^"\n");
 	if t1 = t2 then Bool else
 	match (t1, t2) with
 	| (Int, Double) -> Bool
@@ -266,16 +267,8 @@ let rec check_expr env expr =
 		Not_found -> try get_type_from_id env.globals idl with
 		Not_found -> raise(Error("Can't find left identifier")))in
 		(match t with
-		| Node -> let (_,_,l) = try List.find (fun (nid, _, _) -> nid = idl) env.locals.nodes with
-			Not_found -> try List.find (fun (nid, _, _) -> nid =idl) env.globals.nodes with
-			Not_found -> raise(Error("Node Id not found to left of access")) in
-			let (_,t,_) = try List.find (fun (id, _, _) -> id = idr) l with
-			Not_found -> raise(Error("Couldn't find that accessed identifier in node list")) in t
-		| Rel -> let (_,_,l) = try List.find (fun (rid,_,_) -> rid = idl) env.locals.rels with
-			Not_found -> try List.find (fun (rid, _, _) -> rid=idl) env.globals.rels with
-			Not_found -> raise(Error("Rel Id not found to left of access")) in
-			let (_,t,_) = try List.find (fun (id, _, _) -> id = idr) l with
-			Not_found -> raise(Error("Couldn't find that accessed identifier in rel list")) in t
+		| Node -> t
+		| Rel ->  t
 		| _ -> raise(Error("Trying to access something that is not a node or rel")))
 	| Call("print", el) -> prerr_string("Print function is being called\n"); List.iter(fun e -> ignore(check_expr env e) ) el; Void
 	| Call(id, el) -> let func = (try List.find (fun f -> prerr_string("Looking for function: " ^ id ^ " but finding function: " ^f.fname^".\n");
@@ -432,17 +425,34 @@ and check_nrn_list env nrn_list =
 		Node_Rel_Node_Tup(n1, r, n2) -> if check_nrn_expr env n1 r n2 != true then
 										raise(Error("Combination is not a Node-Rel-Node combination"))) nrn_list; Graph
 
-and get_sliteral_list env ll rl =
-	match ll with
-	[] -> List.rev rl
-	| head :: tail -> let nr = (match head with
+and get_type_from_constructor env id = 
+	if List.exists (fun (fid,_) -> fid=id) env.node_types then Node
+	else Rel
+
+and get_field_list env id ll = 
+	let (_,l) = try List.find (fun (fid, _) -> fid=id) env.node_types with
+		Not_found -> List.find (fun (fid, _) -> fid=id) env.rel_types in
+	get_field_lists l ll [] 
+
+and get_field_lists l ll fl = 
+	match l, ll with
+	| [], [] -> List.rev fl
+	| headl::taill, headll::tailll ->
+		(match headl with
+		Formal(ty, head) -> let sast_literal = (match headll with
 			Int_Literal(i) -> SInt_Literal(i)
 			| Double_Literal(d) -> SDouble_Literal(d)
 			| Bool_Literal(b) -> SBool_Literal(b)
 			| String_Literal(s) -> SString_Literal(s)
 			| Any -> SAny) in
-		let new_rl = nr :: rl in
-	get_sliteral_list env tail new_rl
+			let new_fl = (head, ty, sast_literal) :: fl in
+			get_field_lists taill tailll new_fl)
+	| _ -> raise(Error("Lit list does not match constructor list"))
+
+and get_scomplex env complex =
+	(match complex with
+	Graph_Literal(gcl) -> SGraph_Literal(get_sgc_list env gcl [])
+	| Graph_Element(str, ll) -> SGraph_Element((get_type_from_constructor env str, str), get_field_list env str ll))
 
 and get_sgc_list env gcl sgcl =
 	match gcl with
@@ -458,11 +468,6 @@ and get_sgraph_type env gt =
 	(match gt with
 	Graph_Id(s) -> SGraph_Id(s)
 	| Graph_Type(complex) -> SGraph_type(get_scomplex env complex))
-
-and get_scomplex env complex =
-	(match complex with
-	Graph_Literal(gcl) -> SGraph_Literal(get_sgc_list env gcl [])
-	| Graph_Element(str, ll) -> SGraph_Element(str, get_sliteral_list env ll []))
 
 and get_sformal form =
 	(match form with
@@ -522,6 +527,7 @@ and resolve_envs old_env new_env =
 and check_stmt env stmt =
 	prerr_string("Calling check_stmt\n"); match stmt with
 	| Block(stmt_list) ->
+		print_string("Calling Block from check_stmt\n");
 		let new_env = env in
 		let (checked_stmts, up_env) = List.fold_left (fun (l, e) s -> let (checked_statment, up_e) = check_stmt e s in
 															(checked_statment :: l, up_e)) ([], env) stmt_list in
@@ -529,6 +535,7 @@ and check_stmt env stmt =
 		(SBlock(List.rev checked_stmts), resolved_env)
 
 	| Expr(e) -> 
+		print_string("Calling expression from check_stmt");
 		let new_env = (match e with
 			Geop(e1, geop, formal) -> 
 				let norid = get_id_from_expr e1 in
@@ -551,20 +558,25 @@ and check_stmt env stmt =
 			| _ -> env) in (SExpr(get_sexpr env e), new_env)
 
 	| Return(e) ->
+	print_string("Return from check_stmt");
 		let t1 = check_expr env e in
 		(if not((t1=env.return_type)) then
 			raise (Error("Incompatible Return Type")));
 		let new_env = {env with has_return = true; return_type = t1; return_val = e } in
 		(SReturn(get_sexpr env e), new_env)
 
-	| If(e,s1,s2) -> let t1 = check_expr env e in
+	| If(e,s1,s2) -> 
+	print_string("Calling If from check_stmt\n");
+	let t1 = check_expr env e in
 		(if not(t1=Bool) then
 			raise (Error("If statement must be a boolean")));
 		let (st1,new_env)= check_stmt env s1 in
 		let (st2,new_env2) = check_stmt new_env s2 in
 		(SIf((get_sexpr env e), st1, st2),new_env2)
 
-	| Var_Decl(decl) -> let (checked_stmt, up_env) =
+	| Var_Decl(decl) -> 
+	print_string("Calling Var_decl from check_stmt\n");
+	let (checked_stmt, up_env) =
 		(match decl with
 		Var(ty, id) -> prerr_string("Local_Var: Checking " ^ id ^ "\n");
 			let new_table = (match ty with
@@ -593,8 +605,10 @@ and check_stmt env stmt =
 				(SVar_Decl_Assign(id, ty, get_sexpr env e), new_env)
 			else
 				raise(Error("Type mismatch in local variable assignment"))
-		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2 in
-			prerr_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
+		| Access_Assign(e1, e2) -> 
+			print_string("Access_Assign being called from check_stm\n");
+			let tl = check_expr env e1 and tr = check_expr env e1 in
+			print_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
 			if (tl = tr) then
 				(SAccess_Assign(get_sexpr env e1, get_sexpr env e2), env)
 			else
@@ -649,7 +663,7 @@ let check_global env var =
 				(SVar_Decl_Assign(id, ty, get_sexpr env e), new_env)
 			else
 				raise(Error("Type mismatch in global variable assignment"))
-		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e2 in
+		| Access_Assign(e1, e2) -> let tl = check_expr env e1 and tr = check_expr env e1 in
 			if (tl = tr) then
 				(SAccess_Assign(get_sexpr env e1, get_sexpr env e2), env)
 			else
