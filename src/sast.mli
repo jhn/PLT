@@ -1,9 +1,9 @@
 open Ast
 
-type sformal = 
+type sformal =
   SFormal of Ast.n2n_type * string
 
-type svar_decl = 
+type svar_decl =
     SVar of Ast.n2n_type * string
   | SConstructor of Ast.n2n_type * string * sformal list
   | SVar_Decl_Assign of string * Ast.n2n_type * sexpr
@@ -26,6 +26,7 @@ and sliteral =
   | SDouble_Literal of float
   | SString_Literal of string
   | SBool_Literal of bool
+  | SAny
 
 and sbuilt_in_function_call =
   SFindMany of string * sfind_many
@@ -37,11 +38,11 @@ and sfind_many =
   | SFind_Many_Gen of sgraph_type * sgraph_type
 
 and smap_function =
-  |  SMap_Func of string * sstatement list
+  | SMap_Func of string * sstatement list
 
 and scomplex_literal =
   | SGraph_Literal of sgraph_component list
-  | SGraph_Element of string * sliteral list
+  | SGraph_Element of (Ast.n2n_type * string) * (string * Ast.n2n_type * sliteral) list
 
 and sgraph_component =
   SNode_Rel_Node_tup of sgraph_type * sgraph_type * sgraph_type

@@ -1,7 +1,7 @@
 fn main() -> Void {
 	if (true) {
 		print("success");
-
+		print("\n");
 	}
 	else{
 
@@ -9,12 +9,13 @@ fn main() -> Void {
 
 	if(4<5){
 		print(6);
+		print("\n");
 		if(0>1){
 			print(7);
-
 		}
 		else{
 			print("else");
+			print("\n");
 		}
 	}
 }

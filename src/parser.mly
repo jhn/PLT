@@ -2,7 +2,7 @@
    open Ast
 %}
 
-%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
+%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET ANY
 %token TERMINATION COMMA ASSIGN COLON ARROW CONCAT ACCESS
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
@@ -110,6 +110,7 @@ literal:
   | STRING_LITERAL               { String_Literal($1) } /* "Me", "You", "Bill Clinton" */
   | DOUBLE_LITERAL               { Double_Literal($1) } /* 4.2, 3.7, 7.4 */
   | BOOL_LITERAL                 { Bool_Literal($1) } /* true, false */
+  | ANY                          { Any }
 
 complex_literal:
   | ID LBRACKET literal_opt RBRACKET    { Graph_Element($1, $3) } /* actor("Keanu"), "true" */

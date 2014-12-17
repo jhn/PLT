@@ -2,6 +2,8 @@ fn main() -> Void {
 	a: Int = 66;
 	b: Int = 123456;
 	print(a);
+	print("\n");
 	print(b);
-	
+	print("\n");
+
 }

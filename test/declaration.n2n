@@ -4,12 +4,15 @@ a: Int = 100;
 
 fn main () -> Void {
 	print(a);
+	print("\n");
 	a = 300;
 	print(a);
+	print("\n");
 	a: Int = 1;  ;;Not sure what happens when declared again;;
 	print(a);
+	print("\n");
 
 	b: Int = 200;
 	print(b);
-
+	print("\n");
 }

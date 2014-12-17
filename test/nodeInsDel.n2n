@@ -1,5 +1,6 @@
+actor: Node = { name: String, age: Int };
+
 fn main() -> Void {
-	actor: Node = { name: String, age: Int };
 	Keanu: Node = actor["Keanu", 35];
 	print(Keanu);
 	print("\n");
@@ -7,10 +8,10 @@ fn main() -> Void {
 	Keanu [+] visited: Bool;
 	Keanu.visited = true;
 	print(Keanu);
-	print("\n")
+	print("\n");
 
 	Keanu [-] visited: Bool;
 	print(Keanu);
 	print("\n");
-	
+
 }

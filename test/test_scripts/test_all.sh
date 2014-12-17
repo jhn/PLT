@@ -1,6 +1,6 @@
 #!/bin/bash
 #script used for reg testing
-COMPILER="../compiler"
+COMPILER="../src/n2n"
 COMPFILE="temp_test"
 
 for TESTFILE in ../test/*.n2n;
