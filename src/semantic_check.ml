@@ -78,7 +78,7 @@ let check_arithmetic_binary_op t1 t2 =
 	| (_,_) -> raise(Error("Binary operation fails, wrong element type"))
 
 let check_equality t1 t2 =
-	print_string(print_type t1 ^ " " ^print_type t2 ^"\n");
+	prerr_string(print_type t1 ^ " " ^print_type t2 ^"\n");
 	if t1 = t2 then Bool else
 	match (t1, t2) with
 	| (Int, Double) -> Bool
@@ -527,7 +527,7 @@ and resolve_envs old_env new_env =
 and check_stmt env stmt =
 	prerr_string("Calling check_stmt\n"); match stmt with
 	| Block(stmt_list) ->
-		print_string("Calling Block from check_stmt\n");
+		prerr_string("Calling Block from check_stmt\n");
 		let new_env = env in
 		let (checked_stmts, up_env) = List.fold_left (fun (l, e) s -> let (checked_statment, up_e) = check_stmt e s in
 															(checked_statment :: l, up_e)) ([], env) stmt_list in
@@ -535,7 +535,7 @@ and check_stmt env stmt =
 		(SBlock(List.rev checked_stmts), resolved_env)
 
 	| Expr(e) -> 
-		print_string("Calling expression from check_stmt");
+		prerr_string("Calling expression from check_stmt");
 		let new_env = (match e with
 			Geop(e1, geop, formal) -> 
 				let norid = get_id_from_expr e1 in
@@ -558,7 +558,7 @@ and check_stmt env stmt =
 			| _ -> env) in (SExpr(get_sexpr env e), new_env)
 
 	| Return(e) ->
-	print_string("Return from check_stmt");
+	prerr_string("Return from check_stmt");
 		let t1 = check_expr env e in
 		(if not((t1=env.return_type)) then
 			raise (Error("Incompatible Return Type")));
@@ -566,7 +566,7 @@ and check_stmt env stmt =
 		(SReturn(get_sexpr env e), new_env)
 
 	| If(e,s1,s2) -> 
-	print_string("Calling If from check_stmt\n");
+	prerr_string("Calling If from check_stmt\n");
 	let t1 = check_expr env e in
 		(if not(t1=Bool) then
 			raise (Error("If statement must be a boolean")));
@@ -575,7 +575,7 @@ and check_stmt env stmt =
 		(SIf((get_sexpr env e), st1, st2),new_env2)
 
 	| Var_Decl(decl) -> 
-	print_string("Calling Var_decl from check_stmt\n");
+	prerr_string("Calling Var_decl from check_stmt\n");
 	let (checked_stmt, up_env) =
 		(match decl with
 		Var(ty, id) -> prerr_string("Local_Var: Checking " ^ id ^ "\n");
@@ -606,9 +606,9 @@ and check_stmt env stmt =
 			else
 				raise(Error("Type mismatch in local variable assignment"))
 		| Access_Assign(e1, e2) -> 
-			print_string("Access_Assign being called from check_stm\n");
+			prerr_string("Access_Assign being called from check_stm\n");
 			let tl = check_expr env e1 and tr = check_expr env e1 in
-			print_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
+			prerr_string("tl = " ^ print_type tl ^ " tr = " ^ print_type tr ^ ".\n" );
 			if (tl = tr) then
 				(SAccess_Assign(get_sexpr env e1, get_sexpr env e2), env)
 			else
