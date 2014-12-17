@@ -162,6 +162,17 @@ public class Graph {
                 .collect(Collectors.toSet());
     }
 
+    private Node findMany(Node target) {
+        for (Relationship relationship : relationships) {
+            for (Node node : relationship.getAll()) {
+                if (node.equals(target)) {
+                    return node;
+                }
+            }
+        }
+        return new Node("Empty", new HashMap<>());
+    }
+
     public void insert(List<Member<Node, Relationship>> relatedMemberList) {
         addToGraph(relatedMemberList);
     }
