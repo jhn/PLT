@@ -67,6 +67,10 @@ public class Graph {
         return findManyHelper(r -> r.looselyEquals(relationshipType), r -> r.getNodesFrom(node).stream());
     }
 
+    public Set<Node> findMany(String type, Map<String, Object> data) {
+        return findMany(new Node(type, data));
+    }
+
     /**
      * An operation for finding nodes based on strict relationship equality.
      *

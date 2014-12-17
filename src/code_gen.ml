@@ -116,10 +116,10 @@ and gen_element_instantiation element_type field_info = match element_type with
 
 and gen_graph_elem element_type field_info out_str = match element_type with
   | (n2n_type, id) -> (match field_info with
-    | (field_name, field_type, field_value)::tail -> let put_string = (if field_type = String then
-      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (gen_literal field_value)
+    | (field_name, field_type, field_value)::tail -> let put_string = (if (field_type = String) then
+      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (if field_value = SAny then "\"Any\"" else (gen_literal field_value))
     else
-      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (gen_literal field_value)) in
+      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (if field_value = SAny then "\"Any\"" else (gen_literal field_value))) in
       let new_str = out_str ^ put_string in (gen_graph_elem element_type tail new_str)
     | [] -> out_str)
 
