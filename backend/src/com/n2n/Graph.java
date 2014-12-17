@@ -151,6 +151,10 @@ public class Graph {
         return nodes;
     }
 
+    public Set<Node> neighbors(Node target) {
+        return relationships.stream().flatMap((r -> r.getNodesFrom(target).stream())).collect(Collectors.toSet());
+    }
+
     private Set<Relationship> relationshipFinder(Node left, Node right) {
         Set<Relationship> result = new HashSet<>();
         for (Relationship relationship : relationships) {
