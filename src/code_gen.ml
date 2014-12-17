@@ -7,14 +7,14 @@ let imports =
   "import java.util.*;\n\n"
 
  let rec gen_var_type = function
-    Int -> "int"
-  | Double -> "double"
-  | Bool -> "boolean"
-  | String -> "String"
-  | Void -> "void"
-  | Rel -> "Relationship"
-  | Node -> "Node"
-  | Graph -> "Graph"
+    Int      -> "int"
+  | Double   -> "double"
+  | Bool     -> "boolean"
+  | String   -> "String"
+  | Void     -> "void"
+  | Rel      -> "Relationship"
+  | Node     -> "Node"
+  | Graph    -> "Graph"
   | List(ty) -> "List<" ^ gen_var_type ty ^ ">"
 
 let gen_binop = function
