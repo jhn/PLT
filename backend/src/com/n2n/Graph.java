@@ -41,11 +41,12 @@ public class Graph {
         addToGraph(relatedMemberList);
     }
 
-    private void addToGraph(List<Member<Node, Relationship>> relatedMemberList) {
-        relatedMemberList.stream().forEach((members) -> {
-            members.getRel().addNodes(members.getFrom(), members.getTo());
-            relationships.add(members.getRel());
-        });
+    public void remove(Member<Node, Relationship> entry) {
+        removeFromGraph(Arrays.asList(entry));
+    }
+
+    public void insert(Member<Node, Relationship> member) {
+        addToGraph(Arrays.asList(member));
     }
 
     /**
@@ -167,6 +168,20 @@ public class Graph {
         return getNodesFromRelationships(r -> r.getAll().stream());
     }
 
+    private void addToGraph(List<Member<Node, Relationship>> relatedMemberList) {
+        relatedMemberList.stream().forEach((members) -> {
+            members.getRel().addNodes(members.getFrom(), members.getTo());
+            relationships.add(members.getRel());
+        });
+    }
+
+    private void removeFromGraph(List<Member<Node, Relationship>> relatedMemberList) {
+        relatedMemberList.stream().forEach((members) -> {
+            members.getRel().addNodes(members.getFrom(), members.getTo());
+            relationships.remove(members.getRel());
+        });
+    }
+
     private Set<Node> getNodesFromRelationships(Function<Relationship, Stream<? extends Node>> mapper) {
         return relationships.stream().flatMap(mapper).collect(Collectors.toSet());
     }
@@ -191,10 +206,6 @@ public class Graph {
                 .filter(predicate)
                 .flatMap(mapper)
                 .collect(Collectors.toSet());
-    }
-
-    public void insert(List<Member<Node, Relationship>> relatedMemberList) {
-        addToGraph(relatedMemberList);
     }
 
     @Override

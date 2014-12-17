@@ -30,10 +30,6 @@ public class Node {
     }
 
     private boolean dataLooselyEquals(Map<String, Object> other) {
-        /*if (!this.data.keySet().containsAll(other.keySet())) {
-            return false;
-        }*/
-
         for (Map.Entry<String, Object> entry : other.entrySet()) {
             if (!entry.getValue().equals("Any") && !this.data.get(entry.getKey()).equals(entry.getValue())) {
                 return false;
