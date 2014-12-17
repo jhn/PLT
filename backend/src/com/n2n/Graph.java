@@ -33,6 +33,10 @@ public class Graph {
         public N getTo()   { return to; }
     }
 
+    public Set<Relationship> getRelationships(){
+        return this.relationships;
+    }
+
     public Graph(List<Member<Node, Relationship>> relatedMemberList) {
         addToGraph(relatedMemberList);
     }
@@ -179,6 +183,15 @@ public class Graph {
 
     public void insert(List<Member<Node, Relationship>> relatedMemberList) {
         addToGraph(relatedMemberList);
+    }
+
+    public Set<Node> getMapSet(){
+        Set<Node> allGraphNodes = new HashSet<Node>();
+        for(Relationship relationship : relationships){
+            Set<Node> nodesInRel = relationship.getAll();
+            allGraphNodes.addAll(nodesInRel);
+        }
+        return allGraphNodes;
     }
 
     @Override

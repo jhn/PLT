@@ -25,6 +25,9 @@ fn main() -> Void {
 
 	;;Need to be considered;;
 
-	print(visited_node);
+	print(Keanu.visited);
+	print(matrix.visited);
+	print(Leo.visited);
+	print(wolf.visited);
 
 }

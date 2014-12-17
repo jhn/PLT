@@ -132,7 +132,7 @@ and gen_nrn_tup nrn_tup = match nrn_tup with
 and gen_sfunc fname = match fname with
     (* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
     | SFindMany(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ")"
-    | SMap(id, smf) -> id ^ gen_map smf
+    | SMap(id, smf) -> "for( " ^ "Node " ^ gen_map id smf 
     | SNeighbors_Func(id1, id2) -> id1 ^ ".neighbors(" ^ id2 ^ ")"
 
 and gen_find_many sfind = match sfind with
@@ -141,8 +141,8 @@ and gen_find_many sfind = match sfind with
 
 (* TODO: Figure out what to pass into the Map function when created in Javac Backedn *)
 (* Cuz this is not right! *)
-and gen_map smap = match smap with
-  | SMap_Func(id,sl) -> ".map(" ^ id ^ ", " ^ gen_sstmt_list sl ^ ")"
+and gen_map id smap = match smap with
+  | SMap_Func(nid,sl) -> nid ^ " : " ^ id ^ ".getMapSet() ){\n" ^ gen_sstmt_list sl ^ "}\n" 
 
 and gen_sstmt stmt = match stmt with
   | SBlock(stmt_list) -> gen_sstmt_list stmt_list
@@ -165,7 +165,12 @@ and gen_var_dec dec = match dec with
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
     | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
     | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
-    | Graph -> gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "))"
+    | Graph -> (match e with
+        SFunc(fname, t) ->
+          (match fname with
+          SMap(_,_) -> gen_sfunc fname
+        | _ -> raise Not_found)
+        |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "))")
     | Void -> "void")(* impossible case *)
 
 and gen_var_dec_list var_dec_list = match var_dec_list with
