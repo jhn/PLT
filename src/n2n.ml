@@ -12,7 +12,7 @@ let usage (name:string) =
 
 let javac = "javac"
 
-let backend_path = "backend/src/"
+let backend_path = "../backend/src/"
 let target_path = backend_path ^ "com/n2n/"
 
 let read_process command =
