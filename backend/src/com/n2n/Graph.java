@@ -156,7 +156,15 @@ public class Graph {
     }
 
     public Set<Node> neighbors(Node target) {
-        return relationships.stream().flatMap((r -> r.getNodesFrom(target).stream())).collect(Collectors.toSet());
+        return getNodesFromRelationships(r -> r.getNodesFrom(target).stream());
+    }
+
+    public Set<Node> getMapSet() {
+        return getNodesFromRelationships(r -> r.getAll().stream());
+    }
+
+    private Set<Node> getNodesFromRelationships(Function<Relationship, Stream<? extends Node>> mapper) {
+        return relationships.stream().flatMap(mapper).collect(Collectors.toSet());
     }
 
     private Set<Relationship> relationshipFinder(Node left, Node right) {
@@ -183,10 +191,6 @@ public class Graph {
 
     public void insert(List<Member<Node, Relationship>> relatedMemberList) {
         addToGraph(relatedMemberList);
-    }
-
-    public Set<Node> getMapSet() {
-        return relationships.stream().flatMap((r -> r.getAll().stream())).collect(Collectors.toSet());
     }
 
     @Override
