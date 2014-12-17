@@ -195,6 +195,7 @@ let update_graph_table var_table id v =
 		let va = (match v with
 			|Complex(Graph_Literal(l)) -> l
 			|Func(Map(s, e1)) -> let (_, l) = List.find (fun (gid, _) -> gid=s) var_table.graphs in l
+			|Call(id,_) -> [];  
 			| _ -> raise(Error("Calling the wrong function, you fool!"))) in
 		let new_graphs = (id, va)::var_table.graphs in
 	 			{var_table with graphs = new_graphs}
