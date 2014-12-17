@@ -161,7 +161,7 @@ and gen_sstmt stmt = match stmt with
           | _ -> gen_expr expr ^ ";\n\t")
   | SReturn(expr) -> "return " ^ gen_expr expr ^ ";\n\t"
   | SIf(expr,s1,s2) -> "if(" ^ gen_expr expr ^ ") {\n\t\t" ^ gen_sstmt s1 ^ "}\n\telse {\n\t" ^ gen_sstmt s2 ^ "}\n\n"
-  | SVar_Decl(vdec) -> gen_var_dec vdec ^" "
+  | SVar_Decl(vdec) -> gen_var_dec vdec ^";\n\t"
 
 and gen_sstmt_list stmt_list = match stmt_list with
   | [] -> ""
@@ -169,31 +169,31 @@ and gen_sstmt_list stmt_list = match stmt_list with
   | head::tail -> gen_sstmt head ^ gen_sstmt_list tail
 
 and gen_var_dec dec = match dec with
-  | SVar(ty,id) -> gen_var_type ty ^ " " ^ id ^ ";"
+  | SVar(ty,id) -> gen_var_type ty ^ " " ^ id
   | SConstructor(ty,id,formals) -> "String " ^id^ " = " ^ "\"" ^id^ "\";\n"
   | SAccess_Assign(e1, e2) -> (match e1 with
-      SAccess(el, er, t) -> el ^ ".getData().put(" ^ "\"" ^ er ^ "\", " ^ gen_expr e2 ^ ");\n"
+      SAccess(el, er, t) -> el ^ ".getData().put(" ^ "\"" ^ er ^ "\", " ^ gen_expr e2 ^ ")"
       |_-> gen_expr e1 ^ " = " ^ gen_expr e2)
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
-    | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";\n"
-    | Rel | Node -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");\n"
+    | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
+    | Rel | Node -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
     | List(_) -> (match e with
         SFunc(fname, t) ->
           (match fname with
           _ -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_sfunc fname)
-        | _ -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");\n")
+        | _ -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")")
     | Graph -> (match e with
         SFunc(fname, t) ->
           (match fname with
           SMap(_,_,_) -> gen_sfunc fname
         | _ -> raise Not_found)
-        |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));\n")
+        |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "))")
     | Void -> "void")(* impossible case *)
 
 and gen_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
   | head::[] -> gen_var_dec head
-  | head::tail -> gen_var_dec head ^ gen_var_dec_list tail
+  | head::tail -> ";" ^ gen_var_dec head ^ gen_var_dec_list tail
 
 and gen_global_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
