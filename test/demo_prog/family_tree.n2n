@@ -6,8 +6,8 @@ fn DFS(N: Node, M: Graph)->Int {
 		print(N);
 		print("\n");
 		N.visited = true;
-		;;Neighbor: List<Node> = M.neighbors(N);;
-		;;Neighbor.map(node in { DFS(node, M) });;
+		Neighbor: List<Node> = M.neighbors(N);
+		Neighbor.map(node in { DFS(node, M); });
 	}
 	else{
 		return 0;
