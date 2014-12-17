@@ -12,7 +12,7 @@ let usage (name:string) =
 
 let javac = "javac"
 
-let backend_path = "../backend/src/"
+let backend_path = "backend/src/"
 let target_path = backend_path ^ "com/n2n/"
 
 let read_process command =
@@ -64,7 +64,7 @@ let _ =
                         ignore (read_process clean_command);
                         let output_file = open_out full_path in
                         output_string output_file java_source; close_out output_file;
-                        let command = (javac ^ " " ^ target_path ^ "*.java && java -cp ../backend/src com.n2n.Main") in
+                        let command = (javac ^ " " ^ target_path ^ "*.java && java -cp "^ backend_path ^" com.n2n.Main") in
                         let output = read_process command in
                         print_string output
             | Help -> print_endline (usage Sys.argv.(0)) (* impossible case *)

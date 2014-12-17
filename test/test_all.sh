@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COMPILER="../src/n2n -c"
+COMPILER="../n2n -c"
 TESTFILES=$@
 
 rm errors.out
