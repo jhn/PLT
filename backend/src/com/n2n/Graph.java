@@ -185,13 +185,8 @@ public class Graph {
         addToGraph(relatedMemberList);
     }
 
-    public Set<Node> getMapSet(){
-        Set<Node> allGraphNodes = new HashSet<Node>();
-        for(Relationship relationship : relationships){
-            Set<Node> nodesInRel = relationship.getAll();
-            allGraphNodes.addAll(nodesInRel);
-        }
-        return allGraphNodes;
+    public Set<Node> getMapSet() {
+        return relationships.stream().flatMap((r -> r.getAll().stream())).collect(Collectors.toSet());
     }
 
     @Override
