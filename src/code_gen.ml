@@ -62,7 +62,9 @@ let rec gen_expr expr = match expr with
   | SId(v,t)                -> v
   | SComplex(c,t)           -> gen_scomplex c
   | SUnop(u, e, t)          -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
-  | SBinop(e1, op, e2, t)   -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
+  | SBinop(e1, op, e2, t)   -> (match e1, op with
+            | SAccess(_,_,_), Equal | SAccess(_,_,_), Neq -> gen_expr e1 ^ ".equals(" ^ gen_expr e2 ^ ")"
+            | _ ->gen_expr e1 ^ gen_binop op ^ gen_expr e2)
   | SAccess(e1,e2, t)       -> e1 ^ ".getValueFor(\"" ^ e2 ^"\")"
   | SCall(id, e1, t)        -> if(id="print") then gen_print e1 else id ^ "(" ^ gen_expr_list e1 ^ ")"
   | SFunc(fname, t)         -> gen_sfunc fname
@@ -135,7 +137,7 @@ and gen_sfunc fname = match fname with
     | SMap(id, ty, smf) -> 
         (match ty with 
           Graph -> "for( " ^ "Node " ^ gen_map id ty smf 
-          | List(t) -> "for( " ^ gen_var_type t ^ gen_map id ty smf
+          | List(t) -> "for( " ^ gen_var_type t ^ " " ^ gen_map id ty smf
           | _ -> raise Not_found)
     | SNeighbors_Func(id1, id2) -> id1 ^ ".neighbors(" ^ id2 ^ ")"
 
@@ -154,7 +156,9 @@ and gen_map id ty smap = match smap with
 
 and gen_sstmt stmt = match stmt with
   | SBlock(stmt_list) -> gen_sstmt_list stmt_list
-  | SExpr(expr) -> gen_expr expr ^ ";\n\t"
+  | SExpr(expr) -> (match expr with 
+          SFunc(SMap(_,_,_), _) -> gen_expr expr ^ "\n\t"
+          | _ -> gen_expr expr ^ ";\n\t")
   | SReturn(expr) -> "return " ^ gen_expr expr ^ ";\n\t"
   | SIf(expr,s1,s2) -> "if(" ^ gen_expr expr ^ ") {\n\t\t" ^ gen_sstmt s1 ^ "}\n\telse {\n\t" ^ gen_sstmt s2 ^ "}\n\n"
   | SVar_Decl(vdec) -> gen_var_dec vdec ^";\n\t"
@@ -176,8 +180,7 @@ and gen_var_dec dec = match dec with
     | List(_) -> (match e with
         SFunc(fname, t) ->
           (match fname with
-          SMap(_,_,_) -> gen_sfunc fname
-        | _ -> raise Not_found)
+          _ -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_sfunc fname)
         | _ -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")")
     | Graph -> (match e with
         SFunc(fname, t) ->

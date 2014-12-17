@@ -9,9 +9,7 @@ fn DFS(N: Node, M: Graph)->Int {
 		Neighbor: List<Node> = M.neighbors(N);
 		Neighbor.map(node in { DFS(node, M); });
 	}
-	else{
-		return 0;
-	}
+	return 0;
 }
 
 fn main()->Void {
