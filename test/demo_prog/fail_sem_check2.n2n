@@ -1,0 +1,10 @@
+actor: Node = {name: String, age: Int};
+role: Rel = {name: String};
+
+fn main() -> Void{
+	g: Graph = <
+		actor["Keanu", 24] role["Neo"] actor["Morpheus", 23]
+	>;
+	g.find_many(actor["Keanu", _]); 
+	actor["Keanu", _];
+}

@@ -1,10 +1,5 @@
-member: Node = {Name: String, Age: Int};
+member: Node = {Name: String, Age: Int, visited: Bool};
 relation: Rel = {Relation: String};
-
-fn DFS_setup(g: Graph) -> Graph {
-	g.map(node in { node [+] visited: Bool; });
-	return g;
-}
 
 fn DFS(N: Node, M: Graph)->Int {
 	if(N.visited == false){
@@ -18,10 +13,10 @@ fn DFS(N: Node, M: Graph)->Int {
 }
 
 fn main()->Void {
-	John: Node = member["John Hamilton", 49];
-	Mary: Node = member["Mary Lance", 47];
-	Johan: Node = member["Johan Hamilton", 21];
-	Sara: Node = member["Sara Hamilton", 20];
+	John: Node = member["John Hamilton", 49, false];
+	Mary: Node = member["Mary Lance", 47, false];
+	Johan: Node = member["Johan Hamilton", 21, false];
+	Sara: Node = member["Sara Hamilton", 20, false];
 
 	Mother: Rel = relation["Mother of"];
 	Father: Rel = relation["Father of"];
@@ -42,6 +37,5 @@ fn main()->Void {
 		Sara Child Mary
 	>;
 
-	family_setup: Graph = DFS_setup(Family);
-	DFS(Johan, family_setup);
+	DFS(Johan, Family);
 }

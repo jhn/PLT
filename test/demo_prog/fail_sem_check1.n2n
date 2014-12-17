@@ -1,0 +1,6 @@
+
+actor: Node = {name: String, age: Int};
+
+fn main() -> Void{
+	keanu: Node = actor["Keanu"];
+}

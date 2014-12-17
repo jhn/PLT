@@ -187,6 +187,7 @@ and gen_var_dec dec = match dec with
           (match fname with
           SMap(_,_,_) -> gen_sfunc fname
         | _ -> raise Not_found)
+        | SCall(s, e1, t) -> gen_var_type ty ^ " " ^ id ^ " = " ^ s ^ "(" ^ gen_expr_list e1 ^ ");" 
         |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));")
     | Void -> "void")(* impossible case *)
 
