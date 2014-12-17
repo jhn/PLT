@@ -526,7 +526,7 @@ and check_stmt env stmt =
 		let (checked_stmts, up_env) = List.fold_left (fun (l, e) s -> let (checked_statment, up_e) = check_stmt e s in
 															(checked_statment :: l, up_e)) ([], env) stmt_list in
 		let resolved_env = resolve_envs new_env up_env in
-		(SBlock(checked_stmts), resolved_env)
+		(SBlock(List.rev checked_stmts), resolved_env)
 
 	| Expr(e) -> 
 		let new_env = (match e with
