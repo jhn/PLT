@@ -36,9 +36,14 @@ public class Node {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        int count = this.data.size();
+        int i=0;
         sb.append(type).append("{ ");
         for (Map.Entry<String, Object> data : this.data.entrySet()) {
             sb.append(data.getKey()).append(" = ").append(data.getValue());
+            if (i < count-1)
+                sb.append(", ");
+            i++;
         }
         sb.append(" }");
         return sb.toString();

@@ -15,7 +15,7 @@ let imports =
   | Rel      -> "Relationship"
   | Node     -> "Node"
   | Graph    -> "Graph"
-  | List(ty) -> "List<" ^ gen_var_type ty ^ ">"
+  | List(ty) -> "Set<" ^ gen_var_type ty ^ ">"
 
 let gen_binop = function
   | Add     -> "+"
@@ -42,7 +42,7 @@ let gen_literal lit = match lit with
   | SDouble_Literal(d)   -> string_of_float d
   | SBool_Literal(b)     -> string_of_bool b
   | SString_Literal(str) -> "\"" ^ str ^ "\""
-  | SAny                 -> ""
+  | SAny                 -> "Any"
 
 let rec gen_literal_list ll = match ll with
   | [] -> ""
@@ -137,7 +137,7 @@ and gen_sstmt_list stmt_list = match stmt_list with
 
 and gen_var_dec dec = match dec with
   | SVar(ty,id) -> gen_var_type ty ^ " " ^ id
-  | SConstructor(ty,id,formals) -> "int i = 0\n"
+  | SConstructor(ty,id,formals) -> "public static String " ^id^ " = " ^ "\"" ^id^ "\";\n"
   | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
     | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
