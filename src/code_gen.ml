@@ -75,35 +75,39 @@ and gen_formal_list fl = match fl with
   | head::tail -> gen_formal head ^ ", " ^ gen_formal_list tail
 
 and gen_print p = match p with
-  [] -> ""
-  | head::[] -> "System.out.print(" ^ gen_expr head ^ ")"
+  | []         -> ""
+  | head::[]   -> "System.out.print(" ^ gen_expr head ^ ")"
   | head::tail -> "System.out.print(" ^ gen_expr head ^ ")" ^ gen_print tail
 
 and gen_sgraph_type gt = match gt with
-  | SGraph_Id(id) -> id
+  | SGraph_Id(id)   -> id
   | SGraph_type(s1) -> gen_scomplex s1
 
 and gen_scomplex c = match c with
   | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list (* Should just be a list of graph elements *)
-  | SGraph_Element(id, lit_list) -> id ^ gen_graph_elem lit_list
+  | SGraph_Element(element_type, field_info) -> gen_element_instantiation element_type field_info
 
-and gen_graph_elem ll = "(" ^ gen_literal_list ll ^ ")"
+and gen_element_instantiation element_type field_info = match element_type with
+  |(graph_element_type, id) -> " new " ^ gen_var_type graph_element_type ^ "(" ^ id ^
+  "new HashMap<String, Object>() {{\n\t" ^ (gen_graph_elem element_type field_info "") ^ "\n}})\n"
+
+and gen_graph_elem element_type field_info out_str = match element_type with
+  | (n2n_type, id) -> (match field_info with
+    | (field_name, field_type, field_value)::tail -> let put_string = (if field_type = String then
+      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") ("\"" ^ gen_literal field_value ^ "\"")
+    else
+      sprintf "put(%s, %s);\n" ("\"" ^ field_name ^ "\"") (gen_literal field_value)) in
+      let new_str = out_str ^ put_string in (gen_graph_elem element_type tail new_str)
+    | [] -> out_str)
 
 and gen_node_rel_node_tup_list nrn_tup = match nrn_tup with
   | [] -> ""
   | head::[] -> gen_nrn_tup head
   | head::tail -> gen_nrn_tup head ^ ", " ^ gen_node_rel_node_tup_list tail
-(*and gen_node_rel_node_tup nrn_tup =
-  List.iter (fun nrn_expr -> match nrn_expr with SNode_Rel_Node_tup(sg1, sg2, sg3) -> gen_sgraph_type sg1 ^ ", " ^ gen_sgraph_type sg2 ^ ", " ^ gen_sgraph_type sg3) nrn_tup; *)
+
 and gen_nrn_tup nrn_tup = match nrn_tup with
   SNode_Rel_Node_tup(sg1, sg2, sg3) -> "new Graph.Member<>(" ^ gen_sgraph_type sg1 ^ ", " ^ gen_sgraph_type sg2 ^ ", " ^ gen_sgraph_type sg3 ^ ")"
 
-(*
-and gen_node_rel_node_tup_list nrn_list = match nrn_list with
-  | [] -> ""
-  | head::[] -> gen_node_rel_node_tup head
-  | head::tail -> gen_node_rel_node_tup head ^ ", " ^ gen_node_rel_node_tup_list tail
-*)
 and gen_sfunc fname = match fname with
     (* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
     | SFindMany(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ")"
