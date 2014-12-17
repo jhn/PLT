@@ -21,6 +21,8 @@ fn main() -> Void {
 	visited_node: List<Node>;
 	mutated_graph: Graph = Cast.map(node in {node [+] visited:Bool;});
 
+	Keanu.visited = true;
+
 	;;Need to be considered;;
 
 	print(visited_node);

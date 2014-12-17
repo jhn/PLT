@@ -1,2 +1,2 @@
-{Keanu, 35}
-{Neo}
+actor{ name = Keanu, age = 35}
+actedIn{ role = Neo }

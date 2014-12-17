@@ -18,9 +18,9 @@ fn main() -> Void {
 		Leo jordan wolf
 	>;
 
-	print(Keanu.name);
+	print(Cast.Keanu);
 	print("\n");
-	print(neo.role);
+	print(Cast.neo);
 	print("\n");
 
 }
