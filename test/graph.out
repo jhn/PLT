@@ -1,3 +1,1 @@
-< {Keanu, 35} {Neo} {Matrix, 1999},
-  {Leo, 20} {Jordan} {Wolf, 1994}
->
+Graph{relationships=[actedIn{ role = Jordan }, actedIn{ role = Neo }]}
