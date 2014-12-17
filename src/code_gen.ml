@@ -173,10 +173,10 @@ and gen_var_dec dec = match dec with
   | SConstructor(ty,id,formals) -> "String " ^id^ " = " ^ "\"" ^id^ "\";\n"
   | SAccess_Assign(e1, e2) -> (match e1 with
       SAccess(el, er, t) -> el ^ ".getData().put(" ^ "\"" ^ er ^ "\", " ^ gen_expr e2 ^ ")"
-      |_-> gen_expr e1 ^ " = " ^ gen_expr e2) ^ ";"
+      |_-> gen_expr e1 ^ " = " ^ gen_expr e2)
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
-    | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
-    | Rel | Node -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
+    | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ";"
+    | Rel | Node -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");"
     | List(_) -> (match e with
         SFunc(fname, t) ->
           (match fname with
