@@ -489,7 +489,7 @@ and get_sfm env fm =
 
 and get_smap env ty mf =
 	match mf with
-	Map_Func(s,sl) -> SMap_Func(s, check_map_func env ty mf) (*CHANGE THIS AFTER CHECK STATEMENTS!!!!!!!*)
+	Map_Func(s,sl) -> SMap_Func(s, check_map_func env ty mf) 
 
 and get_sbuilt_in_function_call env f =
 	match f with
@@ -511,7 +511,7 @@ and get_sexpr env ex = match ex with
 	| Geop (e, geop, form) -> SGeop(get_sexpr env e, geop, get_sformal form, check_expr env ex)
 	| Access(str, str2) -> SAccess(str, str2, check_expr env ex)
 	| Call(str, el) -> SCall(str, List.map (fun e -> get_sexpr env e) el, check_expr env ex)
-	| Func(f) -> SFunc(get_sbuilt_in_function_call env f, check_expr env ex)(*Still needs implementation for each funciton*)
+	| Func(f) -> SFunc(get_sbuilt_in_function_call env f, check_expr env ex)
 	| Complex(comp) -> SComplex(get_scomplex env comp, check_expr env ex)
 
 and resolve_envs old_env new_env =
