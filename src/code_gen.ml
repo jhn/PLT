@@ -181,19 +181,19 @@ and gen_var_dec dec = match dec with
         SFunc(fname, t) ->
           (match fname with
           _ -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_sfunc fname)
-        | _ -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")")
+        | _ -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ");")
     | Graph -> (match e with
         SFunc(fname, t) ->
           (match fname with
           SMap(_,_,_) -> gen_sfunc fname
         | _ -> raise Not_found)
-        |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "))")
+        |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "));")
     | Void -> "void")(* impossible case *)
 
 and gen_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
   | head::[] -> gen_var_dec head
-  | head::tail -> ";" ^ gen_var_dec head ^ gen_var_dec_list tail
+  | head::tail -> gen_var_dec head ^ gen_var_dec_list tail
 
 and gen_global_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
