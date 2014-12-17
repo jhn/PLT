@@ -6,6 +6,14 @@ let imports =
   "package com.n2n;\n\n" ^
   "import java.util.*;\n\n"
 
+let set_default_val ty = match ty with
+    Int -> "0"
+    | String -> "\"\""
+    | Double -> "0.0"
+    | Bool -> "false"
+    | _ -> "\"\""
+
+
  let rec gen_var_type = function
     Int      -> "int"
   | Double   -> "double"
@@ -59,7 +67,14 @@ let rec gen_expr expr = match expr with
   | SCall(id, e1, t)        -> if(id="print") then gen_print e1 else id ^ "(" ^ gen_expr_list e1 ^ ")"
   | SFunc(fname, t)         -> gen_sfunc fname
   | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_nrn_tup nrn ^ ")"
-  | SGeop(e1, geop, f1, t)  -> gen_expr e1 ^ gen_graph_elem_op geop ^ gen_formal f1 ^ ")"
+  | SGeop(e1, geop, f1, t)  -> gen_expr e1 ^ gen_graph_elem_op geop ^ 
+      (match f1 with 
+        SFormal(_, id) -> id) ^ 
+      (match geop with 
+        Data_Insert ->  let t = 
+          (match f1 with
+            SFormal(ty,_) -> ty) in "\"," ^ (set_default_val t) ^ ")"
+        | Data_Remove -> "\")")
 
 and gen_expr_list expr_list = match expr_list with
   | [] -> ""
@@ -169,8 +184,8 @@ and gen_graph_op grop = match grop with
   | Graph_Remove -> ".remove("
 
 and gen_graph_elem_op geop = match geop with
-  | Data_Insert -> ".insert("
-  | Data_Remove -> ".remove("
+  | Data_Insert -> ".getData().put(\""
+  | Data_Remove -> ".getData().remove(\""
 
 and gen_func_dec func =
   if(func.sfname = "main") then "public static void main(String[] args) {\n\n\t\t" ^ gen_sstmt_list func.sbody ^ "}\n"
