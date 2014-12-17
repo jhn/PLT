@@ -1,24 +1,33 @@
-fn map() -> Void {
+actor: Node = { name: String, age: Int };
+actedIn: Rel = { role: String };
+movie: Node = { title: String, year: Int };
 
-	actor: Node = { name: String, age: Int }
-	Keanu: Node = actor["Keanu", 35]
-	Leo: Node = actor["Leo", 20]
+fn main() -> Void {
 
-	actedIn: Rel = { role: String }
-	neo: Rel = actedIn["Neo"]
-	jordan: Rel = actedIn["Jordan"]
+	Keanu: Node = actor["Keanu", 35];
+	Leo: Node = actor["Leo", 20];
 
-	movie: Node = { title: String, year: Int }
-	matrix: Node = movie["Matrix", 1999]
-	wolf: Node = movie["Wolf", 1994]
+	neo: Rel = actedIn["Neo"];
+	jordan: Rel = actedIn["Jordan"];
 
-	Cast: Graph = (
+	matrix: Node = movie["Matrix", 1999];
+	wolf: Node = movie["Wolf", 1994];
+
+	Cast: Graph = <
 		Keanu neo matrix,
 		Leo jordan wolf
-	)
+	>;
 
-	visited_node: List<Node> = Cast.map(node in {node [+] visited:Bool = true})
+	visited_node: List<Node>;
+	mutated_graph: Graph = Cast.map(node in {node [+] visited:Bool;});
 
-	print(visited_node)
+	Keanu.visited = true;
+
+	;;Need to be considered;;
+
+	print(Keanu.visited);
+	print(matrix.visited);
+	print(Leo.visited);
+	print(wolf.visited);
 
 }

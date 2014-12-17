@@ -1,5 +1,8 @@
-fn  escapestr3() -> Void {
-	a: String = "a\\"
-	print(a)
+fn escapestr3() -> Void {
+	a: String = "a\\";
+	print(a);
+}
 
+fn main() -> Void {
+  escapestr3();
 }

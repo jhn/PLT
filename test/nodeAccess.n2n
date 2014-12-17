@@ -1,6 +1,10 @@
-fn nodeAccess() -> Void {
-	actor: Node = { name: String, age: Int }
-	Keanu: Node = actor["Keanu", 35]
-	print(Keanu.name)
-	
+actor: Node = { name: String, age: Int };
+
+fn main() -> Void {
+
+	Keanu: Node = actor["Keanu", 35];
+	Keanu.name = "Reeves";
+	print(Keanu.name);
+	print("\n");
+
 }

@@ -18,6 +18,17 @@ public class Relationship {
         this(type, Collections.emptyMap());
     }
 
+    public Object getValueFor(String field) {
+        return this.data.get(field);
+    }
+
+    public Set<Node> getAll() {
+        Set<Node> nodes = new HashSet<>();
+        nodes.addAll(fromTo.keySet());
+        nodes.addAll(toFrom.keySet());
+        return nodes;
+    }
+
     public void addNodes(Node from, Node to) {
         if (fromTo.containsKey(from)) {
             fromTo.get(from).add(to);
@@ -66,9 +77,17 @@ public class Relationship {
 
     @Override
     public String toString() {
-        return "Relationship{" +
-                "type='" + type + '\'' +
-                ", data=" + data +
-                '}';
+        StringBuilder sb = new StringBuilder();
+        int count = this.data.size();
+        int i = 0;
+        sb.append(type).append("{ ");
+        for (Map.Entry<String, Object> data : this.data.entrySet()) {
+            sb.append(data.getKey()).append(" = ").append(data.getValue());
+            if (i < count-1)
+                sb.append(", ");
+            i++;
+        }
+        sb.append(" }");
+        return sb.toString();
     }
 }

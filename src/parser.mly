@@ -2,7 +2,7 @@
    open Ast
 %}
 
-%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
+%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET ANY
 %token TERMINATION COMMA ASSIGN COLON ARROW CONCAT ACCESS
 %token PLUS MINUS TIMES DIVIDE MOD
 %token EQ NEQ LT LEQ GT GEQ AND OR NOT
@@ -15,6 +15,7 @@
 %token <string> STRING_LITERAL ID
 %token <float> DOUBLE_LITERAL
 %token <bool> BOOL_LITERAL
+%token EOF
 
 %nonassoc NOELSE
 %nonassoc ELSE
@@ -39,32 +40,27 @@ program:
  | program function_declaration   { fst $1, ($2 :: snd $1) }
 
 var_declaration:
-  | ID COLON n2n_type                                          { Var($3, $1) } /* foo: String */
-  | ID COLON complex_type ASSIGN LBRACE formal_list RBRACE     { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
+  | ID COLON n2n_type                                         { Var($3, $1) } /* foo: String */
+  | ID COLON n2n_type ASSIGN LBRACE formal_list RBRACE     { Constructor($3, $1, List.rev $6)} /* movie: Node = { title: String, year: Int } */
   | expr ASSIGN expr                                           { Access_Assign($1, $3) } /* foo: String = "lolomg", matrix: Node = movie[“Matrix”, 1999] */
-  | ID COLON complex_type ASSIGN expr                          { Var_Complex_Decl_Assign($1, $3, $5)} /* Split the declaration and initializatio for complex */
-  | ID COLON primitive_type ASSIGN expr                        { Var_Primitive_Decl_Assign($1, $3, $5)} /* and primitive type */
+  | ID COLON n2n_type ASSIGN expr                          { Var_Decl_Assign($1, $3, $5)} /* Split the declaration and initializatio for complex */
 
 global_var_declaration:
   var_declaration TERMINATION { $1 }
 
 n2n_type:
-  | primitive_type { N2N_primitive($1) }
-  | complex_type   { N2N_complex($1) }
-
-primitive_type:
-  | INT       { Int }
-  | STRING    { String }
-  | DOUBLE    { Double }
-  | BOOL      { Bool }
-
-complex_type:
-  | GRAPH     { Graph }
-  | NODE      { Node }
-  | REL       { Rel }
+  | INT                 { Int }
+  | STRING              { String }
+  | DOUBLE              { Double }
+  | BOOL                { Bool }
+  | GRAPH               { Graph }
+  | NODE                { Node }
+  | REL                 { Rel }
+  | LIST LT n2n_type GT { List($3)}
+  | VOID                { Void }
 
 function_declaration:
- | FUNCTION ID LPAREN formal_parameters RPAREN ARROW return_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
+ | FUNCTION ID LPAREN formal_parameters RPAREN ARROW n2n_type LBRACE statements RBRACE /* fn foo (bar: Int) -> Bool { ... } */
      {
        { fname = $2;
          formals = $4;
@@ -82,15 +78,7 @@ formal_list:
   | formal_list COMMA parameter { $3 :: $1 } /* foo: Int, bar: String */
 
 parameter:
-  | ID COLON type_spec { Formal($3, $1) } /* foo: Int */
-
-type_spec:
-  | n2n_type              { N2N_type($1) }
-  | LIST LT n2n_type GT   { List($3) } /*Store the list in the AST?*/
-
-return_type:
-  | type_spec { Type_spec($1) }
-  | VOID      { Void }
+  | ID COLON n2n_type    { Formal($3, $1) } /* foo: Int */
 
 statements:
   | /* nothing */        { [] }
@@ -122,24 +110,33 @@ literal:
   | STRING_LITERAL               { String_Literal($1) } /* "Me", "You", "Bill Clinton" */
   | DOUBLE_LITERAL               { Double_Literal($1) } /* 4.2, 3.7, 7.4 */
   | BOOL_LITERAL                 { Bool_Literal($1) } /* true, false */
+  | ANY                          { Any }
 
 complex_literal:
-  | ID LBRACKET literal_list RBRACKET    { Graph_Element($1, List.rev $3) } /* actor("Keanu"), "true" */
-  | LPAREN graph_component_list RPAREN   { Graph_Literal(List.rev $2) }
+  | ID LBRACKET literal_opt RBRACKET    { Graph_Element($1, $3) } /* actor("Keanu"), "true" */
+  | LT graph_components GT              { Graph_Literal($2) } /* < graph_literals > */
 
 graph_component:
   graph_type graph_type graph_type       { Node_Rel_Node_Tup($1, $2, $3) } /* :: or commas? */
 
+graph_components:
+  |                         { [] }
+  | graph_component_list    { List.rev $1 }
+
 graph_component_list:
-  |                                            { [] }
+  | graph_component                            { [$1] }
   | graph_component_list COMMA graph_component { $3 :: $1 }
 
 graph_type:
   | ID                             { Graph_Id($1) }
   | complex_literal                { Graph_Type($1) }
 
+literal_opt:
+  |               { [] }
+  | literal_list  { List.rev $1 }
+
 literal_list:
-  |                              { [] }
+  | literal                      { [$1] }
   | literal_list COMMA literal   { $3 :: $1 }
 
 actuals_opt:
@@ -171,8 +168,8 @@ graph_operation:
   | expr GRAPH_REMOVE LPAREN graph_component RPAREN                        { Grop($1, Graph_Remove, $4)}/* ^- */
 
 graph_element_operation:
-  | expr DATA_INSERT expr                                                  { Geop($1, Data_Insert, $3) }/* [+] */
-  | expr DATA_REMOVE expr                                                  { Geop($1, Data_Remove, $3) }/* [-] */
+  | expr DATA_INSERT parameter                                       { Geop($1, Data_Insert, $3) }/* [+] */
+  | expr DATA_REMOVE parameter                                       { Geop($1, Data_Remove, $3) }/* [-] */
 
 unary_operation:
   | NOT expr                     { Unop(Not, $2) }

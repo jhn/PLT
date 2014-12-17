@@ -22,9 +22,9 @@ let decimal = ((digit+ '.' digit*) | ('.' digit+))
 (* Regular Rules *)
 
 rule token = parse
-   | [' ' '\t']         { token lexbuf }
-   | '\n'                    { TERMINATION } (* terminate the code*)
-   | ';'                     { block_comment lexbuf } (* block comment*)
+   | [' ' '\n' '\t']         { token lexbuf }
+   | ';'                     { TERMINATION } (* terminate the code*)
+   | ";;"                    { block_comment lexbuf } (* block comment*)
 
    | '('                     { LPAREN }
    | ')'                     { RPAREN }
@@ -84,17 +84,18 @@ rule token = parse
    | "String"                { STRING }
    | "Bool"                  { BOOL }
    | "Void"                  { VOID }
+   | '_'                     { ANY }
 
  | digit+ as lit 										  { INT_LITERAL(int_of_string lit) }
  | decimal as lit 										  { DOUBLE_LITERAL(float_of_string lit) }
- | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(verify_escape lit) }
+ | '"' ([^'"']* as lit) '"'   							  { STRING_LITERAL(lit) }
  | ("true" | "false") as lit							  { BOOL_LITERAL(bool_of_string lit) }
  | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lit { ID(lit) }  (*every ID should start with a letter*)
  | eof { EOF }
  | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and block_comment = parse
-  ";" { token lexbuf }
+  ";;" { token lexbuf }
 | eof  { raise (LexError("unterminated block_comment!")) }
 | _    { block_comment lexbuf }
 

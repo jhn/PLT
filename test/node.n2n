@@ -1,6 +1,9 @@
-fn node() -> Void {
-	actor: Node = { name: String, age: Int }
-	Keanu: Node = actor["Keanu", 35]
-	print(Keanu)
-	
+actor: Node = { name: String, age: Int };
+
+fn main() -> Void {
+
+	Keanu: Node = actor["Keanu", 35];
+	print(Keanu);
+	print("\n");
+
 }

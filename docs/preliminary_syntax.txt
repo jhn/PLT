@@ -23,8 +23,8 @@ conventions:
 	or more of the basic data types. Looks like:
 	{A R1 B} so {Node (Whitespace) Relationship (Whitespace) Node};
 	This creates a directed edge from A to B;
-	
-	Graph: Not sure how we're implementing this yet. But I think we're 
+
+	Graph: Not sure how we're implementing this yet. But I think we're
 	leaning toward a list of nodes, which in turn, have a list of edges.
 	Either that, or an adjacency matrix (see Wikipedia). Syntax for this
 	is:
@@ -60,5 +60,5 @@ Assignment (=)
 
 Please put your input on this. Change this file or whatever you think. And then push it back to the github repo.
 
-Nick 
+Nick
 

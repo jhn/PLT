@@ -1,1 +1,1 @@
-{Keanu, 35}
+actor{ name = Keanu, age = 35 }

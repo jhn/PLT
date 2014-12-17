@@ -33,13 +33,19 @@ public class Graph {
         public N getTo()   { return to; }
     }
 
+    public Set<Relationship> getRelationships(){
+        return this.relationships;
+    }
+
     public Graph(List<Member<Node, Relationship>> relatedMemberList) {
-        relatedMemberList.stream()
-                .forEach((members) -> {
-                    // Hooks up relationships
-                    members.getRel().addNodes(members.getFrom(), members.getTo());
-                    relationships.add(members.getRel());
-                });
+        addToGraph(relatedMemberList);
+    }
+
+    private void addToGraph(List<Member<Node, Relationship>> relatedMemberList) {
+        relatedMemberList.stream().forEach((members) -> {
+            members.getRel().addNodes(members.getFrom(), members.getTo());
+            relationships.add(members.getRel());
+        });
     }
 
     /**
@@ -138,6 +144,29 @@ public class Graph {
         return result;
     }
 
+    public Set<Node> findMany(Node target) {
+        Set<Node> nodes = new HashSet<>();
+        for (Relationship relationship : relationships) {
+            nodes.addAll(relationship
+                    .getAll()
+                    .stream()
+                    .filter(node -> node.looselyEquals(target)).collect(Collectors.toList()));
+        }
+        return nodes;
+    }
+
+    public Set<Node> neighbors(Node target) {
+        return getNodesFromRelationships(r -> r.getNodesFrom(target).stream());
+    }
+
+    public Set<Node> getMapSet() {
+        return getNodesFromRelationships(r -> r.getAll().stream());
+    }
+
+    private Set<Node> getNodesFromRelationships(Function<Relationship, Stream<? extends Node>> mapper) {
+        return relationships.stream().flatMap(mapper).collect(Collectors.toSet());
+    }
+
     private Set<Relationship> relationshipFinder(Node left, Node right) {
         Set<Relationship> result = new HashSet<>();
         for (Relationship relationship : relationships) {
@@ -160,4 +189,14 @@ public class Graph {
                 .collect(Collectors.toSet());
     }
 
+    public void insert(List<Member<Node, Relationship>> relatedMemberList) {
+        addToGraph(relatedMemberList);
+    }
+
+    @Override
+    public String toString() {
+        return "Graph{" +
+                "relationships=" + relationships +
+                '}';
+    }
 }

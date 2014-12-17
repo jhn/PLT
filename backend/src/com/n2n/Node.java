@@ -12,6 +12,36 @@ public class Node {
         this.data = data;
     }
 
+    public Object getValueFor(String field) {
+        return this.data.get(field);
+    }
+
+    public Map<String, Object> getData() {
+        return this.data;
+    }
+
+    public boolean looselyEquals(Object other) {
+        if (this == other) return true;
+        if (other == null || getClass() != other.getClass()) return false;
+
+        Node otherNode = (Node) other;
+
+        return type.equals(otherNode.type) && dataLooselyEquals(otherNode.getData());
+    }
+
+    private boolean dataLooselyEquals(Map<String, Object> other) {
+        if (!this.data.keySet().containsAll(other.keySet())) {
+            return false;
+        }
+
+        for (Map.Entry<String, Object> entry : other.entrySet()) {
+            if (!entry.getValue().equals("Any") && !this.data.get(entry.getKey()).equals(entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -31,9 +61,17 @@ public class Node {
 
     @Override
     public String toString() {
-        return "Node{" +
-                "type='" + type + '\'' +
-                ", data=" + data +
-                '}';
+        StringBuilder sb = new StringBuilder();
+        int count = this.data.size();
+        int i=0;
+        sb.append(type).append("{ ");
+        for (Map.Entry<String, Object> data : this.data.entrySet()) {
+            sb.append(data.getKey()).append(" = ").append(data.getValue());
+            if (i < count-1)
+                sb.append(", ");
+            i++;
+        }
+        sb.append(" }");
+        return sb.toString();
     }
 }

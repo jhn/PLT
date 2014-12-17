@@ -1,10 +1,11 @@
-fn foo () -> Void {
-	;Do something;
-	return 5
+fn foo () -> Int {
+	;;Do something;;
+	return 5;
 
 }
 
-fn init1 () -> Void {
-	a: Int = foo()
-	print(a)
+fn main () -> Void {
+	a: Int = foo();
+	print(a);
+	print("\n");
 }

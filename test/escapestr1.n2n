@@ -1,5 +1,4 @@
-fn  escapestr1() -> Void {
-	a: String = "a\\n"
-	print(a)
-	
+fn  main() -> Void {
+	a: String = "a\n";
+	print(a);
 }
