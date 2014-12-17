@@ -55,7 +55,7 @@ let rec gen_expr expr = match expr with
   | SComplex(c,t)           -> gen_scomplex c
   | SUnop(u, e, t)          -> gen_unop u ^ "(" ^ gen_expr e ^ ")"
   | SBinop(e1, op, e2, t)   -> gen_expr e1 ^ gen_binop op ^ gen_expr e2
-  | SAccess(e1,e2, t)       -> e1 ^ "." ^ e2
+  | SAccess(e1,e2, t)       -> e1 ^ ".getValueFor(\"" ^ e2 ^"\")"
   | SCall(id, e1, t)        -> if(id="print") then gen_print e1 else id ^ "(" ^ gen_expr_list e1 ^ ")"
   | SFunc(fname, t)         -> gen_sfunc fname
   | SGrop(e1, grop, nrn, t) -> gen_expr e1 ^ gen_graph_op grop ^ gen_nrn_tup nrn ^ ")"
@@ -143,8 +143,10 @@ and gen_sstmt_list stmt_list = match stmt_list with
 
 and gen_var_dec dec = match dec with
   | SVar(ty,id) -> gen_var_type ty ^ " " ^ id
-  | SConstructor(ty,id,formals) -> "public static String " ^id^ " = " ^ "\"" ^id^ "\";\n"
-  | SAccess_Assign(e1, e2) -> gen_expr e1 ^ " = " ^ gen_expr e2
+  | SConstructor(ty,id,formals) -> "String " ^id^ " = " ^ "\"" ^id^ "\";\n"
+  | SAccess_Assign(e1, e2) -> (match e1 with
+      SAccess(el, er, t) -> el ^ ".getData().put(" ^ "\"" ^ er ^ "\", " ^ gen_expr e2 ^ ")"
+      |_-> gen_expr e1 ^ " = " ^ gen_expr e2)
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
     | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
     | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
