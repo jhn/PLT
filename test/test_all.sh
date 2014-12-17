@@ -19,7 +19,12 @@ do
 		echo " OK"
 	else
 		echo " FAIL"
-    echo "$DIFF"
+    echo "========"
+    echo "Expected:"
+    echo "$(cat ${TESTFILENAME})"
+    echo "========"
+    echo "But was:"
+    echo "$(cat ${OUTFILENAME})"
 	fi
 
   rm -f $OUTFILENAME
