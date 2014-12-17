@@ -215,7 +215,12 @@ public class Graph {
             Map<Node, Set<Node>> allFromTo = relationship.getAllFromTo();
             for (Node startNode : allFromTo.keySet()) {
                 for (Node endNode : allFromTo.get(startNode)) {
-                    sb.append(startNode).append(" ").append(relationship).append(" ").append(endNode).append(", ");
+                    sb.append(startNode)
+                            .append(" ")
+                            .append(relationship)
+                            .append(" ")
+                            .append(endNode)
+                            .append(",\n");
                 }
             }
         }
