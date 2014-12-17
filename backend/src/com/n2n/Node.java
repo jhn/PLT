@@ -35,9 +35,12 @@ public class Node {
 
     @Override
     public String toString() {
-        return "Node{" +
-                "type='" + type + '\'' +
-                ", data=" + data +
-                '}';
+        StringBuilder sb = new StringBuilder();
+        sb.append(type).append("{ ");
+        for (Map.Entry<String, Object> data : this.data.entrySet()) {
+            sb.append(data.getKey()).append(" = ").append(data.getValue());
+        }
+        sb.append(" }");
+        return sb.toString();
     }
 }
