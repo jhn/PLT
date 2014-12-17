@@ -1,0 +1,43 @@
+member: Node = {Name: String, Age: Int, Visited: Bool};
+relation: Rel = {Relation: String};
+
+fn DFS(N: Node, M: Graph)->Int {
+	if(N.visited == false){
+		print(N);
+		print("\n");
+		N.visited = true;
+		;;Neighbor: List<Node> = M.neighbors(N);;
+		;;Neighbor.map(node in { DFS(node, M) });;
+	}
+	else{
+		return 0;
+	}
+}
+
+fn main()->Void {
+	John: Node = member["John Hamilton", 49, false];
+	Mary: Node = member["Mary Lance", 47, false];
+	Johan: Node = member["Johan Hamilton", 21, false];
+	Sara: Node = member["Sara Hamilton", 20, false];
+
+	Mother: Rel = relation["Mother of"];
+	Father: Rel = relation["Father of"];
+	Child: Rel = relation["Child of"];
+	Brother: Rel = relation["Brother of"];
+	Sister: Rel = relation["Sister of"];
+
+	Family: Graph = <
+		John Father Johan,
+		John Father Sara,
+		Mary Mother Johan,
+		Mary Mother Sara,
+		Johan Brother Sara,
+		Johan Child John,
+		Johan Child Mary,
+		Sara Sister Johan,
+		Sara Child John,
+		Sara Child Mary
+	>;
+
+	DFS(Johan, Family);
+}
