@@ -193,7 +193,7 @@ and gen_var_dec dec = match dec with
 and gen_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
   | head::[] -> gen_var_dec head
-  | head::tail -> gen_var_dec head ^ gen_var_dec_list tail
+  | head::tail -> gen_var_dec head ^ ";" ^ gen_var_dec_list tail
 
 and gen_global_var_dec_list var_dec_list = match var_dec_list with
   | [] -> ""
