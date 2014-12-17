@@ -29,6 +29,10 @@ public class Relationship {
         return nodes;
     }
 
+    public Map<Node, Set<Node>> getAllFromTo() {
+        return new HashMap<>(fromTo);
+    }
+
     public void addNodes(Node from, Node to) {
         if (fromTo.containsKey(from)) {
             fromTo.get(from).add(to);

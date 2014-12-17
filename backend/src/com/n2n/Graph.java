@@ -210,8 +210,16 @@ public class Graph {
 
     @Override
     public String toString() {
-        return "Graph{" +
-                "relationships=" + relationships +
-                '}';
+        StringBuilder sb = new StringBuilder();
+        for (Relationship relationship : relationships) {
+            Map<Node, Set<Node>> allFromTo = relationship.getAllFromTo();
+            for (Node startNode : allFromTo.keySet()) {
+                for (Node endNode : allFromTo.get(startNode)) {
+                    sb.append(startNode).append(" ").append(relationship).append(" ").append(endNode).append(", ");
+                }
+            }
+        }
+        sb.setLength(sb.length() - 2); // removes last comma
+        return sb.toString();
     }
 }
