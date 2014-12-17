@@ -1,1 +1,2 @@
-Graph{relationships=[actedIn{ role = Jordan }, actedIn{ role = Neo }]}
+actor{ name = Leo, age = 20 } actedIn{ role = Jordan } movie{ year = 1994, title = Wolf },
+actor{ name = Keanu, age = 35 } actedIn{ role = Neo } movie{ year = 1999, title = Matrix }
