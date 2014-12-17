@@ -38,10 +38,11 @@ let gen_binop = function
   | Neg -> "-"
 
 let gen_literal lit = match lit with
-  | SInt_Literal(i) -> string_of_int i
-  | SDouble_Literal(d) -> string_of_float d
-  | SBool_Literal(b) -> string_of_bool b
+  | SInt_Literal(i)      -> string_of_int i
+  | SDouble_Literal(d)   -> string_of_float d
+  | SBool_Literal(b)     -> string_of_bool b
   | SString_Literal(str) -> "\"" ^ str ^ "\""
+  | SAny                 -> ""
 
 let rec gen_literal_list ll = match ll with
   | [] -> ""
