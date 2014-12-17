@@ -30,7 +30,7 @@ and sliteral =
 
 and sbuilt_in_function_call =
   SFindMany of string * sfind_many
-  | SMap of string * smap_function
+  | SMap of string * Ast.n2n_type * smap_function
   | SNeighbors_Func of string * string
 
 and sfind_many =

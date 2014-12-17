@@ -132,7 +132,11 @@ and gen_nrn_tup nrn_tup = match nrn_tup with
 and gen_sfunc fname = match fname with
     (* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
     | SFindMany(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ")"
-    | SMap(id, smf) -> "for( " ^ "Node " ^ gen_map id smf 
+    | SMap(id, ty, smf) -> 
+        (match ty with 
+          Graph -> "for( " ^ "Node " ^ gen_map id ty smf 
+          | List(t) -> "for( " ^ gen_var_type t ^ gen_map id ty smf
+          | _ -> raise Not_found)
     | SNeighbors_Func(id1, id2) -> id1 ^ ".neighbors(" ^ id2 ^ ")"
 
 and gen_find_many sfind = match sfind with
@@ -141,8 +145,12 @@ and gen_find_many sfind = match sfind with
 
 (* TODO: Figure out what to pass into the Map function when created in Javac Backedn *)
 (* Cuz this is not right! *)
-and gen_map id smap = match smap with
-  | SMap_Func(nid,sl) -> nid ^ " : " ^ id ^ ".getMapSet() ){\n" ^ gen_sstmt_list sl ^ "}\n" 
+and gen_map id ty smap = match smap with
+  | SMap_Func(nid,sl) -> (match ty with
+      Graph -> nid ^ " : " ^ id ^ ".getMapSet() ){\n" ^ gen_sstmt_list sl ^ "}\n" 
+      | List(t) -> nid ^ " : " ^ id ^ " ){\n" ^ gen_sstmt_list sl ^ "}\n"
+      | _ -> raise Not_found)
+
 
 and gen_sstmt stmt = match stmt with
   | SBlock(stmt_list) -> gen_sstmt_list stmt_list
@@ -164,11 +172,17 @@ and gen_var_dec dec = match dec with
       |_-> gen_expr e1 ^ " = " ^ gen_expr e2)
   | SVar_Decl_Assign(id,ty,e) -> (match ty with
     | Int | Double | Bool | String -> gen_var_type ty ^ " " ^ id ^ " = " ^ gen_expr e ^ ""
-    | Rel | Node | List(_)-> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
+    | Rel | Node -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")"
+    | List(_) -> (match e with
+        SFunc(fname, t) ->
+          (match fname with
+          SMap(_,_,_) -> gen_sfunc fname
+        | _ -> raise Not_found)
+        | _ -> gen_var_type ty ^ " " ^ id ^ " = new " ^ gen_var_type ty ^ "(" ^ gen_expr e ^ ")")
     | Graph -> (match e with
         SFunc(fname, t) ->
           (match fname with
-          SMap(_,_) -> gen_sfunc fname
+          SMap(_,_,_) -> gen_sfunc fname
         | _ -> raise Not_found)
         |_ ->gen_var_type ty ^ " " ^ id ^ " = new Graph(Arrays.asList(" ^ gen_expr e ^ "))")
     | Void -> "void")(* impossible case *)

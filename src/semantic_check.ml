@@ -493,7 +493,7 @@ and get_smap env ty mf =
 and get_sbuilt_in_function_call env f =
 	match f with
 	Find_Many(s, fm) -> SFindMany(s, get_sfm env fm)
-	| Map (s, mf) -> SMap(s, get_smap env (check_expr env (Id(s))) mf)
+	| Map (s, mf) -> SMap(s, (check_expr env (Id(s))), get_smap env (check_expr env (Id(s))) mf)
 	| Neighbors_Func(s1,s2) -> SNeighbors_Func(s1,s2)
 
 and get_sexpr env ex = match ex with
