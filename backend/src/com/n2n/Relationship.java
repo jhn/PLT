@@ -33,15 +33,15 @@ public class Relationship {
     }
 
     public void addNodes(Node from, Node to) {
-        if (fromTo.containsKey(from)) {
-            fromTo.get(from).add(to);
+        addOrInitializeMultiMap(fromTo, from, to);
+        addOrInitializeMultiMap(toFrom, to, from);
+    }
+
+    public void addOrInitializeMultiMap(Map<Node, Set<Node>> map, Node one, Node two) {
+        if (map.containsKey(one)) {
+            map.get(one).add(two);
         } else {
-            fromTo.put(from, new HashSet<>(Arrays.asList(to)));
-        }
-        if (toFrom.containsKey(to)) {
-            toFrom.get(to).add(from);
-        } else {
-            toFrom.put(to, new HashSet<>(Arrays.asList(from)));
+            map.put(one, new HashSet<>(Arrays.asList(two)));
         }
     }
 
