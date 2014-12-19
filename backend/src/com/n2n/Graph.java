@@ -169,14 +169,14 @@ public class Graph {
     }
 
     private void addToGraph(List<Member<Node, Relationship>> relatedMemberList) {
-        relatedMemberList.stream().forEach((members) -> {
+        relatedMemberList.stream().forEach(members -> {
             members.getRel().addNodes(members.getFrom(), members.getTo());
             relationships.add(members.getRel());
         });
     }
 
     private void removeFromGraph(List<Member<Node, Relationship>> relatedMemberList) {
-        relatedMemberList.stream().forEach((members) -> {
+        relatedMemberList.stream().forEach(members -> {
             members.getRel().addNodes(members.getFrom(), members.getTo());
             relationships.remove(members.getRel());
         });
