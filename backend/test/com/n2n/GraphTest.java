@@ -16,10 +16,12 @@ public class GraphTest {
 
     public static Graph graph;
 
-    // Reeves
+    // Actors
     public static Node keanu;
     public static Node laurence;
     public static Node carrie;
+    public static Node morgan;
+    public static Node tom;
 
     public static Relationship neoRole;
     public static Relationship morpheusRole;
@@ -27,6 +29,9 @@ public class GraphTest {
 
     public static Node theMatrix;
     public static Node theMatrixReloaded;
+
+    public static Node forrestGump;
+    public static Node shawshankRedemption;
 
     public static Relationship johnRole;
     public static Node constantine;
@@ -68,6 +73,14 @@ public class GraphTest {
             put("name", "Carrie");
         }});
 
+        tom = new Node(ACTOR, new HashMap<String, Object>() {{
+            put("name", "Tom");
+        }});
+
+        morgan = new Node(ACTOR, new HashMap<String, Object>() {{
+            put("name", "Morgan");
+        }});
+
         neoRole = new Relationship(ACTED_IN, new HashMap<String, Object>() {{
             put("role", "Neo");
         }});
@@ -82,6 +95,16 @@ public class GraphTest {
 
         theMatrix = new Node(MOVIE, new HashMap<String, Object>() {{
             put("title", "The Matrix");
+            put("year", 1999);
+        }});
+
+        forrestGump = new Node(MOVIE, new HashMap<String, Object>() {{
+            put("title", "Forrest Gump");
+            put("year", 1999);
+        }});
+
+        shawshankRedemption = new Node(MOVIE, new HashMap<String, Object>() {{
+            put("title", "Shawshank Redemption");
             put("year", 1999);
         }});
 
@@ -152,7 +175,9 @@ public class GraphTest {
                     new Graph.Member<>(leo,      jordanRole,   wolfOfWallSt),
                     new Graph.Member<>(leo,      jackRole,     titanic),
                     new Graph.Member<>(leo,      produced,     wolfOfWallSt),
-                    new Graph.Member<>(leo,      produced,     theAviator)
+                    new Graph.Member<>(leo,      produced,     theAviator),
+                    new Graph.Member<>(morgan,   produced,     shawshankRedemption),
+                    new Graph.Member<>(tom,      produced,     forrestGump)
                 ));
     }
 
@@ -231,5 +256,15 @@ public class GraphTest {
 
         Set<Relationship> leoKeanuRelationships = graph.findMany(leo, keanu);
         assertThat(leoKeanuRelationships, hasSize(0));
+    }
+
+    @Test
+    public void testFindManyLooseEquality() throws Exception {
+        Set<Node> moviesFrom1999 = graph.findMany(new Node(MOVIE, new HashMap<String, Object>() {{
+            put("year", 1999);
+        }}));
+
+        assertThat(moviesFrom1999, hasSize(3));
+        assertThat(moviesFrom1999, containsInAnyOrder(shawshankRedemption, forrestGump, theMatrix));
     }
 }
