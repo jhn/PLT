@@ -267,4 +267,12 @@ public class GraphTest {
         assertThat(moviesFrom1999, hasSize(3));
         assertThat(moviesFrom1999, containsInAnyOrder(shawshankRedemption, forrestGump, theMatrix));
     }
+
+    @Test
+    public void testFindManyRelationshipBetweenTwoNodes() throws Exception {
+        Set<Relationship> relationshipsBetweenLeoAndWolf = graph.findMany(leo, wolfOfWallSt);
+
+        assertThat(relationshipsBetweenLeoAndWolf, hasSize(2));
+        assertThat(relationshipsBetweenLeoAndWolf, containsInAnyOrder(produced, jordanRole));
+    }
 }

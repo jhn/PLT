@@ -184,18 +184,16 @@ public class Graph {
     }
 
     private Set<Relationship> relationshipFinder(Node left, Node right) {
-        Set<Relationship> result = new HashSet<>();
-        for (Relationship relationship : relationships) {
-            Set<Node> nodesFromLeft = relationship.getNodesFrom(left);
-            Set<Node> nodesToRight = relationship.getNodesTo(right);
-            if (!nodesToRight.isEmpty()) {
-                boolean modified = nodesFromLeft.retainAll(nodesToRight);
-                if (modified) {
-                    result.add(relationship);
-                }
-            }
-        }
-        return result;
+        return relationships
+                .stream()
+                .filter(r -> nodesAreRelated(r, left, right))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean nodesAreRelated(Relationship relationship, Node first, Node second) {
+        Set<Node> nodesFromLeft = relationship.getNodesFrom(first);
+        Set<Node> nodesToRight = relationship.getNodesTo(second);
+        return !nodesToRight.isEmpty() && nodesFromLeft.retainAll(nodesToRight);
     }
 
     private Set<Node> findManyHelper(Predicate<Relationship> predicate, Function<Relationship, Stream<? extends Node>> mapper) {
