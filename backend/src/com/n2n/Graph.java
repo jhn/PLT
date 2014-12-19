@@ -37,12 +37,12 @@ public class Graph {
         return this.relationships;
     }
 
-    public Graph(List<Member<Node, Relationship>> relatedMemberList) {
-        addToGraph(relatedMemberList);
+    public Graph(List<Member<Node, Relationship>> member) {
+        addToGraph(member);
     }
 
-    public void remove(Member<Node, Relationship> entry) {
-        removeFromGraph(Arrays.asList(entry));
+    public void remove(Member<Node, Relationship> member) {
+        removeFromGraph(Arrays.asList(member));
     }
 
     public void insert(Member<Node, Relationship> member) {
