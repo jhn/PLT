@@ -7,6 +7,8 @@ public class Node {
     private String type;
     private Map<String, Object> data;
 
+    private static final String ANY = "Any";
+
     public Node(String type, Map<String, Object> data) {
         this.type = type;
         this.data = data;
@@ -32,7 +34,7 @@ public class Node {
     private boolean dataLooselyEquals(Map<String, Object> other) {
         return other.entrySet()
                 .stream()
-                .filter(e -> !e.getValue().equals("Any"))
+                .filter(e -> !e.getValue().equals(ANY))
                 .allMatch(e -> data.get(e.getKey()).equals(e.getValue()));
     }
 
