@@ -150,14 +150,11 @@ public class Graph {
     }
 
     public Set<Node> findMany(Node target) {
-        Set<Node> nodes = new HashSet<>();
-        for (Relationship relationship : relationships) {
-            nodes.addAll(relationship
-                    .getAll()
-                    .stream()
-                    .filter(node -> node.looselyEquals(target)).collect(Collectors.toList()));
-        }
-        return nodes;
+        return relationships
+                .stream()
+                .flatMap(r -> r.getAll().stream())
+                .filter(node -> node.looselyEquals(target))
+                .collect(Collectors.toSet());
     }
 
     public Set<Node> neighbors(Node target) {
