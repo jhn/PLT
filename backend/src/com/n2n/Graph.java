@@ -152,7 +152,7 @@ public class Graph {
     public Set<Node> findMany(Node target) {
         return relationships
                 .stream()
-                .flatMap(r -> r.getAll().stream())
+                .flatMap(r -> r.getAllNodes().stream())
                 .filter(node -> node.looselyEquals(target))
                 .collect(Collectors.toSet());
     }
@@ -162,7 +162,7 @@ public class Graph {
     }
 
     public Set<Node> getMapSet() {
-        return getNodesFromRelationships(r -> r.getAll().stream());
+        return getNodesFromRelationships(r -> r.getAllNodes().stream());
     }
 
     private void addToGraph(List<Member<Node, Relationship>> relatedMemberList) {

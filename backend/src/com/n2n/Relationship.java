@@ -22,9 +22,8 @@ public class Relationship {
         return this.data.get(field);
     }
 
-    public Set<Node> getAll() {
-        Set<Node> nodes = new HashSet<>();
-        nodes.addAll(fromTo.keySet());
+    public Set<Node> getAllNodes() {
+        Set<Node> nodes = new HashSet<>(fromTo.keySet());
         nodes.addAll(toFrom.keySet());
         return nodes;
     }
