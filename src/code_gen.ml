@@ -107,7 +107,7 @@ and gen_gt_instantiation element_type field_info = match element_type with
   ", new HashMap<String, Object>() {{\n\t" ^ (gen_graph_elem element_type field_info "") ^ "\n}})\n"
 
 and gen_scomplex c = match c with
-  | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list (* Should just be a list of graph elements *)
+  | SGraph_Literal(nrn_list) -> gen_node_rel_node_tup_list nrn_list
   | SGraph_Element(element_type, field_info) -> gen_element_instantiation element_type field_info
 
 and gen_element_instantiation element_type field_info = match element_type with
@@ -132,7 +132,6 @@ and gen_nrn_tup nrn_tup = match nrn_tup with
   SNode_Rel_Node_tup(sg1, sg2, sg3) -> "new Graph.Member<>(" ^ gen_sgraph_type sg1 ^ ", " ^ gen_sgraph_type sg2 ^ ", " ^ gen_sgraph_type sg3 ^ ")"
 
 and gen_sfunc fname = match fname with
-    (* TOASK How call Map and Neighbors function? And Graph/Data inserts *)
     | SFindMany(id, sfm) -> id ^ ".findMany(" ^ gen_find_many sfm ^ ")"
     | SMap(id, ty, smf) -> 
         (match ty with 
@@ -145,14 +144,11 @@ and gen_find_many sfind = match sfind with
   | SFind_Many_Node(scomp) -> gen_scomplex scomp
   | SFind_Many_Gen(gt1, gt2) -> gen_sgraph_type gt1 ^ ", " ^ gen_sgraph_type gt2
 
-(* TODO: Figure out what to pass into the Map function when created in Javac Backedn *)
-(* Cuz this is not right! *)
 and gen_map id ty smap = match smap with
   | SMap_Func(nid,sl) -> (match ty with
       Graph -> nid ^ " : " ^ id ^ ".getMapSet() ){\n" ^ gen_sstmt_list sl ^ "}\n" 
       | List(t) -> nid ^ " : " ^ id ^ " ){\n" ^ gen_sstmt_list sl ^ "}\n"
       | _ -> raise Not_found)
-
 
 and gen_sstmt stmt = match stmt with
   | SBlock(stmt_list) -> gen_sstmt_list stmt_list
@@ -201,7 +197,6 @@ and gen_global_var_dec_list var_dec_list = match var_dec_list with
   | head::[] -> "static " ^ gen_var_dec head ^ ";"
   | head::tail -> gen_var_dec head ^ gen_var_dec_list tail
 
-(* TODO: These dont currently exist in java backend *)
 and gen_graph_op grop = match grop with
   | Graph_Insert -> ".insert("
   | Graph_Remove -> ".remove("
