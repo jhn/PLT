@@ -60,6 +60,5 @@ let _ =
                          ignore (read_process clean_cmd);
                          ignore (write_to_file file_name java_source);
                          ignore (read_process compile_cmd);
-                         let output = read_process run_cmd in
-                         print_string output
+                         print_string (read_process run_cmd)
             | Help -> print_endline (usage Sys.argv.(0)) (* impossible case *)
