@@ -2,7 +2,7 @@ open Unix
 
 type action = Ast | Sast | Java | Compile | Help
 
-let usage (name: string) =
+let usage name =
   "usage:\n" ^ name ^ "\n" ^
     "        -a source.n2n                 (Print AST of an n2n source)\n"^
     "        -s source.n2n                 (Run Semantic Analysis over source)\n"^
