@@ -49,24 +49,17 @@ let _ =
               Ast -> let ast = Ast.string_of_program program in
                      print_string ast
             | Sast -> let sast = Semantic_check.run_program program in
-                        ignore sast; print_string "Passed Semantic Analysis.\n"
+                      ignore sast; print_string "Passed Semantic Analysis.\n"
             | Java -> let sast = Semantic_check.run_program program in
                       let java_source = Code_gen.prog_gen sast in
-                      if args == 2 then
-                        ignore (write_to_file "Main.java" java_source)
-                      else if args == 3 then
-                        ignore (write_to_file (Sys.argv.(2) ^ ".java") java_source)
+                      let file_name = Sys.argv.(2) ^ ".java" in
+                      ignore (write_to_file file_name java_source)
             | Compile -> let sast = Semantic_check.run_program program in
-                      let java_source = Code_gen.prog_gen sast in
-                      if args == 2 then
-                        let full_path = target_path ^ Sys.argv.(2) ^ ".java" in
-                        ignore (write_to_file full_path java_source)
-                      else if args == 3 then
-                        let full_path = target_path ^ "Main.java" in
-                        let clean_command = "rm -f " ^ target_path ^ "Main.class" in
-                        ignore (read_process clean_command);
-                        ignore (write_to_file full_path java_source);
-                        let command = (javac ^ " " ^ target_path ^ "*.java && java -cp "^ backend_path ^" com.n2n.Main") in
-                        let output = read_process command in
-                        print_string output
+                         let java_source = Code_gen.prog_gen sast in
+                         let full_path = target_path ^ "Main.java" in
+                         ignore (read_process clean_cmd);
+                         ignore (write_to_file full_path java_source);
+                         ignore (read_process compile_cmd);
+                         let output = read_process run_cmd in
+                         print_string output
             | Help -> print_endline (usage Sys.argv.(0)) (* impossible case *)
