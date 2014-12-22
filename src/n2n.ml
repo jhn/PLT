@@ -56,9 +56,9 @@ let _ =
                       ignore (write_to_file file_name java_source)
             | Compile -> let sast = Semantic_check.run_program program in
                          let java_source = Code_gen.prog_gen sast in
-                         let full_path = target_path ^ "Main.java" in
+                         let file_name = target_path ^ "Main.java" in
                          ignore (read_process clean_cmd);
-                         ignore (write_to_file full_path java_source);
+                         ignore (write_to_file file_name java_source);
                          ignore (read_process compile_cmd);
                          let output = read_process run_cmd in
                          print_string output
