@@ -10,10 +10,11 @@ let usage (name:string) =
     "        -c source.n2n [target.out]    (Compile n2n to executable)\n" ^
     "        -h                            (Shows this menu)"
 
-let javac = "javac"
-
-let backend_path = "../backend/src/"
-let target_path = backend_path ^ "com/n2n/"
+let backend_path  = "../backend/src/"
+let target_path   = backend_path ^ "com/n2n/"
+let clean_cmd     = "rm -f " ^ target_path ^ "Main.class"
+let compile_cmd   = "javac " ^ target_path ^ "*.java"
+let run_cmd       = "java -cp " ^ backend_path ^ " com.n2n.Main"
 
 let read_process command =
   let buffer_size = 2048 in
