@@ -31,6 +31,11 @@ let read_process command =
 (* Create a pipe for the subprocess output. *)
 let readme, writeme = Unix.pipe ()
 
+let write_to_file file_name contents =
+  let output_file = open_out file_name in
+  output_string output_file contents;
+  close_out output_file
+
 let _ =
   let args = Array.length Sys.argv in
     let action = if args > 1 then
@@ -40,30 +45,26 @@ let _ =
       let lexbuf = Lexing.from_channel input in
       let program = Parser.program Scanner.token lexbuf in
       match action with
-              Ast -> let listing = Ast.string_of_program program in
-                     print_string listing
-            | Sast -> let env = Semantic_check.run_program program in
-                           ignore env; print_string "Passed Semantic Analysis.\n"
+              Ast -> let ast = Ast.string_of_program program in
+                     print_string ast
+            | Sast -> let sast = Semantic_check.run_program program in
+                        ignore sast; print_string "Passed Semantic Analysis.\n"
             | Java -> let sast = Semantic_check.run_program program in
                       let java_source = Code_gen.prog_gen sast in
-                      if args == 3 then
-                        let output_file = open_out (Sys.argv.(2) ^ ".java") in
-                        output_string output_file java_source; close_out output_file;
-                      else if args == 2 then
-                        let output_file = open_out "Main.java" in
-                        output_string output_file java_source; close_out output_file;
+                      if args == 2 then
+                        ignore (write_to_file "Main.java" java_source)
+                      else if args == 3 then
+                        ignore (write_to_file (Sys.argv.(2) ^ ".java") java_source)
             | Compile -> let sast = Semantic_check.run_program program in
                       let java_source = Code_gen.prog_gen sast in
                       if args == 2 then
                         let full_path = target_path ^ Sys.argv.(2) ^ ".java" in
-                        let output_file = open_out full_path in
-                        output_string output_file java_source; close_out output_file;
+                        ignore (write_to_file full_path java_source)
                       else if args == 3 then
                         let full_path = target_path ^ "Main.java" in
                         let clean_command = "rm -f " ^ target_path ^ "Main.class" in
                         ignore (read_process clean_command);
-                        let output_file = open_out full_path in
-                        output_string output_file java_source; close_out output_file;
+                        ignore (write_to_file full_path java_source);
                         let command = (javac ^ " " ^ target_path ^ "*.java && java -cp "^ backend_path ^" com.n2n.Main") in
                         let output = read_process command in
                         print_string output
